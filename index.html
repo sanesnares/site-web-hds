@@ -289,11 +289,17 @@
       height: 100%;
       max-height: 100%;
       display: grid;
-      grid-template-columns: 1.05fr 1fr;
+      /* minmax(0,…) : la colonne gauche ne peut pas écraser la carte */
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
       align-items: center;
       gap: clamp(12px, 2.8vw, 36px);
       padding: clamp(10px, 2vh, 22px) clamp(14px, 2.5vw, 32px);
       margin: 0 auto;
+    }
+    .wait-stage > .wait-ui,
+    .wait-stage > .wait-map {
+      min-width: 0;
+      min-height: 0;
     }
 
     .wait-stage::before {
@@ -450,6 +456,17 @@
       transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
       /* Hub Listenify / scroll éventuel sur petits écrans */
       touch-action: pan-y;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .wait-ui::-webkit-scrollbar {
+      display: none;
     }
 
     #start-screen.launching .wait-ui {
@@ -2287,14 +2304,33 @@
     /* Paysage : coin haut-droit (pouce droit / hors stick) */
     html.phone-landscape .audio-btns {
       left: auto;
-      right: max(10px, env(safe-area-inset-right));
-      top: max(8px, env(safe-area-inset-top));
+      right: 20px;
+      top: 20px;
       bottom: auto;
       flex-direction: row;
       gap: 6px;
       z-index: 70;
       pointer-events: auto;
       transform: none;
+    }
+    html.phone-landscape #start-screen .wait-ui {
+      max-height: calc(100vh - 16px);
+      max-height: calc(100dvh - 16px);
+      justify-content: safe center;
+      padding: 4px 2px 10px;
+    }
+    html.phone-landscape #start-screen .feat-list {
+      margin: 0 0 6px;
+      gap: 4px;
+    }
+    html.phone-landscape #start-screen .feat-list li {
+      padding: 4px 7px;
+    }
+    html.phone-landscape #start-screen .wait-ui .btn {
+      padding: 9px 22px 8px;
+    }
+    html.phone-landscape #start-screen .ysemo-hub {
+      margin: 6px auto 2px;
     }
     html.phone-landscape .btn-mute {
       width: 46px;
@@ -2562,7 +2598,8 @@
       bottom: max(10px, env(safe-area-inset-bottom));
     }
     html.platform-desktop .now-radio {
-      bottom: max(78px, calc(env(safe-area-inset-bottom) + 70px));
+      /* Mute passé en haut-droite : radio peut rester bas-gauche sans collision */
+      bottom: max(16px, env(safe-area-inset-bottom));
     }
 
     /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
@@ -2577,12 +2614,12 @@
       pointer-events: none;
     }
 
-    /* Ordinateur : toujours bas-gauche */
+    /* Ordinateur / paysage : haut-droite (plus de collision avec .now-radio) */
     html.platform-desktop .audio-btns {
-      left: max(14px, env(safe-area-inset-left));
-      right: auto;
-      top: auto;
-      bottom: max(14px, env(safe-area-inset-bottom));
+      left: auto;
+      right: 20px;
+      top: 20px;
+      bottom: auto;
       flex-direction: row;
       gap: 8px;
       transform: none;
@@ -2595,6 +2632,83 @@
       min-width: 52px;
       font-size: 8px;
       pointer-events: auto;
+    }
+
+    /* Desktop accueil : colonne gauche plus compacte + scroll si besoin */
+    html.platform-desktop #start-screen .wait-stage {
+      align-items: stretch;
+      padding-top: clamp(8px, 1.6vh, 16px);
+      padding-bottom: clamp(8px, 1.6vh, 16px);
+    }
+    html.platform-desktop #start-screen .wait-ui {
+      justify-content: safe center;
+      max-height: calc(100vh - 24px);
+      max-height: calc(100dvh - 24px);
+      padding: 6px 4px 12px;
+      gap: 0;
+    }
+    html.platform-desktop #start-screen .hud-box,
+    html.platform-desktop .hud-box {
+      padding: 5px 10px;
+      font-size: clamp(11px, 1.4vw, 13px);
+      line-height: 1.35;
+    }
+    html.platform-desktop #start-screen .feat-list {
+      margin: 0 0 8px;
+      gap: 4px;
+      width: min(320px, 90%);
+    }
+    html.platform-desktop #start-screen .feat-list li {
+      padding: 5px 8px;
+      gap: 6px;
+      font-size: clamp(10px, 1.2vw, 12px);
+    }
+    html.platform-desktop #start-screen .feat-ico {
+      width: 20px;
+      height: 20px;
+      font-size: 8px;
+    }
+    html.platform-desktop #start-screen .wait-ui .btn {
+      padding: 10px 28px 9px;
+      font-size: clamp(12px, 1.5vw, 15px);
+      margin-top: 0;
+    }
+    html.platform-desktop #start-screen .wait-ui .btn.btn-admin,
+    html.platform-desktop #start-screen .wait-ui .btn.btn-admin-off,
+    html.platform-desktop #start-screen .wait-ui .btn.btn-shop,
+    html.platform-desktop #start-screen .wait-ui .btn.btn-listenify {
+      margin-top: 6px;
+      padding: 9px 24px 8px;
+    }
+    html.platform-desktop #start-screen .overlay .subtitle,
+    html.platform-desktop #start-screen .subtitle {
+      margin-bottom: 8px;
+    }
+    html.platform-desktop #start-screen .brand-tag {
+      margin-bottom: 4px;
+    }
+    html.platform-desktop #start-screen .wait-rush {
+      margin: -2px 0 4px;
+    }
+    html.platform-desktop #start-screen .chds-badge {
+      margin: 2px auto 4px;
+      width: min(148px, 32vw);
+    }
+    html.platform-desktop #start-screen .ysemo-hub {
+      margin: 8px auto 2px;
+      width: min(236px, 86%);
+    }
+    html.platform-desktop #start-screen .hint {
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    html.platform-desktop #start-screen .item-loadout {
+      margin-bottom: 6px;
+      padding: 6px 8px;
+    }
+    html.platform-desktop #start-screen .wait-map {
+      align-self: center;
+      max-height: min(64vh, 500px);
     }
 
     .btn-mute {
