@@ -1790,39 +1790,6 @@
       #start-screen.launching .wait-ui { transition-duration: 0.01s; }
     }
 
-    /* —— Faceplate GBA (mobile portrait, bande sous le canvas — cadre inchangé) —— */
-    #gba-shell {
-      display: none;
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--game-canvas-bottom, var(--game-bottom, 136px));
-      z-index: 14;
-      pointer-events: none;
-      overflow: hidden;
-      background: #c4c7df;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    }
-    #gba-shell img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 12%;
-      user-select: none;
-      -webkit-user-drag: none;
-      pointer-events: none;
-    }
-    /* Uniquement téléphone portrait en jeu — jamais desktop / paysage */
-    html.phone-portrait.play-ui #gba-shell {
-      display: block;
-    }
-    html.platform-desktop #gba-shell,
-    html.phone-landscape #gba-shell {
-      display: none !important;
-    }
-
     /* —— Contrôles tactiles (joystick invisible G / saut D) —— */
     #touch {
       position: absolute;
@@ -2009,12 +1976,6 @@
       bottom: max(36px, calc(env(safe-area-inset-bottom) + 18px));
       width: 96px;
       height: 96px;
-    }
-    /* Faceplate GBA visible : feedback stick/saut discret (l’art suffit) */
-    html.phone-portrait.play-ui .stick-base.show,
-    html.phone-portrait.play-ui .stick-knob.show,
-    html.phone-portrait.play-ui .jump-flash.show {
-      opacity: 0.28;
     }
 
     html.phone-portrait.play-ui .btn-pause {
@@ -4381,11 +4342,6 @@ on</button>
         <button type="button" data-d="0">0</button>
         <button type="button" data-d="ok" class="admin-pin-ok">OK</button>
       </div>
-    </div>
-
-    <!-- Faceplate GBA : bande pouces mobile portrait uniquement (ne change pas le cadre jeu) -->
-    <div id="gba-shell" aria-hidden="true">
-      <img src="assets/gba-controls.jpg" alt="" width="703" height="598" decoding="async" draggable="false" />
     </div>
 
     <div id="touch" aria-hidden="true">
