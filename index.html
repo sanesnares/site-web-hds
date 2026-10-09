@@ -862,6 +862,101 @@
     }
     html.phone-landscape #pwa-tip .pwa-tip-steps { font-size: 11.5px; }
 
+    /* Tip son — 1ʳᵉ visite mobile (volume / mode silencieux iOS) */
+    #sound-tip {
+      position: absolute;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom) + 10px);
+      translate: -50% 0;
+      z-index: 41;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      width: min(360px, calc(100% - 24px));
+      padding: 11px 12px 11px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 229, 102, 0.45);
+      background:
+        linear-gradient(145deg, rgba(28, 24, 10, 0.96), rgba(10, 12, 18, 0.94));
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 18px rgba(255, 229, 102, 0.14);
+      text-align: left;
+      touch-action: manipulation;
+      pointer-events: auto;
+      animation: ui-rise 0.5s var(--ease-out) 0.2s backwards;
+    }
+    #sound-tip.hidden { display: none !important; }
+    #sound-tip .sound-tip-ico {
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-arcade);
+      font-size: 18px;
+      font-weight: 700;
+      color: #0a0e14;
+      background: linear-gradient(145deg, #ffe566, #d4a820);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+    }
+    #sound-tip .sound-tip-body { flex: 1; min-width: 0; }
+    #sound-tip .sound-tip-title {
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--neon-y);
+      margin-bottom: 4px;
+    }
+    #sound-tip .sound-tip-steps {
+      font-family: var(--font-ui);
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #d8e2ec;
+    }
+    #sound-tip .sound-tip-steps strong {
+      color: #fff;
+      font-weight: 700;
+    }
+    #sound-tip .sound-tip-close {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      margin: -4px -4px 0 0;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #9aa8b8;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #sound-tip .sound-tip-close:active {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+    html.platform-desktop #sound-tip,
+    html.play-ui #sound-tip { display: none !important; }
+    /* Empile au-dessus du tip PWA s’il est aussi visible */
+    #sound-tip:not(.hidden) ~ #pwa-tip:not(.hidden) {
+      bottom: max(112px, calc(env(safe-area-inset-bottom) + 108px));
+    }
+    html.phone-landscape #sound-tip {
+      width: min(340px, calc(100% - 20px));
+      padding: 8px 10px;
+      bottom: max(8px, env(safe-area-inset-bottom) + 6px);
+    }
+    html.phone-landscape #sound-tip:not(.hidden) ~ #pwa-tip:not(.hidden) {
+      bottom: max(88px, calc(env(safe-area-inset-bottom) + 84px));
+    }
+    html.phone-landscape #sound-tip .sound-tip-steps { font-size: 11.5px; }
+    .sound-tip-ios { display: none; }
+    html.platform-phone .sound-tip-ios { display: inline; }
+
     #end-offers {
       display: flex;
       flex-direction: column;
@@ -2686,17 +2781,49 @@
       height: 20px;
       font-size: 8px;
     }
+    /* Desktop : boutons plus grands (Jouer + secondaires) */
+    html.platform-desktop .btn {
+      padding: 16px 40px 14px;
+      font-size: clamp(15px, 1.7vw, 18px);
+      letter-spacing: 0.22em;
+      border-radius: 4px;
+    }
+    html.platform-desktop .btn::before { border-radius: 3px; }
     html.platform-desktop #start-screen .wait-ui .btn {
-      padding: 10px 28px 9px;
-      font-size: clamp(12px, 1.5vw, 15px);
+      padding: 16px 40px 14px;
+      font-size: clamp(15px, 1.7vw, 18px);
       margin-top: 0;
+    }
+    html.platform-desktop #start-screen .wait-ui #btn-start {
+      padding: 20px 52px 18px;
+      font-size: clamp(18px, 2.1vw, 22px);
+      letter-spacing: 0.26em;
     }
     html.platform-desktop #start-screen .wait-ui .btn.btn-admin,
     html.platform-desktop #start-screen .wait-ui .btn.btn-admin-off,
     html.platform-desktop #start-screen .wait-ui .btn.btn-shop,
     html.platform-desktop #start-screen .wait-ui .btn.btn-listenify {
-      margin-top: 6px;
-      padding: 9px 24px 8px;
+      margin-top: 8px;
+      padding: 13px 32px 12px;
+      font-size: clamp(13px, 1.45vw, 16px);
+    }
+    html.platform-desktop #end-screen .btn,
+    html.platform-desktop #pause-screen .btn {
+      padding: 15px 38px 13px;
+      font-size: clamp(14px, 1.6vw, 17px);
+    }
+    html.platform-desktop #end-screen #btn-retry,
+    html.platform-desktop #pause-screen #btn-resume {
+      padding: 18px 48px 16px;
+      font-size: clamp(16px, 1.9vw, 20px);
+    }
+    html.platform-desktop .btn-end-buy {
+      padding: 12px 22px;
+      font-size: 14px;
+    }
+    html.platform-desktop #shop-screen .btn {
+      padding: 14px 34px 12px;
+      font-size: clamp(14px, 1.5vw, 16px);
     }
     html.platform-desktop #start-screen .overlay .subtitle,
     html.platform-desktop #start-screen .subtitle {
@@ -4311,6 +4438,20 @@ on</button>
       </div>
     </div>
 
+    <aside id="sound-tip" class="hidden" role="dialog" aria-label="Activer le son" aria-live="polite">
+      <span class="sound-tip-ico" aria-hidden="true">♪</span>
+      <div class="sound-tip-body">
+        <p class="sound-tip-title">Active le son</p>
+        <p class="sound-tip-steps">
+          <strong>Monte le volume</strong> et désactive le
+          <strong>mode silencieux</strong>
+          <span class="sound-tip-ios"> (interrupteur sur le côté de l’iPhone)</span>
+          pour entendre la musique.
+        </p>
+      </div>
+      <button type="button" class="sound-tip-close" id="sound-tip-close" aria-label="Fermer">×</button>
+    </aside>
+
     <aside id="pwa-tip" class="hidden" role="dialog" aria-label="Ajouter 92 Rush à l’écran d’accueil" aria-live="polite">
       <img class="pwa-tip-ico" src="assets/apple-touch-icon.png" width="40" height="40" alt="" draggable="false" />
       <div class="pwa-tip-body">
@@ -4403,6 +4544,7 @@ on</button>
   const CATCH_KEY = "hds92_police_catches";
   const DEATH_KEY = "hds92_deaths";
   const PWA_TIP_KEY = "hds92_pwa_tip_v2";
+  const SOUND_TIP_KEY = "hds92_sound_tip_v1";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
   const ADMIN_PIN = "4889";
@@ -4501,6 +4643,8 @@ on</button>
     endStats: document.getElementById("end-stats"),
     endRemain: document.getElementById("end-remain"),
     endOffers: document.getElementById("end-offers"),
+    soundTip: document.getElementById("sound-tip"),
+    soundTipClose: document.getElementById("sound-tip-close"),
     pwaTip: document.getElementById("pwa-tip"),
     pwaTipSteps: document.getElementById("pwa-tip-steps"),
     pwaTipClose: document.getElementById("pwa-tip-close"),
@@ -4625,11 +4769,11 @@ on</button>
     const DIST_FULL = 700;
     // dB → gain linéaire (même niveau pour les deux tracks)
     const dbToGain = (db) => Math.pow(10, db / 20);
-    // Musique bien baissée partout (−≈8,5 dB vs courbe précédente)
-    const VOL_DB_MIN = -28;
-    const VOL_DB_MAX = -25; // plein filtre / volume (~700 m)
-    const MUSIC_VOL_MIN = dbToGain(VOL_DB_MIN); // ~0.040
-    const MUSIC_VOL_MAX = dbToGain(VOL_DB_MAX); // ~0.056
+    // Musique un peu plus haute (−≈6 à −8 dB vs courbe d’origine)
+    const VOL_DB_MIN = -26;
+    const VOL_DB_MAX = -23; // plein filtre / volume (~700 m)
+    const MUSIC_VOL_MIN = dbToGain(VOL_DB_MIN); // ~0.050
+    const MUSIC_VOL_MAX = dbToGain(VOL_DB_MAX); // ~0.071
     const BEAT_VOL_MIN = MUSIC_VOL_MIN;
     const BEAT_VOL_MAX = MUSIC_VOL_MAX;
     const BEAT_VOL = BEAT_VOL_MIN;
@@ -6296,7 +6440,7 @@ on</button>
     // Musique : ON accueil + course + pause + victoire | OFF game over
     // Accueil encore plus bas que la course + hi-cut
     const RUN_MUSIC_ON = dbToGain(-2); // léger plafond master musique
-    const RUN_MUSIC_MENU = dbToGain(-12); // ≈ 0.251
+    const RUN_MUSIC_MENU = dbToGain(-10); // ≈ 0.316
     const RUN_MUSIC_OFF = 0.0001;
     const MENU_HICUT_HZ = 3400; // hi-cut accueil (beat + acap)
     let runMusicOn = false;
@@ -7987,7 +8131,7 @@ on</button>
     }
     refreshShopButtons();
     refreshLoadoutUI();
-    syncPwaTip();
+    syncTips();
   }
 
   /* ============================================================
@@ -8385,6 +8529,41 @@ on</button>
     }
   }
 
+  function isSoundTipDismissed() {
+    try { return localStorage.getItem(SOUND_TIP_KEY) === "1"; }
+    catch (_) { return false; }
+  }
+
+  function dismissSoundTip() {
+    try { localStorage.setItem(SOUND_TIP_KEY, "1"); } catch (_) {}
+    if (el.soundTip) {
+      el.soundTip.classList.add("hidden");
+      el.soundTip.setAttribute("aria-hidden", "true");
+    }
+    syncPwaTip();
+  }
+
+  /**
+   * 1ʳᵉ visite mobile : rappelle volume + mode silencieux (iPhone).
+   * Menus uniquement ; masqué en jeu via CSS (.play-ui).
+   */
+  function syncSoundTip() {
+    if (!el.soundTip) return;
+    let mobile = false;
+    try { mobile = document.documentElement.classList.contains("platform-phone"); } catch (_) {}
+    if (!mobile) {
+      try { mobile = isMobilePlatform(); } catch (_) {}
+    }
+    const show = mobile && !isSoundTipDismissed();
+    if (!show) {
+      el.soundTip.classList.add("hidden");
+      el.soundTip.setAttribute("aria-hidden", "true");
+      return;
+    }
+    el.soundTip.classList.remove("hidden");
+    el.soundTip.setAttribute("aria-hidden", "false");
+  }
+
   /**
    * Indice install : Safari iOS, hors mode PWA, tant que non fermé.
    * Visible sur menus (accueil / fin), masqué en jeu via CSS (.play-ui).
@@ -8404,6 +8583,11 @@ on</button>
     }
     el.pwaTip.classList.remove("hidden");
     el.pwaTip.setAttribute("aria-hidden", "false");
+  }
+
+  function syncTips() {
+    syncSoundTip();
+    syncPwaTip();
   }
 
   let best = loadBest();
@@ -11065,7 +11249,7 @@ on</button>
       "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
       "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
 
-    syncPwaTip();
+    syncTips();
 
     // Sous Boutique : charges restantes Jetpack / Air Max
     if (el.endRemain) {
@@ -11273,7 +11457,7 @@ on</button>
     ensureMenuMusic();
     AudioFX.updateRunMusic(false, false, true);
     syncPhoneLayoutClass();
-    syncPwaTip();
+    syncTips();
   }
 
   /**
@@ -14157,6 +14341,8 @@ on</button>
       btnStart.disabled = true;
       btnStart.textContent = "…";
     }
+    // 1ʳᵉ partie : le tip son a été vu
+    try { dismissSoundTip(); } catch (_) {}
 
     try {
       // Gesture click = unlock immédiat (ne pas attendre les tracks HTML)
@@ -14278,6 +14464,13 @@ on</button>
       e.preventDefault();
       e.stopPropagation();
       dismissPwaTip();
+    });
+  }
+  if (el.soundTipClose) {
+    el.soundTipClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dismissSoundTip();
     });
   }
 
@@ -14591,14 +14784,14 @@ on</button>
   refreshLoadoutUI();
   syncMuteBtn();
   resetLevel();
-  syncPwaTip();
+  syncTips();
   requestAnimationFrame(frame);
 
   // PWA — installable iOS (Partager → Sur l’écran d’accueil) + Android
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
-      syncPwaTip();
+      syncTips();
     });
   }
 })();
