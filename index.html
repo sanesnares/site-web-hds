@@ -2598,8 +2598,8 @@
       bottom: max(10px, env(safe-area-inset-bottom));
     }
     html.platform-desktop .now-radio {
-      /* Mute passé en haut-droite : radio peut rester bas-gauche sans collision */
       bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 56;
     }
 
     /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
@@ -2614,12 +2614,24 @@
       pointer-events: none;
     }
 
-    /* Ordinateur / paysage : haut-droite (plus de collision avec .now-radio) */
-    html.platform-desktop .audio-btns {
+    /* Desktop menus : haut-droite (évite le hub / carte) */
+    html.platform-desktop:not(.play-ui) .audio-btns {
       left: auto;
       right: 20px;
       top: 20px;
       bottom: auto;
+      flex-direction: row;
+      gap: 8px;
+      transform: none;
+      z-index: 70;
+      pointer-events: auto;
+    }
+    /* Desktop en jeu : bas-gauche, juste au-dessus de la radio */
+    html.platform-desktop.play-ui .audio-btns {
+      left: max(14px, env(safe-area-inset-left));
+      right: auto;
+      top: auto;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px);
       flex-direction: row;
       gap: 8px;
       transform: none;
@@ -2632,6 +2644,12 @@
       min-width: 52px;
       font-size: 8px;
       pointer-events: auto;
+    }
+    html.platform-desktop.play-ui .btn-mute {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      font-size: 7.5px;
     }
 
     /* Desktop accueil : colonne gauche plus compacte + scroll si besoin */
@@ -3890,9 +3908,13 @@
       box-shadow: 0 0 12px rgba(80, 255, 140, 0.45);
       transition: transform 0.18s ease-out;
     }
+    /* Desktop : collée sous la jauge jetpack (gy = H-48) */
     html.platform-desktop.play-ui .hp-bar {
       top: auto;
-      bottom: max(18px, env(safe-area-inset-bottom) + 14px);
+      bottom: calc(
+        var(--game-canvas-bottom, 0px)
+        + var(--game-h, 540px) * 8 / 540
+      );
     }
     html.phone-portrait.play-ui .hp-bar,
     html.phone-landscape.play-ui .hp-bar {
@@ -7357,6 +7379,8 @@ on</button>
   flecheImg.src = "assets/flecheskin.png";
   const jetpackImg = new Image();
   jetpackImg.src = "assets/jetpack.png";
+  const scooterImg = new Image();
+  scooterImg.src = "assets/scooter.png";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
   let levelProps = [];
   /** Métro aérien (800–900 m) */
@@ -8299,6 +8323,7 @@ on</button>
     _px: 0, _py: 0,
     coyoteTimer: 0,
     jumpBufferTimer: 0,
+    onScooter: false,
   };
 
   let platforms = [];
@@ -8594,6 +8619,7 @@ on</button>
       jetAwaitRelease: false,
       coyoteTimer: 0,
       jumpBufferTimer: 0,
+      onScooter: false,
     });
 
     /*
@@ -8855,6 +8881,44 @@ on</button>
         h: fh,
         facing: -1, // regarde la table (à gauche)
       });
+    }
+
+    // —— Scooters 50cc (×5) posés sur plateformes flottantes ——
+    {
+      const floats = platforms.filter((p) => p.type === "float" && p.w >= 90);
+      const SW = 56;
+      const SH = 48;
+      const nWant = 5;
+      if (floats.length > 0) {
+        for (let i = 0; i < nWant; i++) {
+          const idx = Math.min(
+            floats.length - 1,
+            Math.floor(((i + 0.5) / nWant) * floats.length)
+          );
+          // Évite deux scooters sur la même plateforme si possible
+          let p = floats[idx];
+          for (let k = 0; k < floats.length; k++) {
+            const cand = floats[(idx + k) % floats.length];
+            const busy = collectibles.some(
+              (c) => c.specialKind === "scooter" && c.platRef === cand
+            );
+            if (!busy) { p = cand; break; }
+          }
+          const offX = Math.max(4, (p.w - SW) * 0.5);
+          collectibles.push({
+            x: p.x + offX,
+            y: p.y - SH,
+            w: SW,
+            h: SH,
+            taken: false,
+            bob: 0,
+            special: false,
+            specialKind: "scooter",
+            platRef: p,
+            platOffX: offX,
+          });
+        }
+      }
     }
 
     // Easter egg — 320 m, très haut (jetpack only) ; placeholder rond blanc
@@ -9285,6 +9349,7 @@ on</button>
         player.x += dx;
       }
     }
+    syncScooterCollectibles();
   }
 
   function resolvePlatforms() {
@@ -9384,8 +9449,20 @@ on</button>
   }
 
   function maxRunSpeed() {
-    const base = hasShoes() ? MAX_RUN_SHOES : MAX_RUN;
+    let base = hasShoes() ? MAX_RUN_SHOES : MAX_RUN;
+    if (player.onScooter) base *= 1.15; // Scooter 50cc : +15 %
     return isAdmin() ? base * ADMIN_SPEED_MUL : base;
+  }
+
+  /** Suit les plateformes flottantes pour les scooters au sol */
+  function syncScooterCollectibles() {
+    for (let i = 0; i < collectibles.length; i++) {
+      const c = collectibles[i];
+      if (c.taken || c.specialKind !== "scooter" || !c.platRef) continue;
+      const p = c.platRef;
+      c.x = p.x + (c.platOffX != null ? c.platOffX : Math.max(4, (p.w - c.w) * 0.5));
+      c.y = p.y - c.h;
+    }
   }
 
   function updatePlayer(dt) {
@@ -9683,13 +9760,28 @@ on</button>
       dustTimer = 0;
     }
 
+    syncScooterCollectibles();
     for (const c of collectibles) {
       if (c.taken) continue;
-      const bobAmp = c.routeOrb ? 7 : 6;
+      const isScooter = c.specialKind === "scooter";
+      const bobAmp = isScooter ? 0 : (c.routeOrb ? 7 : 6);
       const bobSpd = c.routeOrb ? 2.1 : 2.6;
-      const cy = c.y + Math.sin(time * bobSpd + c.bob) * bobAmp;
+      const cy = c.y + (bobAmp ? Math.sin(time * bobSpd + c.bob) * bobAmp : 0);
       if (aabb(player, { x: c.x, y: cy, w: c.w, h: c.h })) {
         c.taken = true;
+        if (isScooter) {
+          player.onScooter = true;
+          AudioFX.power();
+          addTrauma(0.1);
+          floatText(c.x + c.w * 0.5, cy - 8, "SCOOTER !", {
+            color: "#ff5a5a", size: 15, life: 1.0,
+          });
+          burst(c.x + c.w * 0.5, cy + c.h * 0.5, {
+            n: 14, ring: true, speed: 110, life: 0.4, gravity: 40,
+            color: "#ff4040", size: 2, glow: true,
+          });
+          continue;
+        }
         if (c.egg) {
           player.heavyChain = true;
           player.chainMsgT = 5.5;
@@ -9772,7 +9864,21 @@ on</button>
         AudioFX.oi();
         player.copKillTimer = 0;
 
-        if (player.rocketArmor > 0) {
+        if (player.onScooter) {
+          // Scooter détruit : CRS renversé, pas de perte de PV
+          player.onScooter = false;
+          stompCop(hit);
+          player.invuln = Math.max(player.invuln || 0, 0.9);
+          addTrauma(0.42);
+          flashScreen("rgba(255,80,60,0.55)");
+          floatText(player.x + player.w * 0.5, player.y - 12, "SCOOTER HS", {
+            color: "#ff6b5a", size: 14, life: 0.95,
+          });
+          burst(player.x + player.w * 0.5, player.y + player.h * 0.6, {
+            n: 18, speed: 140, life: 0.4, gravity: 80,
+            color: "#ff4040", size: 3, glow: true,
+          });
+        } else if (player.rocketArmor > 0) {
           // Bouclier : absorbe + pousse à travers pour passer
           player.rocketArmor = 0;
           player.invuln = 0.7;
@@ -12274,8 +12380,16 @@ on</button>
   }
 
   function drawCollectibles() {
+    syncScooterCollectibles();
     for (const c of collectibles) {
       if (c.taken) continue;
+      if (c.specialKind === "scooter") {
+        const cx = sx(c.x);
+        if (cx < -80 || cx > W + 80) continue;
+        const cy = sy(c.y);
+        drawScooterSprite(cx + c.w * 0.5, cy + c.h, c.w, c.h, 1);
+        continue;
+      }
       if (c.egg) {
         const cx = sx(c.x);
         if (cx < -24 || cx > W + 24) continue;
@@ -12297,6 +12411,30 @@ on</button>
       if (c.special) drawPinkCamPickFlame(cx, cy, c.w);
       drawCamembert(cx, cy, c.special);
     }
+  }
+
+  /**
+   * Scooter PNG (face à droite). facing < 0 → miroir horizontal.
+   * Ancré au centre bas (roues au sol).
+   */
+  function drawScooterSprite(anchorX, feetY, sw, sh, facing) {
+    const w = sw || 72;
+    const h = sh || 56;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(anchorX, feetY);
+    if (facing < 0) ctx.scale(-1, 1);
+    if (scooterImg.complete && scooterImg.naturalWidth > 0) {
+      ctx.drawImage(scooterImg, -w * 0.5, -h + 2, w, h);
+    } else {
+      // Fallback pixel si image pas prête
+      fr(-w * 0.4, -h * 0.55, w * 0.75, h * 0.35, "#e02020");
+      fr(-w * 0.15, -h * 0.7, w * 0.35, h * 0.18, "#101018");
+      fr(-w * 0.38, -10, 10, 10, "#181818");
+      fr(w * 0.18, -10, 10, 10, "#181818");
+    }
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
   }
 
   function copAlertAmt(t) {
@@ -12744,11 +12882,23 @@ on</button>
     const pinkAura = player.rocketArmor > 0;
     const lean = player.dodgeLean || 0;
     const spinning = (player.spinT || 0) > 0;
+    const onScooter = !!player.onScooter;
 
     // Course fluide (remplace les frames discrètes)
-    const runBounce = moving ? Math.abs(Math.sin(player.runPhase * 2)) : 0;
-    const legSwing = moving ? Math.sin(player.runPhase) : 0;
+    const runBounce = (!onScooter && moving) ? Math.abs(Math.sin(player.runPhase * 2)) : 0;
+    const legSwing = (!onScooter && moving) ? Math.sin(player.runPhase) : 0;
     const torsoOffsetY = Math.round(runBounce * 2);
+
+    // Scooter derrière / sous le perso (roues aux pieds)
+    if (onScooter) {
+      drawScooterSprite(
+        px + player.w * 0.5,
+        py + player.h + 2,
+        78,
+        60,
+        f
+      );
+    }
 
     // Aura derrière le perso (gros halo qui charge)
     if (pinkAura) drawPinkCamembertAura(px, py, player.w, player.h);
@@ -12775,6 +12925,9 @@ on</button>
     if (spinning) {
       // Boule style Sonic pendant le salto
       legL = -6; legR = -6; bodyBob = 1; arm = -5;
+    } else if (onScooter) {
+      // Assis sur la selle
+      legL = -4; legR = -3; bodyBob = 3; arm = -2;
     } else if (lean > 0.15) {
       legL = -2; legR = 3; bodyBob = -1; arm = -4 - lean * 2;
     } else if (inAir) {
@@ -13375,12 +13528,36 @@ on</button>
     if (threatZoom < 1.0005 && targetZ <= 1) threatZoom = 1;
   }
 
+  /** Petit cœur pixel vert (logo vie, sous l’icône jetpack) */
+  function drawHpHeartIcon(x, y, s) {
+    const c0 = "#1a3a24";
+    const c1 = "#2ecc71";
+    const c2 = "#7CFFB2";
+    // Forme cœur 7×6 en cases
+    const cells = [
+      [1, 0], [2, 0], [4, 0], [5, 0],
+      [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1],
+      [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2],
+      [1, 3], [2, 3], [3, 3], [4, 3], [5, 3],
+      [2, 4], [3, 4], [4, 4],
+      [3, 5],
+    ];
+    for (let i = 0; i < cells.length; i++) {
+      const cx = cells[i][0];
+      const cy = cells[i][1];
+      const col = (cx === 1 && cy === 1) || (cx === 2 && cy === 1) ? c2
+        : (cy >= 4 ? c0 : c1);
+      fr(x + cx * s, y + cy * s, s, s, col);
+    }
+  }
+
   function drawJetFuelGauge() {
     if (!runJetActive || state !== "play") return;
     const gw = 168;
     const gh = 18; // un peu plus haute
     const gx = (W - gw) / 2;
-    const gy = H - 56; // remontée sur l’UI
+    // Un peu plus bas pour rapprocher la barre verte (HP) juste en dessous
+    const gy = H - 48;
     const fuel = Math.max(0, Math.min(1, player.jetFuel / JET_FUEL_MAX));
     // Mini icône jetpack à gauche de la jauge
     if (jetpackImg.complete && jetpackImg.naturalWidth > 0) {
@@ -13390,6 +13567,8 @@ on</button>
       ctx.restore();
       ctx.imageSmoothingEnabled = false;
     }
+    // Cœur vert (vie) sous le logo jetpack
+    drawHpHeartIcon(gx - 24, gy + 20, 2);
     fr(gx - 2, gy - 2, gw + 4, gh + 4, "rgba(0,0,0,0.6)");
     fr(gx, gy, gw, gh, "#0e141c");
     fr(gx + 1, gy + 1, gw - 2, 2, "rgba(255,255,255,0.08)");
