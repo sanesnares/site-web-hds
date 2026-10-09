@@ -7451,6 +7451,18 @@ on</button>
       if (k === "Escape") { e.preventDefault(); closeShop(); }
       return;
     }
+    // Intro cinématique : n’importe quelle touche lance la course (phase await)
+    if (state === "intro_cinematic") {
+      if (k === "Escape" || k === "p" || k === "P") {
+        e.preventDefault();
+        return;
+      }
+      if (typeof isIntroAwaiting === "function" && isIntroAwaiting()) {
+        e.preventDefault();
+        finishIntroCinematic();
+      }
+      return;
+    }
     if (k === "p" || k === "P" || k === "Escape") {
       e.preventDefault();
       togglePause();
@@ -7626,7 +7638,17 @@ on</button>
   }
 
   function onTouchStart(e) {
-    if (state !== "play" || paused) return;
+    if (paused) return;
+    if (state === "intro_cinematic") {
+      if (el.shop && !el.shop.classList.contains("hidden")) return;
+      AudioFX.unlock();
+      if (typeof isIntroAwaiting === "function" && isIntroAwaiting()) {
+        e.preventDefault();
+        finishIntroCinematic();
+      }
+      return;
+    }
+    if (state !== "play") return;
     if (el.shop && !el.shop.classList.contains("hidden")) return;
     AudioFX.unlock();
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -7684,7 +7706,7 @@ on</button>
 
   // Empêche le scroll / zoom page pendant la partie (iOS) — pas en pause (hub / menus)
   document.addEventListener("touchmove", (e) => {
-    if (state === "play" && !paused && el.touch && el.touch.classList.contains("visible")) {
+    if ((state === "play" || state === "intro_cinematic") && !paused && el.touch && el.touch.classList.contains("visible")) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -7728,8 +7750,8 @@ on</button>
     let isPaused = false;
     let isEnd = false;
     try {
-      playing = state === "play";
-      isPaused = !!(playing && paused);
+      playing = state === "play" || state === "intro_cinematic";
+      isPaused = !!(state === "play" && paused);
       isEnd = state === "dead" || state === "win";
     } catch (_) {}
     root.classList.toggle("play-ui", playing);
@@ -8880,19 +8902,28 @@ on</button>
    */
   let cine = null;
 
-  /** Intro caméra après Jouer : courte, contrôles très tôt */
-  const INTRO_CAM_DUR = 1.25;
-  const INTRO_CONTROL_AT = 0.48; // joueur libre ~0,5 s
+  /**
+   * Intro cinématique (état `intro_cinematic`) avant PLAY :
+   * approach → smash mur → burst briques/alarme → runout → await input.
+   */
   const INTRO_SPAWN_X = 100;
-  let introCam = null; // null | { t, startX, startZ, endZ, fromX, toX, unlocked }
-  let spawnNoBlinkT = 0; // anti-clignotement juste après spawn
+  const INTRO_WALL_X = 48;
+  const INTRO_WALL_W = 58;
+  const INTRO_WALL_H = 210;
+  let introCine = null;
+  let spawnNoBlinkT = 0;
 
   function isIntroCam() {
-    return !!introCam;
+    return state === "intro_cinematic" && !!introCine;
   }
 
   function isIntroLocked() {
-    return !!(introCam && !introCam.unlocked);
+    // Toute la cinématique + l’attente d’input : pas de contrôle gameplay
+    return isIntroCam();
+  }
+
+  function isIntroAwaiting() {
+    return isIntroCam() && introCine.phase === "await";
   }
 
   function isCinematic() {
@@ -8913,110 +8944,308 @@ on</button>
     return 1 - x * x * x * x * x;
   }
 
-  function beginIntroCam() {
-    const fromX = -36;
-    introCam = {
+  function spawnIntroBricks(cx, cy) {
+    const colors = ["#3e4650", "#485058", "#363e48", "#424a54", "#5c6470", "#2e343c", "#6a727c", "#323840"];
+    for (let i = 0; i < 32; i++) {
+      const p = getFreeParticle();
+      const ang = -0.2 + Math.random() * 1.1;
+      const sp = 70 + Math.random() * 200;
+      p.x = cx + (Math.random() - 0.35) * 46;
+      p.y = cy + (Math.random() - 0.5) * 90;
+      p.vx = Math.cos(ang) * sp;
+      p.vy = Math.sin(ang) * sp - 40 - Math.random() * 160;
+      p.life = 0.75 + Math.random() * 0.65;
+      p.max = p.life;
+      p.size = 3 + ((Math.random() * 5) | 0);
+      p.color = colors[(Math.random() * colors.length) | 0];
+      p.gravity = 560;
+      p.glow = false;
+    }
+  }
+
+  function beginIntroCinematic() {
+    introCine = {
       t: 0,
-      startX: 8,
-      startZ: 0.9,
-      endZ: 1,
-      fromX,
-      toX: INTRO_SPAWN_X,
-      unlocked: false,
+      phase: "approach",
+      phaseT: 0,
+      wallX: INTRO_WALL_X,
+      wallW: INTRO_WALL_W,
+      wallH: INTRO_WALL_H,
+      holeOpen: 0,
+      smashed: false,
+      alarmPulse: 0,
+      zoom: 1.14,
     };
-    player.x = fromX;
+    player.x = INTRO_WALL_X - 34;
     player.y = GROUND_Y - player.h;
     player.vx = 0;
     player.vy = 0;
-    player.facing = -1; // regarde derrière lui en arrivant
-    player.moving = true;
+    player.facing = 1;
+    player.moving = false;
     player.onGround = true;
     player.runFrame = 0;
     player.runTimer = 0;
     player.runPhase = 0;
     player.invuln = 0;
-    spawnNoBlinkT = 2.2;
-    camX = introCam.startX;
+    spawnNoBlinkT = 3.2;
+    camX = 0;
     camY = 0;
     threatZoom = 1;
-    try { AudioFX.setIntroFade(0.35); } catch (_) {}
+    try { AudioFX.setIntroFade(0.22); } catch (_) {}
   }
 
-  function unlockIntroControls() {
-    if (!introCam || introCam.unlocked) return;
-    introCam.unlocked = true;
-    player.x = introCam.toX;
+  /** Alias compat — l’ancien flux introCam appelle la cinématique mur */
+  function beginIntroCam() {
+    beginIntroCinematic();
+  }
+
+  function finishIntroCinematic() {
+    if (!introCine || introCine.phase !== "await") return false;
+    introCine = null;
+    state = "play";
+    player.x = INTRO_SPAWN_X;
     player.y = GROUND_Y - player.h;
     player.vx = 0;
     player.vy = 0;
+    player.facing = 1;
     player.moving = false;
-    player.facing = 1; // prêt à courir vers la droite
-    player.runFrame = 0;
+    player.runPhase = 0;
     player.invuln = 0;
-    spawnNoBlinkT = Math.max(spawnNoBlinkT, 1.4);
+    spawnNoBlinkT = Math.max(spawnNoBlinkT, 1.0);
+    try { AudioFX.setIntroFade(1); } catch (_) {}
+    if (el.btnPause) {
+      el.btnPause.classList.add("visible");
+      el.btnPause.textContent = "❚❚";
+      el.btnPause.setAttribute("aria-label", "Pause");
+    }
+    if (el.minimap) el.minimap.classList.add("visible");
+    if (isTouch() && el.touch) {
+      el.touch.classList.add("visible");
+      showTouchGuide();
+    }
+    keys.left = keys.right = keys.jump = keys.action = false;
+    keys.jumpPressed = keys.actionPressed = false;
+    syncPhoneLayoutClass();
+    return true;
   }
 
-  function updateIntroCam(dt) {
-    if (!introCam) return;
-    introCam.t += dt;
-    const raw = Math.min(1, introCam.t / INTRO_CAM_DUR);
-    const uCam = smootherstep(raw);
+  function updateIntroCinematic(dt) {
+    if (!introCine) return;
+    const ic = introCine;
+    ic.t += dt;
+    ic.phaseT += dt;
 
-    if (!introCam.unlocked) {
-      const uEnter = easeOutQuint(Math.min(1, introCam.t / INTRO_CONTROL_AT));
-      player.x = introCam.fromX + (introCam.toX - introCam.fromX) * uEnter;
+    const followCam = (lerp) => {
+      const targetX = Math.max(0, player.x - W * 0.30);
+      camX += (targetX - camX) * (1 - Math.exp(-(lerp || 6) * dt));
+      camY += (0 - camY) * Math.min(1, 5 * dt);
+    };
+
+    if (ic.phase === "approach") {
+      // Contre le mur, charge courte
+      player.facing = 1;
+      player.moving = true;
+      player.onGround = true;
       player.y = GROUND_Y - player.h;
       player.vx = 0;
       player.vy = 0;
-      player.onGround = true;
-      player.facing = -1;
-      player.moving = uEnter < 0.98;
-      if (player.moving) {
-        advanceRunPhase(player, dt * 12);
-        player.dreadLift = 0.4 + Math.abs(Math.sin(player.runPhase * 2)) * 0.35;
-        player.dreadSwing = Math.sin(player.runPhase) * 1.6;
-      } else {
-        player.runFrame = 0;
-        player.runPhase = 0;
-        player.dreadLift *= 0.9;
-        player.dreadSwing *= 0.9;
+      const shake = Math.sin(ic.phaseT * 28) * 2.2;
+      player.x = ic.wallX - 32 + shake;
+      advanceRunPhase(player, dt * 11);
+      player.dreadLift = 0.5;
+      player.dreadSwing = Math.sin(player.runPhase) * 1.2;
+      followCam(4);
+      ic.zoom += (1.12 - ic.zoom) * (1 - Math.exp(-3 * dt));
+      if (ic.phaseT >= 0.4) {
+        ic.phase = "smash";
+        ic.phaseT = 0;
       }
-
-      const endX = Math.max(0, player.x - W * CAM_FOCUS_X);
-      // Pan accéléré pour arriver près du cadrage jeu dès le unlock
-      const uPan = easeOutQuint(Math.min(1, introCam.t / INTRO_CONTROL_AT));
-      camX = introCam.startX + (endX - introCam.startX) * uPan;
-      camY += (0 - camY) * Math.min(1, 6 * dt);
-
-      if (introCam.t >= INTRO_CONTROL_AT) unlockIntroControls();
-    } else {
-      // Contrôles libres : caméra suit le joueur, zoom/musique continuent
-      // Caméra Look-Ahead : on décale la vue selon la vitesse actuelle
-      const maxSpd = Math.max(1, maxRunSpeed());
-      const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
-      // On ajoute jusqu'à 14% de champ de vision supplémentaire à l'avant
-      const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
-
-      const targetX = Math.max(0, player.x - W * dynamicFocusX);
-      camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * dt));
-      const targetY = Math.min(0, player.y - H * 0.52);
-      camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * dt));
+    } else if (ic.phase === "smash") {
+      if (!ic.smashed) {
+        ic.smashed = true;
+        spawnIntroBricks(ic.wallX + ic.wallW * 0.55, GROUND_Y - ic.wallH * 0.45);
+        addTrauma(0.5);
+        flashScreen("rgba(255,100,70,0.4)");
+        try { AudioFX.impact(); } catch (_) {}
+      }
+      ic.holeOpen = Math.min(1, ic.phaseT / 0.18);
+      ic.alarmPulse = Math.min(1, ic.phaseT / 0.15);
+      const u = easeOutQuint(Math.min(1, ic.phaseT / 0.48));
+      player.x = ic.wallX - 8 + u * 95;
+      player.y = GROUND_Y - player.h;
+      player.facing = 1;
+      player.moving = true;
+      player.onGround = true;
+      player.vx = 0;
+      player.vy = 0;
+      advanceRunPhase(player, dt * 16);
+      player.dreadLift = 0.6 + Math.abs(Math.sin(player.runPhase * 2)) * 0.4;
+      player.dreadSwing = Math.sin(player.runPhase) * 2;
+      followCam(9);
+      ic.zoom += (1.06 - ic.zoom) * (1 - Math.exp(-5 * dt));
+      if (ic.phaseT >= 0.52) {
+        ic.phase = "burst";
+        ic.phaseT = 0;
+      }
+    } else if (ic.phase === "burst") {
+      ic.holeOpen = 1;
+      ic.alarmPulse = 0.55 + Math.sin(ic.t * 16) * 0.45;
+      player.facing = 1;
+      player.moving = true;
+      player.onGround = true;
+      player.y = GROUND_Y - player.h;
+      player.x = Math.min(INTRO_SPAWN_X, player.x + 210 * dt);
+      player.vx = 0;
+      player.vy = 0;
+      advanceRunPhase(player, dt * 14);
+      followCam(7);
+      // Léger dézoom pour cadrer la scène
+      ic.zoom += (1.0 - ic.zoom) * (1 - Math.exp(-2.8 * dt));
+      if (ic.phaseT >= 0.9) {
+        ic.phase = "runout";
+        ic.phaseT = 0;
+      }
+    } else if (ic.phase === "runout") {
+      ic.holeOpen = 1;
+      ic.alarmPulse = 0.45 + Math.sin(ic.t * 14) * 0.35;
+      player.x = INTRO_SPAWN_X;
+      player.y = GROUND_Y - player.h;
+      player.facing = 1;
+      player.moving = true;
+      player.onGround = true;
+      player.vx = 0;
+      player.vy = 0;
+      advanceRunPhase(player, dt * 12);
+      followCam(5);
+      ic.zoom += (1.0 - ic.zoom) * (1 - Math.exp(-3.5 * dt));
+      if (ic.phaseT >= 0.55) {
+        ic.phase = "await";
+        ic.phaseT = 0;
+        player.moving = false;
+        player.runPhase = 0;
+        player.runFrame = 0;
+        try { AudioFX.setIntroFade(1); } catch (_) {}
+      }
+    } else if (ic.phase === "await") {
+      ic.holeOpen = 1;
+      ic.alarmPulse = Math.max(0, ic.alarmPulse - dt * 0.65);
+      player.x = INTRO_SPAWN_X;
+      player.y = GROUND_Y - player.h;
+      player.facing = 1;
+      player.moving = false;
+      player.vx = 0;
+      player.vy = 0;
+      player.runPhase = 0;
+      followCam(4);
+      ic.zoom = 1;
     }
 
-    try { AudioFX.setIntroFade(uCam); } catch (_) {}
+    try {
+      const fadeU = Math.min(1, ic.t / 2.4);
+      AudioFX.setIntroFade(0.22 + fadeU * 0.78);
+    } catch (_) {}
+  }
 
-    if (raw >= 1) {
-      if (!introCam.unlocked) unlockIntroControls();
-      try { AudioFX.setIntroFade(1); } catch (_) {}
-      introCam = null;
-    }
+  /** Compat ancien nom */
+  function updateIntroCam(dt) {
+    updateIntroCinematic(dt);
   }
 
   function introCamZoom() {
-    if (!introCam) return 1;
-    const u = smootherstep(Math.min(1, introCam.t / INTRO_CAM_DUR));
-    const z = introCam.startZ + (introCam.endZ - introCam.startZ) * easeOutQuint(u);
-    return z;
+    if (!introCine) return 1;
+    return introCine.zoom || 1;
+  }
+
+  function drawIntroBreakBuilding() {
+    if (!introCine) return;
+    const ic = introCine;
+    const px = Math.floor(sx(ic.wallX));
+    const groundSy = Math.floor(sy(GROUND_Y));
+    const top = groundSy - ic.wallH;
+    const ww = ic.wallW;
+    if (px > W + 40 || px + ww < -40) return;
+
+    // Façade bâtiment (pierres style sol)
+    const tones = ["#3a424c", "#485058", "#323840", "#424a54"];
+    fr(px - 4, top - 8, ww + 10, ic.wallH + 10, "#121820");
+    for (let row = 0; row < 14; row++) {
+      const ry = top + row * 15;
+      const stagger = (row % 2) * 7;
+      for (let col = -1; col < 5; col++) {
+        const rx = px + stagger + col * 14;
+        if (rx + 12 < px || rx > px + ww) continue;
+        fr(rx, ry, 12, 13, tones[(row + col + 4) % 4]);
+        fr(rx, ry, 12, 2, "#5a6270");
+        fr(rx + 11, ry, 1, 13, "#222830");
+      }
+    }
+    // Corniche
+    fr(px - 6, top - 10, ww + 14, 8, "#5c6470");
+    fr(px - 6, top - 10, ww + 14, 2, "#7a828c");
+
+    // Ouverture cassée + intérieur sombre
+    const holeH = Math.floor(ic.wallH * 0.72 * Math.max(0.15, ic.holeOpen));
+    const holeW = Math.floor((ww - 10) * Math.max(0.2, ic.holeOpen));
+    const hx = px + ((ww - holeW) / 2) | 0;
+    const hy = groundSy - holeH - 4;
+    if (ic.holeOpen > 0.05) {
+      fr(hx, hy, holeW, holeH, "#080c12");
+      // Contour irrégulier
+      fr(hx - 2, hy + 4, 3, holeH - 8, "#2a3038");
+      fr(hx + holeW - 1, hy + 6, 3, holeH - 10, "#2a3038");
+      fr(hx + 2, hy, holeW - 4, 3, "#1a2028");
+      // Alarme / gyrophare dans l’ouverture
+      if (ic.alarmPulse > 0.02) {
+        const pulse = ic.alarmPulse;
+        ctx.save();
+        ctx.globalAlpha = 0.25 + pulse * 0.55;
+        const glow = ctx.createRadialGradient(
+          hx + holeW * 0.5, hy + holeH * 0.35, 2,
+          hx + holeW * 0.5, hy + holeH * 0.35, holeW * 0.7
+        );
+        glow.addColorStop(0, "rgba(255,70,40,0.95)");
+        glow.addColorStop(0.45, "rgba(255,120,40,0.45)");
+        glow.addColorStop(1, "rgba(255,40,20,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(hx - 4, hy - 4, holeW + 8, holeH + 8);
+        // Voyant
+        fr(hx + holeW * 0.5 - 4, hy + 10, 8, 6, pulse > 0.55 ? "#ff5030" : "#a02818");
+        fr(hx + holeW * 0.5 - 3, hy + 11, 6, 2, pulse > 0.55 ? "#ffe0a0" : "#603020");
+        ctx.restore();
+      }
+      // Débris au sol
+      fr(hx - 6, groundSy - 6, 5, 4, "#3e4650");
+      fr(hx + holeW + 2, groundSy - 5, 6, 3, "#485058");
+      fr(hx + 8, groundSy - 4, 4, 3, "#2e343c");
+    }
+  }
+
+  function drawIntroStartPrompt() {
+    if (!isIntroAwaiting()) return;
+    const blink = 0.55 + Math.sin(time * 4.2) * 0.45;
+    const mobile = (() => {
+      try { return document.documentElement.classList.contains("platform-phone"); }
+      catch (_) { return false; }
+    })();
+    const msg = mobile
+      ? "Joystick / Toucher pour commencer"
+      : "Joystick / Touche pour commencer";
+    ctx.save();
+    ctx.globalAlpha = blink;
+    ctx.font = "700 13px Orbitron, Sora, sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const pad = 14;
+    const tw = ctx.measureText(msg).width;
+    const bx = pad;
+    const by = H - pad - 18;
+    fr(bx - 8, by - 12, tw + 16, 24, "rgba(4,10,18,0.72)");
+    ctx.strokeStyle = "rgba(61,196,255,0.35)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx - 8, by - 12, tw + 16, 24);
+    ctx.fillStyle = "#e8f0f8";
+    ctx.fillText(msg, bx, by);
+    ctx.restore();
   }
 
   function findBossObstacle() {
@@ -9126,7 +9355,7 @@ on</button>
     trapDoor = null;
     metro = null;
     cine = null;
-    introCam = null;
+    introCine = null;
     spawnNoBlinkT = 0;
     camCount = 0;
     maxReachX = 0;
@@ -10135,7 +10364,9 @@ on</button>
         resolvePlatforms();
         player.invuln = Math.max(player.invuln || 0, 0.4);
       }
-      maxReachX = Math.max(maxReachX, player.x + player.w);
+      if (!isIntroLocked()) {
+        maxReachX = Math.max(maxReachX, player.x + player.w);
+      }
       if (player.invuln > 0) player.invuln -= dt;
       if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - dt);
       updateCompanion(dt);
@@ -11803,7 +12034,7 @@ on</button>
     refreshShopButtons();
     refreshLoadoutUI();
     syncMuteBtn();
-    introCam = null;
+    introCine = null;
     try { AudioFX.setIntroFade(1); } catch (_) {}
     ensureMenuMusic();
     AudioFX.updateRunMusic(false, false, true);
@@ -14320,6 +14551,7 @@ on</button>
     drawParallaxNear();
     drawWater();
     drawGround();
+    drawIntroBreakBuilding();
     drawFinish();
     drawMetro();
     drawLevelProps();
@@ -14341,6 +14573,7 @@ on</button>
       drawStatusHints();
       drawJetFuelGauge();
     }
+    drawIntroStartPrompt();
     drawScreenFx();
   }
 
@@ -14394,35 +14627,16 @@ on</button>
     const gdt = dt * GAME_SPEED;
     time += gdt;
 
-    if (state === "play" && !paused) {
+    if (state === "intro_cinematic" && !paused) {
       if (!hitStopFreeze) updatePlayer(gdt);
-      // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
-      if (state === "play") {
-        if (isIntroCam()) {
-          updateIntroCam(gdt);
-        } else {
-          // Caméra Look-Ahead : décalage selon la vitesse (clamp anti-spike)
-          const maxSpd = Math.max(1, maxRunSpeed());
-          const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
-          const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
-          const targetX = Math.max(0, player.x - W * dynamicFocusX);
-          camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
-          if (camX < 0) camX = 0;
-          // Caméra verticale : suit le perso (ciel / jetpack), ancrée au sol sinon
-          const targetY = Math.min(0, player.y - H * 0.52);
-          camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * gdt));
-        }
+      if (state === "intro_cinematic") {
+        updateIntroCinematic(gdt);
         updateHud();
         updateSnow(gdt);
-        AudioFX.setProgress(meters());
+        AudioFX.setProgress(0);
         AudioFX.tickSync(realDt);
         AudioFX.updateRunMusic(true, false);
-        // Vent / ville : seulement à la course
-        AudioFX.updateCityAmbience(
-          !isIntroLocked() && player.onGround && player.moving && Math.abs(player.vx) > 15
-        );
-        // Sirène police à 20 s de jeu
-        if (!isIntroLocked()) AudioFX.tickPlaySiren(gdt);
+        AudioFX.updateCityAmbience(false);
         AudioFX.updateCopsAudio(player, obstacles);
         try {
           AudioFX.updateCompanionVoices(
@@ -14431,7 +14645,41 @@ on</button>
           );
         } catch (_) {}
         updateCopsAnim(gdt);
-        if (!isIntroLocked()) updateThreatZoom(gdt);
+      }
+    } else if (state === "play" && !paused) {
+      if (!hitStopFreeze) updatePlayer(gdt);
+      // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
+      if (state === "play") {
+        // Caméra Look-Ahead : décalage selon la vitesse (clamp anti-spike)
+        const maxSpd = Math.max(1, maxRunSpeed());
+        const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
+        const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
+        const targetX = Math.max(0, player.x - W * dynamicFocusX);
+        camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
+        if (camX < 0) camX = 0;
+        // Caméra verticale : suit le perso (ciel / jetpack), ancrée au sol sinon
+        const targetY = Math.min(0, player.y - H * 0.52);
+        camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * gdt));
+        updateHud();
+        updateSnow(gdt);
+        AudioFX.setProgress(meters());
+        AudioFX.tickSync(realDt);
+        AudioFX.updateRunMusic(true, false);
+        // Vent / ville : seulement à la course
+        AudioFX.updateCityAmbience(
+          player.onGround && player.moving && Math.abs(player.vx) > 15
+        );
+        // Sirène police à 20 s de jeu
+        AudioFX.tickPlaySiren(gdt);
+        AudioFX.updateCopsAudio(player, obstacles);
+        try {
+          AudioFX.updateCompanionVoices(
+            player.x + player.w * 0.5,
+            companion.x + companion.w * 0.5
+          );
+        } catch (_) {}
+        updateCopsAnim(gdt);
+        updateThreatZoom(gdt);
       }
     } else if (state === "play" && paused) {
       AudioFX.tickSync(realDt);
@@ -14695,7 +14943,7 @@ on</button>
   function enterPlayState() {
     resetLevel();
     AudioFX.stopAllFlicVoices();
-    state = "play";
+    state = "intro_cinematic";
     lastTs = 0;
     paused = false;
     // 1 charge engagée si équipement activé avec uses restantes
@@ -14720,16 +14968,18 @@ on</button>
     el.end.classList.add("hidden");
     if (el.endOffers) el.endOffers.classList.add("hidden");
     if (el.pause) el.pause.classList.add("hidden");
+    // Pause / minimap après la cinématique (handover PLAY)
     if (el.btnPause) {
-      el.btnPause.classList.add("visible");
+      el.btnPause.classList.remove("visible");
       el.btnPause.textContent = "❚❚";
       el.btnPause.setAttribute("aria-label", "Pause");
     }
-    if (el.minimap) el.minimap.classList.add("visible");
+    if (el.minimap) el.minimap.classList.remove("visible");
     if (el.shop) el.shop.classList.add("hidden");
+    // Stick visible pour « press to start », guide après handover
     if (isTouch() && el.touch) {
       el.touch.classList.add("visible");
-      showTouchGuide();
+      hideTouchGuide(true);
     }
     keys.left = keys.right = keys.jump = keys.action = false;
     keys.jumpPressed = keys.actionPressed = false;
@@ -14740,12 +14990,12 @@ on</button>
     if (jumpFlash) jumpFlash.classList.remove("show");
     syncPhoneLayoutClass();
     resize();
-    beginIntroCam(); // fade musique à 0 avant le gate run
+    beginIntroCinematic();
     AudioFX.updateRunMusic(true, false);
   }
 
   async function startGame() {
-    if (state === "play" || launching) return;
+    if (state === "play" || state === "intro_cinematic" || launching) return;
     const fromMenu = state === "menu" && el.start && !el.start.classList.contains("hidden");
     launching = true;
     const launchId = (startGame._id = (startGame._id || 0) + 1);
@@ -14776,7 +15026,7 @@ on</button>
         AudioFX.armMusic();
         AudioFX.startMusic("run").then(() => {
           if (launchId !== startGame._id) return;
-          if (state === "play") AudioFX.updateRunMusic(true, false);
+          if (state === "play" || state === "intro_cinematic") AudioFX.updateRunMusic(true, false);
         }).catch(() => {});
       }
       try { AudioFX.start(); } catch (_) {}
@@ -15191,6 +15441,14 @@ on</button>
       startGame();
     }
   });
+
+  // Clic / tap hors UI → lance la course en fin de cinématique
+  window.addEventListener("pointerdown", (e) => {
+    if (state !== "intro_cinematic" || !isIntroAwaiting()) return;
+    const t = e.target;
+    if (t && t.closest && t.closest("button, a, input, #shop, #pause, #admin-pin")) return;
+    finishIntroCinematic();
+  }, { passive: true });
 
   updateHudBest();
   refreshShopButtons();
