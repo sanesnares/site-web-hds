@@ -3,7 +3,25 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/assets/(minia\\.(png|jpg)|apple-touch-icon\\.png|icon-.*\\.png)",
+      "source": "/assets/minia.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/minia.jpg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/apple-touch-icon.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/icon-:size.png",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, must-revalidate" }
       ]
