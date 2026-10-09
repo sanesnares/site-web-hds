@@ -3,11 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#060b14" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Course arcade La Défense → Berges de Seine. Évite les CRS, ramasse les camemberts, décolle au jetpack." />
+  <meta name="application-name" content="Rush 92" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Rush 92" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="format-detection" content="telephone=no" />
   <title>Hauts-de-Seine Rush 92</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/minia.png" type="image/png" sizes="any" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" sizes="192x192" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Hauts-de-Seine Rush 92" />
+  <meta property="og:description" content="Course arcade La Défense → Berges de Seine." />
+  <meta property="og:image" content="assets/minia.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Hauts-de-Seine Rush 92" />
+  <meta name="twitter:image" content="assets/minia.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -741,6 +757,84 @@
       color: var(--camembert);
     }
 
+    /* Aide PWA — après la 2e mort (mobile) */
+    #pwa-tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 12px;
+      width: min(320px, 92vw);
+      padding: 10px 12px 10px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(61, 196, 255, 0.35);
+      background:
+        linear-gradient(145deg, rgba(20, 40, 64, 0.95), rgba(8, 14, 24, 0.92));
+      box-shadow: 0 0 18px rgba(61, 196, 255, 0.18);
+      text-align: left;
+      touch-action: manipulation;
+      animation: ui-rise 0.55s var(--ease-out) 0.7s backwards;
+    }
+    #pwa-tip.hidden { display: none !important; }
+    #pwa-tip .pwa-tip-ico {
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      image-rendering: auto;
+      pointer-events: none;
+    }
+    #pwa-tip .pwa-tip-body {
+      flex: 1;
+      min-width: 0;
+    }
+    #pwa-tip .pwa-tip-title {
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--neon-b);
+      margin-bottom: 4px;
+    }
+    #pwa-tip .pwa-tip-steps {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #d8e2ec;
+    }
+    #pwa-tip .pwa-tip-steps strong {
+      color: #fff;
+      font-weight: 700;
+    }
+    #pwa-tip .pwa-tip-close {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      margin: -4px -4px 0 0;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #9aa8b8;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #pwa-tip .pwa-tip-close:active {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+    html.platform-desktop #pwa-tip { display: none !important; }
+    html.phone-landscape #pwa-tip {
+      width: min(300px, 88vw);
+      padding: 8px 10px;
+      margin-top: 8px;
+    }
+    html.phone-landscape #pwa-tip .pwa-tip-steps { font-size: 11px; }
+
     #end-offers {
       display: flex;
       flex-direction: column;
@@ -977,9 +1071,12 @@
     .btn.btn-admin-off.hidden { display: none !important; }
 
     .admin-pin {
-      position: relative;
-      z-index: 40;
-      margin: 10px auto 0;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 80;
+      margin: 0;
       width: min(260px, 90vw);
       padding: 14px 14px 12px;
       border-radius: 12px;
@@ -998,26 +1095,13 @@
     }
     .admin-pin.hidden { display: none !important; }
     .admin-pin-label {
-      margin: 0 0 6px;
+      margin: 0 0 10px;
       text-align: center;
       font-family: var(--font-arcade);
       font-size: 11px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: rgba(220, 235, 255, 0.75);
-    }
-    .admin-pin-code {
-      margin: 0 0 10px;
-      text-align: center;
-      font-family: var(--font-arcade);
-      font-size: clamp(28px, 8vw, 36px);
-      font-weight: 800;
-      letter-spacing: 0.28em;
-      color: #ffe566;
-      text-shadow:
-        0 0 12px rgba(255, 229, 102, 0.55),
-        0 2px 0 #061018;
-      line-height: 1.1;
     }
     .admin-pin-dots {
       display: flex;
@@ -1065,54 +1149,36 @@
     }
     .admin-pin-pad .admin-pin-x { color: rgba(255, 180, 190, 0.9); }
 
-    /* Code admin affiché en grand sur la pause */
-    .pause-admin-code {
+    /* Pause : Admin ON / OFF */
+    .pause-admin {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
       margin: 14px auto 6px;
-      padding: 12px 18px 14px;
       width: min(320px, 92vw);
-      border-radius: 14px;
-      background: rgba(6, 12, 22, 0.88);
-      border: 1px solid rgba(61, 196, 255, 0.4);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      text-align: center;
       pointer-events: auto;
       touch-action: manipulation;
     }
-    .pause-admin-code__label {
-      display: block;
-      font-family: var(--font-arcade);
-      font-size: 11px;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: rgba(180, 210, 240, 0.75);
-      margin-bottom: 6px;
-    }
-    .pause-admin-code__digits {
-      display: block;
-      font-family: var(--font-arcade);
-      font-size: clamp(36px, 11vw, 52px);
-      font-weight: 800;
-      letter-spacing: 0.32em;
-      color: #ffe566;
-      text-shadow:
-        0 0 16px rgba(255, 229, 102, 0.55),
-        0 3px 0 #061018;
-      line-height: 1.05;
-      padding-left: 0.32em; /* compense letter-spacing visuel */
-    }
-    .pause-admin-code__hint {
-      display: block;
-      margin-top: 6px;
-      font-size: 11px;
+    .pause-admin .btn {
+      min-width: 72px;
+      font-size: 10px;
+      padding: 6px 10px;
       letter-spacing: 0.06em;
-      color: rgba(200, 220, 240, 0.65);
     }
-    html.phone-portrait .pause-admin-code {
-      margin-top: 10px;
-      padding: 10px 14px 12px;
+    .pause-admin .btn.is-active {
+      box-shadow: 0 0 10px rgba(61, 196, 255, 0.4);
+      border-color: rgba(61, 196, 255, 0.65);
     }
-    html.phone-portrait .pause-admin-code__digits {
-      font-size: clamp(32px, 12vw, 44px);
+    html.phone-portrait .pause-admin {
+      margin-top: 8px;
+      gap: 6px;
+      width: min(240px, 80vw);
+    }
+    html.phone-portrait .pause-admin .btn {
+      min-width: 68px;
+      font-size: 9px;
+      padding: 5px 8px;
     }
     html.phone-portrait .admin-pin {
       width: min(280px, 92vw);
@@ -1577,10 +1643,18 @@
       height: 72px;
     }
 
-    #shop-jetpack .shop-ico svg {
-      width: 62px;
-      height: 62px;
-      filter: drop-shadow(0 0 8px rgba(80, 200, 255, 0.7));
+    #shop-jetpack .shop-ico img.jetpack-ico {
+      position: relative;
+      z-index: 1;
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 0 8px rgba(80, 200, 255, 0.55));
+      animation: jp-hover 1.6s ease-in-out infinite;
+      transform-origin: 50% 40%;
+      pointer-events: none;
     }
 
     #shop-jetpack {
@@ -1592,14 +1666,14 @@
       transform-origin: 50% 80%;
     }
 
-    .shop-ico .jp-body {
-      animation: jp-hover 1.6s ease-in-out infinite;
-      transform-origin: 50% 40%;
-    }
-
-    .shop-ico .jp-flame {
-      animation: jp-flame 0.28s ease-in-out infinite alternate;
-      transform-origin: 50% 0%;
+    .loadout-ico img.jetpack-ico {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      pointer-events: none;
     }
 
     @keyframes shop-spin {
@@ -1624,8 +1698,7 @@
     @media (prefers-reduced-motion: reduce) {
       .shop-ico::before,
       .shop-ico .shoe-glow,
-      .shop-ico .jp-body,
-      .shop-ico .jp-flame { animation: none !important; }
+      #shop-jetpack .shop-ico img.jetpack-ico { animation: none !important; }
     }
 
     .shop-item h3 {
@@ -1905,10 +1978,6 @@
     html.phone-portrait #start-screen .wait-ui {
       touch-action: pan-y;
     }
-    html.phone-portrait #start-screen .admin-pin {
-      margin-bottom: 18px;
-    }
-
     /* Pause / boutique : centrés dans la zone safe */
     html.phone-portrait #pause-screen {
       justify-content: safe center;
@@ -1916,7 +1985,7 @@
       padding:
         max(28px, calc(env(safe-area-inset-top, 0px) + 22px))
         16px
-        max(32px, calc(env(safe-area-inset-bottom, 0px) + 28px));
+        max(88px, calc(env(safe-area-inset-bottom, 0px) + 72px)); /* place radio bas */
       box-sizing: border-box;
       overflow-x: hidden;
       overflow-y: auto;
@@ -1933,7 +2002,7 @@
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(56px, calc(env(safe-area-inset-top, 0px) + 58px))
+        max(72px, calc(env(safe-area-inset-top, 0px) + 68px)) /* sous mute + radio */
         16px
         max(18px, calc(env(safe-area-inset-bottom, 0px) + 14px));
       box-sizing: border-box;
@@ -1993,37 +2062,78 @@
     }
     html.phone-portrait .wait-stage {
       grid-template-columns: 1fr;
-      grid-template-rows: minmax(0, 1fr) minmax(20vh, 26vh);
+      grid-template-rows: minmax(0, 1fr) minmax(14vh, 18vh);
       align-content: stretch;
       gap: 2px;
       padding:
-        max(6px, env(safe-area-inset-top))
+        max(44px, calc(env(safe-area-inset-top) + 36px)) /* sous radio + mute */
         10px
-        max(8px, env(safe-area-inset-bottom));
+        max(12px, env(safe-area-inset-bottom));
     }
     html.phone-portrait .wait-map {
-      max-height: 26vh;
+      max-height: 18vh;
       height: 100%;
+    }
+    html.phone-portrait .wait-ui {
+      gap: 0;
+      padding: 2px 4px 8px;
+      max-width: 100%;
     }
     html.phone-portrait .wait-ui .neon-title,
     html.phone-portrait .wait-ui h1 {
-      font-size: clamp(26px, 8.5vw, 38px);
+      font-size: clamp(24px, 7.5vw, 34px);
+      margin-bottom: 2px;
     }
-    html.phone-portrait .wait-rush { font-size: clamp(13px, 3.8vw, 17px); margin: 2px 0 6px; }
+    html.phone-portrait .wait-rush { font-size: clamp(12px, 3.4vw, 15px); margin: 0 0 4px; }
+    html.phone-portrait .wait-ui .subtitle {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
     html.phone-portrait .feat-list {
-      grid-template-columns: 1fr 1fr;
-      width: min(340px, 94vw);
-      gap: 6px;
-      margin: 8px auto;
+      display: none; /* gagne de la place vs Listenify / boutons */
     }
-    html.phone-portrait .feat-list li {
+    html.phone-portrait .chds-badge { width: min(88px, 28vw); margin-bottom: 2px; }
+    html.phone-portrait .wait-ui .btn-row {
+      gap: 8px;
+      margin: 6px 0 4px;
+      width: min(300px, 92vw);
+    }
+    html.phone-portrait .wait-ui .btn {
+      font-size: 13px;
+      padding: 10px 14px;
+      min-height: 42px;
+    }
+    html.phone-portrait .wait-ui .btn.btn-listenify,
+    html.phone-portrait .wait-ui .btn.btn-admin,
+    html.phone-portrait .wait-ui .btn.btn-admin-off,
+    html.phone-portrait .wait-ui .btn.btn-shop {
+      margin-top: 0;
+    }
+    html.phone-portrait .wait-ui .btn.btn-listenify {
       font-size: 11px;
-      padding: 6px 8px;
+      padding: 8px 12px;
+      min-height: 38px;
+      letter-spacing: 0.06em;
     }
-    html.phone-portrait .chds-badge { width: min(110px, 34vw); }
+    html.phone-portrait #pause-screen .btn.btn-listenify {
+      margin-top: 6px;
+      font-size: 12px;
+      padding: 8px 12px;
+      min-height: 40px;
+    }
+    html.phone-portrait #pause-screen .neon-title {
+      font-size: clamp(28px, 8vw, 40px);
+      margin-bottom: 4px;
+    }
+    html.phone-portrait .item-loadout {
+      margin: 4px auto 2px;
+      width: min(280px, 90vw);
+    }
     html.phone-portrait .overlay .hint {
-      font-size: 11px;
-      margin-top: 8px;
+      font-size: 10px;
+      margin-top: 6px;
+      opacity: 0.75;
+      max-width: 92vw;
     }
     html.phone-portrait .overlay .hint .hint-kb { display: none; }
 
@@ -2119,10 +2229,24 @@
       padding:
         max(12px, calc(env(safe-area-inset-top, 0px) + 10px))
         max(16px, calc(env(safe-area-inset-right, 0px) + 12px))
-        max(12px, calc(env(safe-area-inset-bottom, 0px) + 10px))
+        max(56px, calc(env(safe-area-inset-bottom, 0px) + 48px))
         max(16px, calc(env(safe-area-inset-left, 0px) + 12px));
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+    }
+    html.phone-landscape #pause-screen .ysemo-hub {
+      display: none !important;
+    }
+    html.phone-landscape .ysemo-hub {
+      width: min(160px, 36vw);
+      margin: 4px auto 2px;
+    }
+    html.phone-landscape .ysemo-hub__hero { height: 40px; }
+    html.phone-landscape .ysemo-hub__name { font-size: 16px; }
+    html.phone-landscape .ysemo-hub__latest,
+    html.phone-landscape .ysemo-hub__rows,
+    html.phone-landscape .ysemo-hub__foot {
+      display: none;
     }
     html.phone-landscape .audio-btns { z-index: 80; }
 
@@ -2345,25 +2469,87 @@
       .now-radio__track,
       .now-radio__live::before { animation: none !important; }
     }
-    html.phone-portrait .now-radio {
+    /* Mobile accueil : radio compacte haut-gauche (ne recouvre pas les menus) */
+    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio {
       left: max(10px, env(safe-area-inset-left));
       right: auto;
-      top: max(12px, env(safe-area-inset-top));
+      top: max(10px, env(safe-area-inset-top));
       bottom: auto;
-      width: min(168px, 48vw);
-      padding: 5px 10px 5px 5px;
-      gap: 8px;
+      width: min(148px, 44vw);
+      padding: 4px 8px 4px 4px;
+      gap: 6px;
+      z-index: 45;
     }
-    html.phone-portrait .now-radio__disc {
+    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__disc {
+      width: 28px;
+      height: 28px;
+    }
+    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__track { font-size: 9px; }
+    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__live { font-size: 6px; }
+    /* En jeu : bas gauche, au-dessus des sticks */
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio {
+      left: max(10px, env(safe-area-inset-left));
+      right: auto;
+      top: auto;
+      bottom: max(12px, calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + 10px));
+      width: min(200px, 62vw);
+      padding: 6px 12px 6px 6px;
+      gap: 8px;
+      z-index: 58;
+    }
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__disc {
+      width: 38px;
+      height: 38px;
+    }
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__track { font-size: 11px; }
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__live { font-size: 7px; letter-spacing: 0.16em; }
+    /* Menu fin : haut-gauche, sous les mutes */
+    html.phone-portrait.end-ui .now-radio {
+      top: max(64px, calc(env(safe-area-inset-top) + 56px));
+      bottom: auto;
+      width: min(150px, 44vw);
+      padding: 4px 8px 4px 4px;
+      gap: 6px;
+      z-index: 45;
+    }
+    html.phone-portrait.end-ui .now-radio__disc {
+      width: 28px;
+      height: 28px;
+    }
+    html.phone-portrait.end-ui .now-radio__track { font-size: 9px; }
+    html.phone-portrait.end-ui .now-radio__live { font-size: 6px; }
+    /* Pause : bas, compacte pour ne pas manger Admin / boutons */
+    html.phone-portrait.pause-ui .now-radio {
+      top: auto;
+      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
+      width: min(168px, 52vw);
+      padding: 5px 10px 5px 5px;
+      gap: 7px;
+      z-index: 45;
+    }
+    html.phone-portrait.pause-ui .now-radio__disc {
       width: 30px;
       height: 30px;
     }
-    html.phone-portrait .now-radio__track { font-size: 10px; }
-    html.phone-portrait .now-radio__live { font-size: 7px; }
+    html.phone-portrait.pause-ui .now-radio__track { font-size: 10px; }
+    html.phone-portrait.pause-ui .now-radio__live { font-size: 7px; }
     html.phone-landscape .now-radio {
       left: max(10px, env(safe-area-inset-left));
+      top: auto;
       bottom: max(10px, env(safe-area-inset-bottom));
-      width: min(180px, 36vw);
+      width: min(220px, 42vw);
+      padding: 7px 12px 7px 7px;
+    }
+    html.phone-landscape .now-radio__disc {
+      width: 40px;
+      height: 40px;
+    }
+    html.phone-landscape.end-ui .now-radio {
+      /* fin paysage : reste en bas à gauche (déjà le cas) */
+      bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    html.phone-landscape.pause-ui .now-radio {
+      bottom: max(10px, env(safe-area-inset-bottom));
     }
     html.platform-desktop .now-radio {
       bottom: max(78px, calc(env(safe-area-inset-bottom) + 70px));
@@ -2564,6 +2750,55 @@
 
     #loadout-jetpack .loadout-ico {
       box-shadow: 0 0 10px rgba(61, 196, 255, 0.4);
+    }
+
+    /* Stock camemberts (banque) dans Équipements */
+    .loadout-bank {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--white);
+      padding: 8px 8px;
+      margin-bottom: 6px;
+      border-radius: 4px;
+      background: rgba(236, 200, 120, 0.06);
+      border: 1px solid rgba(236, 200, 120, 0.22);
+      pointer-events: none;
+      user-select: none;
+    }
+    .loadout-bank .loadout-ico {
+      box-shadow: 0 0 10px rgba(236, 200, 120, 0.4);
+      background: rgba(20, 14, 8, 0.45);
+    }
+    .loadout-bank .loadout-ico img.cam-ico {
+      display: block;
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      image-rendering: auto;
+      pointer-events: none;
+    }
+    .loadout-bank .loadout-name {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .loadout-bank .loadout-name strong {
+      font-family: var(--font-arcade);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(255, 229, 102, 0.35);
+    }
+    .loadout-bank .loadout-name strong.bump {
+      animation: hud-bump 0.45s var(--ease-spring);
     }
 
     .loadout-tog .loadout-name {
@@ -2958,21 +3193,50 @@
       width: min(260px, 86vw);
     }
 
+    /* Mobile : hub Listenify compact (accueil) */
     html.phone-portrait .ysemo-hub {
-      width: min(220px, 78vw);
-      margin: 8px auto 2px;
-      border-radius: 14px;
+      width: min(168px, 62vw);
+      margin: 6px auto 2px;
+      border-radius: 12px;
     }
-    html.phone-portrait .ysemo-hub__hero { height: 84px; }
-    html.phone-portrait .ysemo-hub__name { font-size: 32px; top: 6px; }
-    html.phone-portrait .ysemo-hub__latest img { width: 38px; height: 38px; }
-    html.phone-portrait .ysemo-hub__rows { display: none; }
+    html.phone-portrait .ysemo-hub__hero { height: 44px; }
+    html.phone-portrait .ysemo-hub__name {
+      font-size: 18px;
+      top: 4px;
+      left: 8px;
+      letter-spacing: 0.08em;
+    }
+    html.phone-portrait .ysemo-hub__open {
+      font-size: 8px;
+      bottom: 4px;
+      right: 6px;
+      letter-spacing: 0.1em;
+    }
+    html.phone-portrait .ysemo-hub__actions {
+      padding: 6px 6px 4px;
+      gap: 4px;
+    }
+    html.phone-portrait .ysemo-hub__cta {
+      font-size: 9px;
+      padding: 6px 8px;
+      letter-spacing: 0.08em;
+      border-radius: 8px;
+    }
+    html.phone-portrait .ysemo-hub__cta-play {
+      width: 10px;
+      height: 10px;
+    }
+    html.phone-portrait .ysemo-hub__latest {
+      display: none; /* trop haut sur petit écran — bouton Listenify suffit */
+    }
+    html.phone-portrait .ysemo-hub__rows,
+    html.phone-portrait .ysemo-hub__foot {
+      display: none;
+    }
+    /* Pause : pas de gros hub — le bouton Listenify du menu suffit */
     html.phone-portrait #pause-screen .ysemo-hub {
-      width: min(210px, 72vw);
-      margin-top: 10px;
+      display: none !important;
     }
-    html.phone-portrait #pause-screen .ysemo-hub__hero { height: 72px; }
-    html.phone-portrait #pause-screen .ysemo-hub__actions { padding-top: 8px; }
 
     /* ============================================================
        UX v2 — AAA polish layer (glass, tactile buttons, motion)
@@ -3615,10 +3879,9 @@ on</button>
         <button class="btn" id="btn-pause-yes" type="button">Oui</button>
         <button class="btn btn-pause-home" id="btn-pause-no" type="button">Non</button>
       </div>
-      <div class="pause-admin-code" id="pause-admin-code" aria-label="Code admin à taper">
-        <span class="pause-admin-code__label">Code admin</span>
-        <strong class="pause-admin-code__digits">4 8 8 9</strong>
-        <span class="pause-admin-code__hint">À saisir sur l’accueil → Admin</span>
+      <div class="pause-admin" id="pause-admin" aria-label="Mode admin">
+        <button class="btn btn-admin" id="btn-pause-admin-on" type="button">Admin ON</button>
+        <button class="btn btn-admin-off" id="btn-pause-admin-off" type="button">Admin OFF</button>
       </div>
       <aside class="ysemo-hub" aria-label="Ysemo sur Listenify">
         <a class="ysemo-hub__hero" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">
@@ -3684,6 +3947,15 @@ on</button>
           </ul>
           <div class="item-loadout hidden" id="item-loadout">
             <p class="loadout-label">Équipements</p>
+            <div class="loadout-bank" id="loadout-bank" aria-label="Stock camemberts">
+              <span class="loadout-ico" aria-hidden="true">
+                <img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" width="44" height="44" draggable="false" decoding="async" />
+              </span>
+              <span class="loadout-name">
+                <span>Camemberts</span>
+                <strong id="loadout-bank-n">0</strong>
+              </span>
+            </div>
             <label class="loadout-tog hidden" id="loadout-shoes">
               <span class="loadout-ico loadout-ico-emoji" aria-hidden="true">👟👟</span>
               <span class="loadout-name" id="loadout-shoes-name">Air Max ×0</span>
@@ -3691,11 +3963,7 @@ on</button>
             </label>
             <label class="loadout-tog hidden" id="loadout-jetpack">
               <span class="loadout-ico" aria-hidden="true">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="16" y="10" width="16" height="20" rx="3" fill="#1a3048" stroke="#3dc4ff" stroke-width="2"/>
-                  <path d="M20 31c1 4 2.5 7 4 9 1.5-2 3-5 4-9z" fill="#ff6040"/>
-                  <path d="M22 31c.8 3 1.5 5 2 7 .5-2 1.2-4 2-7z" fill="#ffe566"/>
-                </svg>
+                <img class="jetpack-ico" src="assets/jetpack.png" alt="" width="64" height="64" draggable="false" decoding="async" />
               </span>
               <span class="loadout-name" id="loadout-jetpack-name">Jetpack ×0</span>
               <input type="checkbox" id="tog-jetpack" checked />
@@ -3705,7 +3973,7 @@ on</button>
             <button class="btn" id="btn-start" type="button">Jouer</button>
             <a class="btn btn-listenify" id="btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
             <button class="btn btn-shop hidden" id="btn-shop" type="button">Boutique</button>
-            <button class="btn btn-admin" id="btn-admin" type="button">Admin</button>
+            <button class="btn btn-admin" id="btn-admin" type="button">Admin ON</button>
             <button class="btn btn-admin-off hidden" id="btn-admin-off" type="button">Admin OFF</button>
           </div>
           <aside class="ysemo-hub" aria-label="Ysemo sur Listenify">
@@ -3744,27 +4012,6 @@ on</button>
               <a href="https://www.listenify.app/" target="_blank" rel="noopener noreferrer" aria-label="Listenify — page d’accueil">Listenify</a>
             </div>
           </aside>
-          <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
-            <p class="admin-pin-label">Code admin</p>
-            <p class="admin-pin-code" id="admin-pin-code" aria-hidden="true">4 8 8 9</p>
-            <div class="admin-pin-dots" id="admin-pin-dots" aria-hidden="true">
-              <i></i><i></i><i></i><i></i>
-            </div>
-            <div class="admin-pin-pad" id="admin-pin-pad">
-              <button type="button" data-d="1">1</button>
-              <button type="button" data-d="2">2</button>
-              <button type="button" data-d="3">3</button>
-              <button type="button" data-d="4">4</button>
-              <button type="button" data-d="5">5</button>
-              <button type="button" data-d="6">6</button>
-              <button type="button" data-d="7">7</button>
-              <button type="button" data-d="8">8</button>
-              <button type="button" data-d="9">9</button>
-              <button type="button" data-d="x" class="admin-pin-x">⌫</button>
-              <button type="button" data-d="0">0</button>
-              <button type="button" data-d="ok" class="admin-pin-ok">OK</button>
-            </div>
-          </div>
           <p class="hint">
             <span class="hint-kb">Clavier : ← → · Espace (Saut / Jetpack) · E / X (Action)<br /></span>
             Mobile : Stick gauche · Saut / Jetpack à droite · Camemberts roses = bouclier
@@ -3883,20 +4130,7 @@ on</button>
           </div>
           <div class="shop-item" data-item="jetpack" id="shop-jetpack">
             <div class="shop-ico" aria-hidden="true">
-              <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <g class="jp-body">
-                  <rect x="14" y="6" width="20" height="26" rx="3.5" fill="#1a3048" stroke="#3dc4ff" stroke-width="1.6"/>
-                  <rect x="18" y="10" width="12" height="10" rx="1.5" fill="#2a5080"/>
-                  <rect x="19" y="12" width="10" height="4" fill="#7ae0ff" opacity="0.95"/>
-                  <path d="M10 14h5v16h-5c-2 0-3-1.2-3-2.5v-11c0-1.3 1-2.5 3-2.5z" fill="#243848" stroke="#5ad0ff" stroke-width="1.2"/>
-                  <path d="M33 14h5c2 0 3 1.2 3 2.5v11c0 1.3-1 2.5-3 2.5h-5z" fill="#243848" stroke="#5ad0ff" stroke-width="1.2"/>
-                  <circle cx="24" cy="24" r="2.6" fill="#ffe566" stroke="#ffb020" stroke-width="0.9"/>
-                </g>
-                <g class="jp-flame">
-                  <path d="M18 33c1.2 5 3.2 10 6 12.5 2.8-2.5 4.8-7.5 6-12.5z" fill="#ff6040"/>
-                  <path d="M21 33c1 4 2 8 3 10.5 1-2.5 2-6.5 3-10.5z" fill="#ffe566"/>
-                </g>
-              </svg>
+              <img class="jetpack-ico" src="assets/jetpack.png" alt="" width="128" height="128" draggable="false" decoding="async" />
             </div>
             <div>
               <h3>Jetpack</h3>
@@ -3974,6 +4208,35 @@ on</button>
           <button class="btn-end-buy" id="btn-end-buy-shoes" type="button">Racheter Air Max ●3</button>
         </div>
         <p class="end-remain hidden" id="end-remain"></p>
+        <aside id="pwa-tip" class="hidden" role="note" aria-label="Installer l’app">
+          <img class="pwa-tip-ico" src="assets/apple-touch-icon.png" width="40" height="40" alt="" draggable="false" />
+          <div class="pwa-tip-body">
+            <p class="pwa-tip-title">Sur l’écran d’accueil</p>
+            <p class="pwa-tip-steps" id="pwa-tip-steps"></p>
+          </div>
+          <button type="button" class="pwa-tip-close" id="pwa-tip-close" aria-label="Fermer">×</button>
+        </aside>
+      </div>
+    </div>
+
+    <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
+      <p class="admin-pin-label">Code admin</p>
+      <div class="admin-pin-dots" id="admin-pin-dots" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+      </div>
+      <div class="admin-pin-pad" id="admin-pin-pad">
+        <button type="button" data-d="1">1</button>
+        <button type="button" data-d="2">2</button>
+        <button type="button" data-d="3">3</button>
+        <button type="button" data-d="4">4</button>
+        <button type="button" data-d="5">5</button>
+        <button type="button" data-d="6">6</button>
+        <button type="button" data-d="7">7</button>
+        <button type="button" data-d="8">8</button>
+        <button type="button" data-d="9">9</button>
+        <button type="button" data-d="x" class="admin-pin-x">⌫</button>
+        <button type="button" data-d="0">0</button>
+        <button type="button" data-d="ok" class="admin-pin-ok">OK</button>
       </div>
     </div>
 
@@ -4039,6 +4302,8 @@ on</button>
   const SEINE_START_X = 775 * PX_PER_METER; // fondu neige → quais
   const STORAGE_KEY = "hds92_best_v4";
   const CATCH_KEY = "hds92_police_catches";
+  const DEATH_KEY = "hds92_deaths";
+  const PWA_TIP_KEY = "hds92_pwa_tip_dismissed";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
   const ADMIN_PIN = "4889";
@@ -4137,6 +4402,9 @@ on</button>
     endStats: document.getElementById("end-stats"),
     endRemain: document.getElementById("end-remain"),
     endOffers: document.getElementById("end-offers"),
+    pwaTip: document.getElementById("pwa-tip"),
+    pwaTipSteps: document.getElementById("pwa-tip-steps"),
+    pwaTipClose: document.getElementById("pwa-tip-close"),
     btnEndBuyJet: document.getElementById("btn-end-buy-jet"),
     btnEndBuyShoes: document.getElementById("btn-end-buy-shoes"),
     touch: document.getElementById("touch"),
@@ -4157,11 +4425,12 @@ on</button>
   let launching = false;
   let paused = false;
 
-  /* —— Mode admin (PIN 4889) —— */
+  /* —— Mode admin (PIN via pad, jamais affiché) —— */
   let adminPinBuf = "";
   let adminPinLastT = 0;
   let adminBrandTaps = 0;
   let adminBrandTapT = 0;
+  const ADMIN_SPEED_MUL = 2.5;
 
   function syncAdminUI() {
     const on = isAdmin();
@@ -4175,11 +4444,15 @@ on</button>
       el.adminPin.classList.add("hidden");
       el.adminPin.setAttribute("aria-hidden", "true");
     }
-    const pauseCode = document.getElementById("pause-admin-code");
-    if (pauseCode) {
-      pauseCode.classList.toggle("hidden", on);
-      const hint = pauseCode.querySelector(".pause-admin-code__hint");
-      if (hint) hint.textContent = on ? "Mode admin actif" : "À saisir sur l’accueil → Admin";
+    const pauseOn = document.getElementById("btn-pause-admin-on");
+    const pauseOff = document.getElementById("btn-pause-admin-off");
+    if (pauseOn) {
+      pauseOn.classList.toggle("is-active", on);
+      pauseOn.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    if (pauseOff) {
+      pauseOff.classList.toggle("is-active", !on);
+      pauseOff.setAttribute("aria-pressed", on ? "false" : "true");
     }
     try {
       document.documentElement.classList.toggle("admin-on", on);
@@ -6869,8 +7142,16 @@ on</button>
     root.classList.toggle("phone-landscape", !!(mobile && !portrait));
 
     let playing = false;
-    try { playing = state === "play"; } catch (_) { playing = false; }
+    let isPaused = false;
+    let isEnd = false;
+    try {
+      playing = state === "play";
+      isPaused = !!(playing && paused);
+      isEnd = state === "dead" || state === "win";
+    } catch (_) {}
     root.classList.toggle("play-ui", playing);
+    root.classList.toggle("pause-ui", isPaused);
+    root.classList.toggle("end-ui", isEnd);
 
     // Pas de stick sur ordinateur
     try {
@@ -6964,6 +7245,8 @@ on</button>
   flecheImg.src = "assets/flecheskin.png";
   const metroImg = new Image();
   metroImg.src = "assets/metro-aerien.png";
+  const jetpackImg = new Image();
+  jetpackImg.src = "assets/jetpack.png";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
   let levelProps = [];
   /** Métro aérien (800–900 m) */
@@ -7254,12 +7537,27 @@ on</button>
     const togJ = document.getElementById("tog-jetpack");
     const nameS = document.getElementById("loadout-shoes-name");
     const nameJ = document.getElementById("loadout-jetpack-name");
+    const bankEl = document.getElementById("loadout-bank-n");
     const jetUses = jetUsesLeft();
     const shoeUses = shoeUsesLeft();
+    const bank = Math.max(0, meta.bank | 0);
     if (jetUses <= 0) loadout.jetpack = false;
     if (shoeUses <= 0) loadout.shoes = false;
-    const any = shoeUses > 0 || jetUses > 0;
+    // Affiche dès qu’on a une banque / un item / une partie jouée
+    const any = shoeUses > 0 || jetUses > 0 || bank > 0 || (meta.gamesPlayed | 0) >= 1;
     if (box) box.classList.toggle("hidden", !any);
+    if (bankEl) {
+      const nb = String(bank);
+      if (bankEl.textContent !== nb) {
+        const had = bankEl.textContent !== "" && bankEl.textContent !== nb;
+        bankEl.textContent = nb;
+        if (had) {
+          bankEl.classList.remove("bump");
+          void bankEl.offsetWidth;
+          bankEl.classList.add("bump");
+        }
+      }
+    }
     if (rowS) {
       rowS.classList.toggle("hidden", shoeUses <= 0);
       if (nameS) nameS.textContent = "Air Max ×" + shoeUses;
@@ -7276,12 +7574,14 @@ on</button>
     if (n <= 0) return;
     meta.bank += n;
     saveMeta(meta);
+    refreshLoadoutUI();
   }
 
   function markGamePlayed() {
     meta.gamesPlayed = (meta.gamesPlayed | 0) + 1;
     saveMeta(meta);
     refreshShopButtons();
+    refreshLoadoutUI();
   }
 
   function tryBuy(itemId) {
@@ -7710,6 +8010,62 @@ on</button>
     return n;
   }
 
+  function loadDeathCount() {
+    try { return parseInt(localStorage.getItem(DEATH_KEY) || "0", 10) || 0; }
+    catch (_) { return 0; }
+  }
+  function bumpDeathCount() {
+    const n = loadDeathCount() + 1;
+    try { localStorage.setItem(DEATH_KEY, String(n)); } catch (_) {}
+    return n;
+  }
+
+  function isPwaInstalled() {
+    try {
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+      if (window.navigator.standalone === true) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  function isIosDevice() {
+    const ua = navigator.userAgent || "";
+    return /iPhone|iPad|iPod/i.test(ua)
+      || (navigator.platform === "MacIntel" && (navigator.maxTouchPoints || 0) > 1);
+  }
+
+  function isPwaTipDismissed() {
+    try { return localStorage.getItem(PWA_TIP_KEY) === "1"; }
+    catch (_) { return false; }
+  }
+
+  function dismissPwaTip() {
+    try { localStorage.setItem(PWA_TIP_KEY, "1"); } catch (_) {}
+    if (el.pwaTip) el.pwaTip.classList.add("hidden");
+  }
+
+  /** Aide install PWA : mobile, dès la 2ᵉ mort, tant que pas installé / fermé */
+  function syncPwaTip(deathN, isWin) {
+    if (!el.pwaTip || !el.pwaTipSteps) return;
+    const show = !isWin
+      && isMobilePlatform()
+      && !isPwaInstalled()
+      && !isPwaTipDismissed()
+      && (deathN | 0) >= 2;
+    if (!show) {
+      el.pwaTip.classList.add("hidden");
+      return;
+    }
+    if (isIosDevice()) {
+      el.pwaTipSteps.innerHTML =
+        "Safari → <strong>Partager</strong> → <strong>Sur l’écran d’accueil</strong>";
+    } else {
+      el.pwaTipSteps.innerHTML =
+        "Chrome → menu <strong>⋮</strong> → <strong>Installer l’app</strong> / écran d’accueil";
+    }
+    el.pwaTip.classList.remove("hidden");
+  }
+
   let best = loadBest();
   let dustTimer = 0;
   let wasOnGround = true;
@@ -7761,13 +8117,19 @@ on</button>
    */
   let cine = null;
 
-  /** Intro caméra après Jouer : entrée perso + pan/zoom + fade musique (4 s) */
-  const INTRO_CAM_DUR = 4.2;
+  /** Intro caméra après Jouer : courte, contrôles très tôt */
+  const INTRO_CAM_DUR = 1.25;
+  const INTRO_CONTROL_AT = 0.48; // joueur libre ~0,5 s
   const INTRO_SPAWN_X = 100;
-  let introCam = null; // null | { t, startX, startZ, endZ, fromX, toX }
+  let introCam = null; // null | { t, startX, startZ, endZ, fromX, toX, unlocked }
+  let spawnNoBlinkT = 0; // anti-clignotement juste après spawn
 
   function isIntroCam() {
-    return !!(introCam && introCam.t < INTRO_CAM_DUR);
+    return !!introCam;
+  }
+
+  function isIntroLocked() {
+    return !!(introCam && !introCam.unlocked);
   }
 
   function isCinematic() {
@@ -7775,7 +8137,7 @@ on</button>
   }
 
   function isPlayerLocked() {
-    return isCinematic() || isIntroCam();
+    return isCinematic() || isIntroLocked();
   }
 
   function smootherstep(t) {
@@ -7789,14 +8151,15 @@ on</button>
   }
 
   function beginIntroCam() {
-    const fromX = -72;
+    const fromX = -36;
     introCam = {
       t: 0,
-      startX: -20,
-      startZ: 0.68,
+      startX: 8,
+      startZ: 0.9,
       endZ: 1,
       fromX,
       toX: INTRO_SPAWN_X,
+      unlocked: false,
     };
     player.x = fromX;
     player.y = GROUND_Y - player.h;
@@ -7807,56 +8170,76 @@ on</button>
     player.onGround = true;
     player.runFrame = 0;
     player.runTimer = 0;
+    player.invuln = 0;
+    spawnNoBlinkT = 2.2;
     camX = introCam.startX;
     camY = 0;
     threatZoom = 1;
-    try { AudioFX.setIntroFade(0); } catch (_) {}
+    try { AudioFX.setIntroFade(0.35); } catch (_) {}
+  }
+
+  function unlockIntroControls() {
+    if (!introCam || introCam.unlocked) return;
+    introCam.unlocked = true;
+    player.x = introCam.toX;
+    player.y = GROUND_Y - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.moving = false;
+    player.facing = 1; // prêt à courir vers la droite
+    player.runFrame = 0;
+    player.invuln = 0;
+    spawnNoBlinkT = Math.max(spawnNoBlinkT, 1.4);
   }
 
   function updateIntroCam(dt) {
     if (!introCam) return;
     introCam.t += dt;
     const raw = Math.min(1, introCam.t / INTRO_CAM_DUR);
-    // Zoom / musique : très fluide (smootherstep)
     const uCam = smootherstep(raw);
-    // Entrée perso : un peu plus tôt, ease-out
-    const uEnter = easeOutQuint(Math.min(1, raw / 0.82));
 
-    player.x = introCam.fromX + (introCam.toX - introCam.fromX) * uEnter;
-    player.y = GROUND_Y - player.h;
-    player.vx = 0;
-    player.vy = 0;
-    player.onGround = true;
-    player.facing = -1; // toujours regarder derrière pendant l’arrivée
-    player.moving = uEnter < 0.97;
-    if (player.moving) {
-      player.runTimer = (player.runTimer || 0) + dt;
-      while (player.runTimer >= 0.09) {
-        player.runTimer -= 0.09;
-        player.runFrame = (player.runFrame + 1) % 6;
+    if (!introCam.unlocked) {
+      const uEnter = easeOutQuint(Math.min(1, introCam.t / INTRO_CONTROL_AT));
+      player.x = introCam.fromX + (introCam.toX - introCam.fromX) * uEnter;
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = true;
+      player.facing = -1;
+      player.moving = uEnter < 0.98;
+      if (player.moving) {
+        player.runTimer = (player.runTimer || 0) + dt;
+        while (player.runTimer >= 0.09) {
+          player.runTimer -= 0.09;
+          player.runFrame = (player.runFrame + 1) % 6;
+        }
+        player.dreadLift = 0.4 + Math.abs(Math.sin(player.runFrame * 0.9)) * 0.35;
+        player.dreadSwing = Math.sin(player.runFrame * 1.15) * 1.6;
+      } else {
+        player.runFrame = 0;
+        player.dreadLift *= 0.9;
+        player.dreadSwing *= 0.9;
       }
-      // Légère respiration des dreads en courant
-      player.dreadLift = 0.4 + Math.abs(Math.sin(player.runFrame * 0.9)) * 0.35;
-      player.dreadSwing = Math.sin(player.runFrame * 1.15) * 1.6;
+
+      const endX = Math.max(0, player.x - W * CAM_FOCUS_X);
+      // Pan accéléré pour arriver près du cadrage jeu dès le unlock
+      const uPan = easeOutQuint(Math.min(1, introCam.t / INTRO_CONTROL_AT));
+      camX = introCam.startX + (endX - introCam.startX) * uPan;
+      camY += (0 - camY) * Math.min(1, 6 * dt);
+
+      if (introCam.t >= INTRO_CONTROL_AT) unlockIntroControls();
     } else {
-      player.runFrame = 0;
-      player.dreadLift *= 0.9;
-      player.dreadSwing *= 0.9;
+      // Contrôles libres : caméra suit le joueur, zoom/musique continuent
+      const targetX = Math.max(0, player.x - W * CAM_FOCUS_X);
+      camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * dt));
+      const targetY = Math.min(0, player.y - H * 0.52);
+      camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * dt));
     }
 
-    const focusX = player.x - W * CAM_FOCUS_X;
-    const endX = Math.max(0, focusX);
-    camX = introCam.startX + (endX - introCam.startX) * uCam;
-    camY += (0 - camY) * Math.min(1, 6 * dt);
-
-    // Musique monte avec le zoom
     try { AudioFX.setIntroFade(uCam); } catch (_) {}
 
     if (raw >= 1) {
-      player.x = introCam.toX;
-      player.moving = false;
-      player.facing = -1;
-      camX = Math.max(0, player.x - W * CAM_FOCUS_X);
+      if (!introCam.unlocked) unlockIntroControls();
       try { AudioFX.setIntroFade(1); } catch (_) {}
       introCam = null;
     }
@@ -7865,7 +8248,6 @@ on</button>
   function introCamZoom() {
     if (!introCam) return 1;
     const u = smootherstep(Math.min(1, introCam.t / INTRO_CAM_DUR));
-    // Ease-out supplémentaire sur le zoom pour un finish plus doux
     const z = introCam.startZ + (introCam.endZ - introCam.startZ) * easeOutQuint(u);
     return z;
   }
@@ -7975,6 +8357,7 @@ on</button>
     metro = null;
     cine = null;
     introCam = null;
+    spawnNoBlinkT = 0;
     camCount = 0;
     maxReachX = 0;
     camX = 0;
@@ -8363,23 +8746,24 @@ on</button>
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
 
+  /** Hitbox visuelle / stomp — déjà plus étroite que le sprite */
   function copHitbox(o) {
     if (o.kind === "boss") {
-      return { x: o.x + 6, y: o.y + 8, w: o.w - 12, h: o.h - 12 };
+      return { x: o.x + 18, y: o.y + 14, w: o.w - 36, h: o.h - 28 };
     }
     if (o.kind === "angry") {
       return {
-        x: o.x + Math.floor(o.w * 0.18),
-        y: o.y + Math.floor(o.h * 0.12),
-        w: Math.max(10, Math.floor(o.w * 0.58)),
-        h: Math.max(12, Math.floor(o.h * 0.72)),
+        x: o.x + Math.floor(o.w * 0.28),
+        y: o.y + Math.floor(o.h * 0.18),
+        w: Math.max(8, Math.floor(o.w * 0.40)),
+        h: Math.max(10, Math.floor(o.h * 0.62)),
       };
     }
     return {
-      x: o.x + Math.floor(o.w * 0.30),
-      y: o.y + Math.floor(o.h * 0.22),
-      w: Math.max(8, Math.floor(o.w * 0.40)),
-      h: Math.max(10, Math.floor(o.h * 0.58)),
+      x: o.x + Math.floor(o.w * 0.36),
+      y: o.y + Math.floor(o.h * 0.26),
+      w: Math.max(6, Math.floor(o.w * 0.28)),
+      h: Math.max(8, Math.floor(o.h * 0.50)),
     };
   }
 
@@ -8391,18 +8775,28 @@ on</button>
   }
 
   /**
-   * Hitbox corps (sans la tête) — contact mortel.
-   * Évite de tuer le joueur qui retombe clairement sur le crâne.
+   * Hitbox corps (sans la tête) — contact blessant.
+   * Encore plus serrée : les frôlements ne comptent pas.
    */
   function copBodyHitbox(o) {
     const head = copHeadBand(o);
     const hb = head.full;
+    const insetX = Math.max(2, Math.floor(hb.w * 0.18));
     return {
-      x: hb.x,
+      x: hb.x + insetX,
       y: hb.y + head.h,
-      w: hb.w,
-      h: Math.max(8, hb.h - head.h),
+      w: Math.max(4, hb.w - insetX * 2),
+      h: Math.max(6, hb.h - head.h),
     };
+  }
+
+  /** Vrai contact (pas un graze) : overlap horizontal + vertical suffisant */
+  function overlapsCopHurt(box) {
+    const ox = Math.min(player.x + player.w, box.x + box.w) - Math.max(player.x, box.x);
+    const oy = Math.min(player.y + player.h, box.y + box.h) - Math.max(player.y, box.y);
+    if (ox <= 0 || oy <= 0) return false;
+    // ~38 % largeur joueur + un peu de hauteur torse — laisse passer les rasades
+    return ox >= player.w * 0.38 && oy >= player.h * 0.20;
   }
 
   /**
@@ -8783,14 +9177,15 @@ on</button>
   }
 
   function maxRunSpeed() {
-    return hasShoes() ? MAX_RUN_SHOES : MAX_RUN;
+    const base = hasShoes() ? MAX_RUN_SHOES : MAX_RUN;
+    return isAdmin() ? base * ADMIN_SPEED_MUL : base;
   }
 
   function updatePlayer(dt) {
     updateMovingPlatforms(dt);
 
-    // Déclenche cinématique face au mur de CRS (pas pendant l’intro cam)
-    if (!cine && !isIntroCam()) {
+    // Déclenche cinématique face au mur de CRS (pas pendant le lock intro)
+    if (!cine && !isIntroLocked()) {
       const boss = findBossObstacle();
       if (boss && player.x + player.w >= boss.x - 210) {
         startBossCinematic(boss);
@@ -8799,13 +9194,14 @@ on</button>
     if (isPlayerLocked()) {
       if (isCinematic()) updateBossCinematic(dt);
       player.jetting = false;
-      if (isIntroCam()) {
+      if (isIntroLocked()) {
         // Position / anim gérées par updateIntroCam (après updatePlayer)
         player.vx = 0;
         player.vy = 0;
         player._px = player.x;
         player._py = player.y;
-        player.invuln = Math.max(player.invuln || 0, 0.35);
+        // Pas d’invuln clignotante pendant l’entrée
+        player.invuln = 0;
       } else {
         // Cinématique boss : freinage
         player.moving = false;
@@ -8827,6 +9223,7 @@ on</button>
       maxReachX = Math.max(maxReachX, player.x + player.w);
       updatePlayerHp(dt);
       if (player.invuln > 0) player.invuln -= dt;
+      if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - dt);
       updateCompanion(dt);
       keys.jumpPressed = false;
       keys.actionPressed = false;
@@ -8835,7 +9232,8 @@ on</button>
 
     const wantL = keys.left, wantR = keys.right;
     const ctrl = player.onGround ? 1 : AIR_CTRL;
-    const accel = hasShoes() ? ACCEL * 1.28 : ACCEL;
+    let accel = hasShoes() ? ACCEL * 1.28 : ACCEL;
+    if (isAdmin()) accel *= ADMIN_SPEED_MUL;
     const top = maxRunSpeed() * (player.dodgeBoostT > 0 ? 1.14 : 1);
     player.moving = false;
     player.jetting = false;
@@ -9136,16 +9534,14 @@ on</button>
       // Continue : multi-stomp si plusieurs têtes sous les pieds
     }
 
-    // Contact corps CRS : mort (hitbox sans tête si on retombe)
+    // Contact corps CRS : hitbox corps serrée + seuil d’overlap (frôler = OK)
     if (!stomped && player.invuln <= 0) {
       let hit = null;
-      const falling = player.vy > 20;
       for (let i = 0; i < obstacles.length; i++) {
         const o = obstacles[i];
         if (o._spent || o._downed) continue;
-        // En retombée : corps seulement (la tête = stomp)
-        const box = falling ? copBodyHitbox(o) : copHitbox(o);
-        if (aabb(player, box)) { hit = o; break; }
+        const box = copBodyHitbox(o);
+        if (overlapsCopHurt(box)) { hit = o; break; }
       }
       if (hit) {
         hit._alertT = Math.max(hit._alertT || 0, 1.2);
@@ -9153,9 +9549,13 @@ on</button>
         player.copKillTimer = 0;
 
         if (player.rocketArmor > 0) {
-          // Bouclier : absorbe le coup, courte invuln pour sortir du overlap
+          // Bouclier : absorbe + pousse à travers pour passer
           player.rocketArmor = 0;
-          player.invuln = 0.45;
+          player.invuln = 0.7;
+          const past = player.facing >= 0 ? 1 : -1;
+          player.vx = past * Math.max(200, Math.abs(player.vx) * 0.9);
+          player.x += past * 14;
+          player.vy = Math.min(player.vy, -120);
           AudioFX.shield();
           addTrauma(0.38);
           flashScreen("rgba(200,136,168,0.85)");
@@ -9173,7 +9573,8 @@ on</button>
 
     updatePlayerHp(dt);
     if (player.invuln > 0) player.invuln -= dt;
-    else if (hitStalactite()) {
+    if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - dt);
+    if (player.invuln <= 0 && hitStalactite()) {
       die("spike");
       return;
     }
@@ -10043,7 +10444,7 @@ on</button>
     }
   }
 
-  function prepareEndScreen(reason, dist, saved) {
+  function prepareEndScreen(reason, dist, saved, deathN) {
     const win = reason === "win";
     el.end.classList.toggle("win-mode", win);
     if (win) {
@@ -10102,6 +10503,8 @@ on</button>
       "Distance : <strong>" + dist + "</strong> m<br />" +
       "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
       "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
+
+    syncPwaTip(deathN | 0, win);
 
     // Sous Boutique : charges restantes Jetpack / Air Max
     if (el.endRemain) {
@@ -10255,6 +10658,7 @@ on</button>
       resetPauseConfirmUI();
       if (isTouch()) el.touch.classList.add("visible");
     }
+    try { syncPhoneLayoutClass(); } catch (_) {}
   }
 
   function togglePause() {
@@ -10364,18 +10768,25 @@ on</button>
       return true;
     }
     const kind = hit && hit.kind;
-    // Vie pleine : encaisse le 1er coup
+    // Vie pleine : encaisse le 1er coup — pousse À TRAVERS pour laisser passer
     if (player.hp >= PLAYER_HP_MAX - 0.01) {
       player.hp = Math.max(0, PLAYER_HP_MAX - 1);
       player.hurtFlashT = HP_HURT_FLASH;
       player.hpRegenDelay = HP_REGEN_DELAY;
-      player.invuln = Math.max(player.invuln || 0, 0.7);
-      // Léger knockback pour sortir du overlap
-      const dir = (hit && (player.x + player.w * 0.5) < (hit.x + hit.w * 0.5)) ? -1 : 1;
-      player.vx = dir * Math.max(140, Math.abs(player.vx) * 0.4);
-      player.vy = Math.min(player.vy, -180);
+      player.invuln = Math.max(player.invuln || 0, 1.15);
+      // Direction de passage : sens de course / face, pas un rebond arrière
+      let past = player.facing >= 0 ? 1 : -1;
+      if (Math.abs(player.vx) > 40) past = player.vx > 0 ? 1 : -1;
+      else if (hit) {
+        const pc = player.x + player.w * 0.5;
+        const hc = hit.x + hit.w * 0.5;
+        past = pc <= hc ? 1 : -1; // traverse le CRS
+      }
+      player.vx = past * Math.max(240, Math.abs(player.vx) * 0.95 + 80);
+      player.x += past * 18;
+      player.vy = Math.min(player.vy, -140);
       player.onGround = false;
-      addTrauma(0.42);
+      addTrauma(0.32);
       flashScreen("rgba(255,50,60,0.45)");
       floatText(player.x + player.w * 0.5, player.y - 10, "AÏE", {
         color: "#ff6b7a", size: 15, life: 0.9,
@@ -10425,9 +10836,10 @@ on</button>
     const dist = meters();
     bankCamemberts(camCount);
     markGamePlayed();
+    const deathN = win ? loadDeathCount() : bumpDeathCount();
     const saved = saveBest(dist, camCount);
     updateHudBest();
-    prepareEndScreen(reason, dist, saved);
+    prepareEndScreen(reason, dist, saved, deathN);
 
     if (win) {
       flashScreen("rgba(255,229,102,0.95)");
@@ -11945,9 +12357,44 @@ on</button>
     ctx.restore();
   }
 
+  /** Jetpack sprite (assets/jetpack.png) — dos du perso, flammes si jetting */
+  function drawPlayerJetpack(by) {
+    const s = artScale || 1;
+    // Sprite ~84×92 logique ; ancré au dos (sangles à gauche)
+    const jw = 14 * s;
+    const jh = 16 * s;
+    const jx = -5 * s;
+    const jy = (by + 12) * s;
+    if (jetpackImg.complete && jetpackImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(jetpackImg, jx, jy, jw, jh);
+      ctx.restore();
+      ctx.imageSmoothingEnabled = false;
+    } else {
+      fr(-1, by + 16, 7, 16, "#2a2a2a");
+      fr(0, by + 14, 5, 10, "#f0f0f0");
+      fr(1, by + 12, 3, 3, "#e04040");
+    }
+    if (player.jetting) {
+      const flicker = Math.sin(time * 28) * 0.5 + 0.5;
+      const fh = 4 + (flicker * 4) | 0;
+      // Tuyère principale (bas centre) + secondaire (droite)
+      fr(1, by + 27, 5, fh, "#ff6040");
+      fr(2, by + 28 + (fh * 0.35) | 0, 3, fh, "#ffe566");
+      fr(8, by + 26, 3, 3 + (flicker * 2) | 0, "#ff8040");
+      fr(9, by + 28, 2, 2 + (flicker * 3) | 0, "#fff0a0");
+    }
+  }
+
   function drawPlayer() {
-    // Clignote seulement hors admin (admin = invuln permanente)
-    if (!isAdmin() && player.invuln > 0 && ((player.invuln * 15) | 0) % 2 === 0) return;
+    // Pas de clignotement à l’intro / grace spawn ; sinon invuln post-hit
+    const suppressBlink = isIntroCam() || spawnNoBlinkT > 0 || isAdmin();
+    if (
+      !suppressBlink
+      && player.invuln > 0
+      && ((player.invuln * 12) | 0) % 2 === 0
+    ) return;
 
     const px = Math.floor(sx(player.x));
     const py = Math.floor(sy(player.y));
@@ -12021,7 +12468,7 @@ on</button>
     // Neige (~700 m) : même perso / physiques, nouveaux habits (inspi PNG)
     if (hasWinterSkinZone()) {
       drawPlayerWinterBody(by, arm, legL, legR, torsoH, waistY, nike);
-      if (player.invuln > 0.2) {
+      if (player.invuln > 0.2 && spawnNoBlinkT <= 0 && !isIntroCam()) {
         ctx.globalAlpha = 0.18 + Math.sin(time * 14) * 0.1;
         fr(8, by + 4, 16, 40, C.mag);
         ctx.globalAlpha = 1;
@@ -12076,7 +12523,7 @@ on</button>
       fr(18, by + 8, 2, 2, skinDeep);
       fr(16, by + 11, 5, 1, skinDeep);
 
-      if (player.invuln > 0.2) {
+      if (player.invuln > 0.2 && spawnNoBlinkT <= 0 && !isIntroCam()) {
         ctx.globalAlpha = 0.2 + Math.sin(time * 14) * 0.1;
         fr(11, by + 3, 12, 9, C.mag);
         ctx.globalAlpha = 1;
@@ -12097,15 +12544,8 @@ on</button>
       fr(16, by + 15, 1, 1, "#c8d0d8");
     }
 
-    if (hasJetpack()) {
-      fr(-1, by + 16, 7, 16, "#2a3848");
-      fr(0, by + 17, 5, 14, "#3a5068");
-      fr(1, by + 19, 3, 4, C.blue);
-      if (player.jetting) {
-        fr(0, by + 32, 5, 5, "#ff8040");
-        fr(1, by + 36, 3, 5, "#ffe566");
-      }
-    }
+    // Jetpack sur le dos (après le corps pour rester lisible, y compris doudoune)
+    if (hasJetpack()) drawPlayerJetpack(by);
 
     endCharDraw();
     if (poseXform) ctx.restore();
@@ -12603,6 +13043,14 @@ on</button>
     const gx = (W - gw) / 2;
     const gy = H - 56; // remontée sur l’UI
     const fuel = Math.max(0, Math.min(1, player.jetFuel / JET_FUEL_MAX));
+    // Mini icône jetpack à gauche de la jauge
+    if (jetpackImg.complete && jetpackImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(jetpackImg, gx - 28, gy - 6, 24, 24);
+      ctx.restore();
+      ctx.imageSmoothingEnabled = false;
+    }
     fr(gx - 2, gy - 2, gw + 4, gh + 4, "rgba(0,0,0,0.6)");
     fr(gx, gy, gw, gh, "#0e141c");
     fr(gx + 1, gy + 1, gw - 2, 2, "rgba(255,255,255,0.08)");
@@ -12685,11 +13133,11 @@ on</button>
     const threatZ = threatZoom > 1.001 ? threatZoom : 1;
     const viewZ = threatZ * introZ;
     if (Math.abs(viewZ - 1) > 0.002) {
-      // Zoom intro : pivot un peu vers le centre pour un cadrage plus doux
-      const ax = isIntroCam()
+      // Zoom intro : pivot fixe au lock, puis suit le perso une fois libre
+      const ax = isIntroLocked()
         ? W * 0.42
         : sx(player.x + player.w * 0.5);
-      const ay = isIntroCam()
+      const ay = isIntroLocked()
         ? H * 0.55
         : sy(player.y + player.h * 0.45);
       ctx.translate(ax, ay);
@@ -12788,10 +13236,10 @@ on</button>
         AudioFX.updateRunMusic(true, false);
         // Vent / ville : seulement à la course
         AudioFX.updateCityAmbience(
-          !isIntroCam() && player.onGround && player.moving && Math.abs(player.vx) > 15
+          !isIntroLocked() && player.onGround && player.moving && Math.abs(player.vx) > 15
         );
         // Sirène police à 20 s de jeu
-        if (!isIntroCam()) AudioFX.tickPlaySiren(gdt);
+        if (!isIntroLocked()) AudioFX.tickPlaySiren(gdt);
         AudioFX.updateCopsAudio(player, obstacles);
         try {
           AudioFX.updateCompanionVoices(
@@ -12800,7 +13248,7 @@ on</button>
           );
         } catch (_) {}
         updateCopsAnim(gdt);
-        if (!isIntroCam()) updateThreatZoom(gdt);
+        if (!isIntroLocked()) updateThreatZoom(gdt);
       }
     } else if (state === "play" && paused) {
       AudioFX.tickSync(realDt);
@@ -13127,7 +13575,8 @@ on</button>
       try { await raceTimeout(AudioFX.unlock(), 450); } catch (_) {}
       if (launchId !== startGame._id) return;
       syncMuteBtn();
-      flashScreen("rgba(61,196,255,0.7)");
+      // Flash discret (évite le clignotement violent sur mobile)
+      flashScreen(isMobilePlatform() ? "rgba(61,196,255,0.28)" : "rgba(61,196,255,0.55)");
       AudioFX.loadFlicBuffers().catch(() => {});
       AudioFX.preloadMusic();
       AudioFX.resetPlaySirenTimer();
@@ -13236,8 +13685,15 @@ on</button>
 
   document.getElementById("btn-start").addEventListener("click", startGame);
   document.getElementById("btn-retry").addEventListener("click", startGame);
+  if (el.pwaTipClose) {
+    el.pwaTipClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dismissPwaTip();
+    });
+  }
 
-  // Admin : ouvre le pad PIN (toujours visible hors mode admin)
+  // Admin ON (accueil) → pad PIN
   if (el.btnAdmin) {
     el.btnAdmin.addEventListener("click", (e) => {
       e.preventDefault();
@@ -13253,6 +13709,29 @@ on</button>
       e.stopPropagation();
       setAdminMode(false);
       try { screenText("ADMIN OFF", { color: "#9ab0c8", size: 32, y: H * 0.22, life: 1.4 }); } catch (_) {}
+    });
+  }
+  // Pause : Admin ON / OFF
+  const btnPauseAdminOn = document.getElementById("btn-pause-admin-on");
+  const btnPauseAdminOff = document.getElementById("btn-pause-admin-off");
+  if (btnPauseAdminOn) {
+    btnPauseAdminOn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isAdmin()) {
+        try { screenText("ADMIN ON", { color: "#ff8aa0", size: 28, y: H * 0.22, life: 1.1 }); } catch (_) {}
+        return;
+      }
+      openAdminPinPad();
+    });
+  }
+  if (btnPauseAdminOff) {
+    btnPauseAdminOff.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isAdmin()) return;
+      setAdminMode(false);
+      try { screenText("ADMIN OFF", { color: "#9ab0c8", size: 28, y: H * 0.22, life: 1.1 }); } catch (_) {}
     });
   }
   // Pad PIN — pointerup (mobile/PC), click en secours sans double-tap
@@ -13525,6 +14004,13 @@ on</button>
   syncMuteBtn();
   resetLevel();
   requestAnimationFrame(frame);
+
+  // PWA — installable iOS (Partager → Sur l’écran d’accueil) + Android
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
 })();
   </script>
 </body>
