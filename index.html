@@ -3,26 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#060b14" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#060b14" />
   <meta name="color-scheme" content="dark" />
   <meta name="description" content="Course arcade La Défense → Berges de Seine. Évite les CRS, ramasse les camemberts, décolle au jetpack." />
-  <meta name="application-name" content="Rush 92" />
+  <meta name="application-name" content="92 Rush" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Rush 92" />
+  <meta name="apple-mobile-web-app-title" content="92 Rush" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="format-detection" content="telephone=no" />
-  <title>Hauts-de-Seine Rush 92</title>
-  <link rel="manifest" href="manifest.webmanifest" />
+  <title>92 Rush — Hauts-de-Seine</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192" />
   <link rel="icon" href="assets/minia.png" type="image/png" sizes="any" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" sizes="192x192" />
+  <meta name="msapplication-TileColor" content="#060b14" />
+  <meta name="msapplication-TileImage" content="assets/icon-192.png" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Hauts-de-Seine Rush 92" />
+  <meta property="og:title" content="92 Rush" />
   <meta property="og:description" content="Course arcade La Défense → Berges de Seine." />
   <meta property="og:image" content="assets/minia.png" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Hauts-de-Seine Rush 92" />
+  <meta name="twitter:title" content="92 Rush" />
   <meta name="twitter:image" content="assets/minia.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -757,22 +761,27 @@
       color: var(--camembert);
     }
 
-    /* Aide PWA — après la 2e mort (mobile) */
+    /* Indice install PWA — Safari iOS uniquement (bas d’écran) */
     #pwa-tip {
+      position: absolute;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom) + 10px);
+      translate: -50% 0;
+      z-index: 40;
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin-top: 12px;
-      width: min(320px, 92vw);
-      padding: 10px 12px 10px 10px;
-      border-radius: 10px;
-      border: 1px solid rgba(61, 196, 255, 0.35);
+      width: min(360px, calc(100% - 24px));
+      padding: 11px 12px 11px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(61, 196, 255, 0.4);
       background:
-        linear-gradient(145deg, rgba(20, 40, 64, 0.95), rgba(8, 14, 24, 0.92));
-      box-shadow: 0 0 18px rgba(61, 196, 255, 0.18);
+        linear-gradient(145deg, rgba(14, 28, 46, 0.96), rgba(6, 12, 22, 0.94));
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(61, 196, 255, 0.16);
       text-align: left;
       touch-action: manipulation;
-      animation: ui-rise 0.55s var(--ease-out) 0.7s backwards;
+      pointer-events: auto;
+      animation: ui-rise 0.5s var(--ease-out) 0.35s backwards;
     }
     #pwa-tip.hidden { display: none !important; }
     #pwa-tip .pwa-tip-ico {
@@ -800,7 +809,7 @@
     }
     #pwa-tip .pwa-tip-steps {
       font-family: var(--font-ui);
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 500;
       line-height: 1.45;
       color: #d8e2ec;
@@ -827,13 +836,14 @@
       background: rgba(255, 255, 255, 0.14);
       color: #fff;
     }
-    html.platform-desktop #pwa-tip { display: none !important; }
+    html.platform-desktop #pwa-tip,
+    html.play-ui #pwa-tip { display: none !important; }
     html.phone-landscape #pwa-tip {
-      width: min(300px, 88vw);
+      width: min(340px, calc(100% - 20px));
       padding: 8px 10px;
-      margin-top: 8px;
+      bottom: max(8px, env(safe-area-inset-bottom) + 6px);
     }
-    html.phone-landscape #pwa-tip .pwa-tip-steps { font-size: 11px; }
+    html.phone-landscape #pwa-tip .pwa-tip-steps { font-size: 11.5px; }
 
     #end-offers {
       display: flex;
@@ -3735,13 +3745,13 @@
       transition: opacity 0.15s ease-out;
     }
 
-    /* Barre de vie verte — PC en bas, mobile en haut */
+    /* Barre de vie verte — même taille que la jauge jetpack (168×18 canvas) */
     .hp-bar {
       position: absolute;
       left: 50%;
       translate: -50% 0;
-      width: min(200px, 42vw);
-      height: 9px;
+      width: calc(var(--game-w, 960px) * 168 / 960);
+      height: calc(var(--game-h, 540px) * 18 / 540);
       z-index: 12;
       pointer-events: none;
       border-radius: 999px;
@@ -3751,6 +3761,7 @@
       overflow: hidden;
       opacity: 0;
       transition: opacity 0.25s ease;
+      box-sizing: border-box;
     }
     .hp-bar:not(.hidden) { opacity: 1; }
     .hp-bar.hidden { display: none !important; }
@@ -3773,10 +3784,6 @@
     html.phone-landscape.play-ui .hp-bar {
       bottom: auto;
       top: max(10px, env(safe-area-inset-top) + 8px);
-    }
-    html.phone-portrait.play-ui .hp-bar {
-      width: min(160px, 48vw);
-      height: 7px;
     }
     #fx-flash {
       z-index: 19;
@@ -3937,7 +3944,7 @@ on</button>
             <span class="chds-shine" aria-hidden="true"></span>
             <span class="chds-shine-2" aria-hidden="true"></span>
           </div>
-          <p class="wait-rush">Rush 92</p>
+          <p class="wait-rush">92 Rush</p>
           <p class="subtitle">La Défense → Berges de Seine</p>
           <ul class="feat-list">
             <li><span class="feat-ico" aria-hidden="true">↑↑</span> Double saut</li>
@@ -4163,10 +4170,11 @@ on</button>
                   <figcaption>Face</figcaption>
                 </figure>
               </div>
-              <h3>T-shirt Face</h3>
-              <p>Certifié Hauts-de-Seine</p>
-              <p class="skin-price"><img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" /><span>16</span></p>
-              <p class="skin-status">Acheter</p>
+              <h3>T-shirt Physique</h3>
+              <p>Achète-le en vrai !</p>
+              <p class="skin-price"><img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" /><span>150</span></p>
+              <p class="skin-status">Débloquer code promo</p>
+              <p id="merch-promo" style="display: none; background: #222; color: #ffe566; padding: 4px; border-radius: 4px; margin-top: 5px; font-weight: bold; letter-spacing: 2px;">RUSH92</p>
             </button>
             <button class="skin-card" type="button" data-skin="teeBack" id="skin-tee-back">
               <div class="skin-preview">
@@ -4200,6 +4208,10 @@ on</button>
       <div class="end-actions">
         <div class="btn-row">
           <button class="btn" id="btn-retry" type="button">Rejouer</button>
+          <!-- NOUVEAU BOUTON STREAMING -->
+          <a class="btn" style="background: linear-gradient(180deg, #1DB954 0%, #15823B 100%); margin-top: 10px; text-decoration: none; width: 100%; text-align: center; color: white; display: flex; align-items: center; justify-content: center;" href="https://ysemo.listenify.app/#streaming" target="_blank" rel="noopener noreferrer">
+             🎧 Écoute l'album
+          </a>
           <button class="btn btn-shop hidden" id="btn-shop-end" type="button">Boutique</button>
         </div>
         <div id="end-offers" class="hidden" aria-live="polite">
@@ -4208,16 +4220,20 @@ on</button>
           <button class="btn-end-buy" id="btn-end-buy-shoes" type="button">Racheter Air Max ●3</button>
         </div>
         <p class="end-remain hidden" id="end-remain"></p>
-        <aside id="pwa-tip" class="hidden" role="note" aria-label="Installer l’app">
-          <img class="pwa-tip-ico" src="assets/apple-touch-icon.png" width="40" height="40" alt="" draggable="false" />
-          <div class="pwa-tip-body">
-            <p class="pwa-tip-title">Sur l’écran d’accueil</p>
-            <p class="pwa-tip-steps" id="pwa-tip-steps"></p>
-          </div>
-          <button type="button" class="pwa-tip-close" id="pwa-tip-close" aria-label="Fermer">×</button>
-        </aside>
       </div>
     </div>
+
+    <aside id="pwa-tip" class="hidden" role="dialog" aria-label="Ajouter 92 Rush à l’écran d’accueil" aria-live="polite">
+      <img class="pwa-tip-ico" src="assets/apple-touch-icon.png" width="40" height="40" alt="" draggable="false" />
+      <div class="pwa-tip-body">
+        <p class="pwa-tip-title">Installer 92 Rush</p>
+        <p class="pwa-tip-steps" id="pwa-tip-steps">
+          Clique sur le bouton <strong>Partager</strong> en bas de ton écran, puis sélectionne
+          <strong>Sur l’écran d’accueil</strong>.
+        </p>
+      </div>
+      <button type="button" class="pwa-tip-close" id="pwa-tip-close" aria-label="Fermer">×</button>
+    </aside>
 
     <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
       <p class="admin-pin-label">Code admin</p>
@@ -4303,7 +4319,7 @@ on</button>
   const STORAGE_KEY = "hds92_best_v4";
   const CATCH_KEY = "hds92_police_catches";
   const DEATH_KEY = "hds92_deaths";
-  const PWA_TIP_KEY = "hds92_pwa_tip_dismissed";
+  const PWA_TIP_KEY = "hds92_pwa_tip_v2";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
   const ADMIN_PIN = "4889";
@@ -4321,7 +4337,7 @@ on</button>
   const SHOP = {
     shoes: { price: 3, label: "Nike Air Max", uses: 3, consumable: true },
     jetpack: { price: 20, label: "Jetpack", uses: 2, consumable: true },
-    teeFront: { price: 16, label: "T-shirt Face", skin: true },
+    teeFront: { price: 150, label: "T-shirt Physique", skin: true },
     teeBack: { price: 16, label: "T-shirt Dos", skin: true },
   };
   /** Charges engagées pour la partie en cours (consommées à la mort / victoire) */
@@ -5674,7 +5690,7 @@ on</button>
     const companionBufs = { l1: null, l2: null, ys: null };
     let companionVoiceLoad = null;
     const activeCompVoices = [];
-    const COMP_VOICE_VOL = 0.28; // plus bas que les flics (0.60)
+    const COMP_VOICE_VOL = 0.14; // plus bas que les flics
 
     function loadCompanionVoice() {
       if (companionBufs.l1 && companionBufs.l2 && companionBufs.ys) {
@@ -6332,17 +6348,12 @@ on</button>
     }
 
     /**
-     * Tape Stop / VariFi sur beat + acap + Sub-Drop.
-     * playbackRate identique sur les deux BufferSources → restent collés.
+     * Game Over : étouffe la musique (lowpass → ~300 Hz) sans couper la boucle.
      * @returns {Promise<void>}
      */
     function tapeStopGameOver() {
       if (tapeActive) return Promise.resolve();
       tapeActive = true;
-      // Coupe toute relance IMMÉDIATEMENT (startMusic async, keepSync, unmute)
-      musicAllowed = false;
-      musicStarted = false;
-      startingMusic = false;
       musicGen++;
       const myTape = ++tapeGen;
       ensureGraph();
@@ -6351,53 +6362,40 @@ on</button>
       stopAmbience(false);
       subDrop();
 
-      // Refs capturées : le VariFi continue sur CES sources même si musicGen a bougé
-      const srcBeat = beatSrcNode;
-      const srcAcap = acapSrcNode;
       const t0 = performance.now();
-      const startBeat = beatGain ? beatGain.gain.value : BEAT_VOL;
-      const startAcap = acapGain ? acapGain.gain.value : ACAP_VOL_MIN;
       const startMaster = musicMaster ? Math.max(0.0001, musicMaster.gain.value) : 1;
+
+      // On sauvegarde la fréquence actuelle du filtre
+      const startFreq = acapFilter ? acapFilter.frequency.value : LP_MAX;
 
       return new Promise((resolve) => {
         function tick(now) {
-          // Nouvelle partie / reset → abandonner ce VariFi
           if (myTape !== tapeGen) {
             resolve();
             return;
           }
           const u = Math.min(1, (now - t0) / TAPE_MS);
-          // Descente plus douce → effet verify/tape plus long à l’oreille
-          const rate = Math.max(0.04, Math.exp(-3.05 * u));
-          const volMul = Math.exp(-1.65 * u);
 
           if (graphReady && ac) {
             const t = ac.currentTime;
-            try {
-              if (srcBeat) srcBeat.playbackRate.setValueAtTime(rate, t);
-              if (srcAcap) srcAcap.playbackRate.setValueAtTime(rate, t);
-            } catch (_) {}
-            if (beatGain) beatGain.gain.setValueAtTime(startBeat * volMul, t);
-            if (acapGain) acapGain.gain.setValueAtTime(startAcap * volMul, t);
+
+            // AU LIEU DE BAISSER LE PLAYBACK RATE (TAPE STOP) :
+            // On baisse agressivement le filtre passe-bas pour l'effet "sous l'eau"
+            if (acapFilter) {
+              // Descend jusqu’à 300Hz pour bien étouffer
+              const currentFreq = startFreq - (startFreq - 300) * u;
+              acapFilter.frequency.setValueAtTime(Math.max(300, currentFreq), t);
+            }
+
+            // On baisse légèrement le volume global mais on ne coupe pas !
+            const volMul = 1 - (u * 0.4); // Volume à 60%
             if (musicMaster) musicMaster.gain.setValueAtTime(startMaster * Math.max(0.05, volMul), t);
           }
 
           if (u < 1) {
             requestAnimationFrame(tick);
           } else {
-            if (myTape === tapeGen) {
-              // Fin VariFi : kill sources + silence (sans re-incr tapeGen)
-              musicAllowed = false;
-              musicStarted = false;
-              startingMusic = false;
-              resetRunMusicGate();
-              stopMusicSources();
-              stopAmbience(false);
-              stopAlertSiren();
-              silenceMusicMaster();
-              tapeActive = false;
-            }
-            resolve();
+            resolve(); // Fin de l’animation, la musique CONTINUE de jouer en fond étouffé !
           }
         }
         requestAnimationFrame(tick);
@@ -6427,8 +6425,8 @@ on</button>
     const FLIC_MAX_DIST = 780;   // au-delà → quasi silence
     const FLIC_NEAR = 110;       // volume plein
     const FLIC_PAN_SCALE = 200;  // pan bien marqué
-    // ~−4 dB vs 0.95 (0.95 × 10^(−4/20) ≈ 0.60)
-    const FLIC_VOL = 0.60;
+    // Voix CRS — baissées (~−10 dB vs ancien 0.60)
+    const FLIC_VOL = 0.34;
     let flicReverbIR = null;
 
     /** Courbe soft-clip pour grain radio / talkie */
@@ -7675,7 +7673,15 @@ on</button>
       const status = card.querySelector(".skin-status");
       if (!status) return;
       if (id === "default") status.textContent = selected ? "Équipé" : "Sélectionner";
-      else if (!owned) {
+      else if (id === "teeFront") {
+        const promoEl = document.getElementById("merch-promo");
+        if (promoEl) promoEl.style.display = owned ? "block" : "none";
+        if (!owned) {
+          status.textContent = def && meta.bank < def.price ? "Pas assez ●" : "Débloquer code promo";
+        } else {
+          status.textContent = selected ? "Équipé" : "Sélectionner";
+        }
+      } else if (!owned) {
         status.textContent = def && meta.bank < def.price ? "Pas assez ●" : "Acheter";
       } else {
         status.textContent = selected ? "Équipé" : "Sélectionner";
@@ -7713,7 +7719,18 @@ on</button>
       return;
     }
     if (!ownsSkin(s)) {
-      tryBuy(s);
+      if (tryBuy(s)) {
+        // Si l'achat a fonctionné et que c'est le t-shirt, on affiche le code promo
+        if (s === "teeFront") {
+          const promoEl = document.getElementById("merch-promo");
+          if (promoEl) {
+            promoEl.style.display = "block";
+            // Optionnel : on peut changer le texte pour "Équiper"
+            const statusEl = document.querySelector("#skin-tee-front .skin-status");
+            if (statusEl) statusEl.textContent = "Sélectionner";
+          }
+        }
+      }
       return;
     }
     selectSkin(s);
@@ -7744,6 +7761,7 @@ on</button>
     }
     refreshShopButtons();
     refreshLoadoutUI();
+    syncPwaTip();
   }
 
   /* ============================================================
@@ -7751,6 +7769,44 @@ on</button>
      ============================================================ */
   const particles = [];
   const shockwaves = [];
+  /** Plafond pool : évite une croissance infinie sur une longue run */
+  const PARTICLE_POOL_MAX = 384;
+  const RUN_PHASE_TAU = Math.PI * 2;
+
+  // --- OBJECT POOLING POUR LES PARTICULES ---
+  function getFreeParticle() {
+    for (let i = 0; i < particles.length; i++) {
+      if (particles[i].life <= 0) return particles[i];
+    }
+    if (particles.length >= PARTICLE_POOL_MAX) {
+      // Recycle la plus expirée (évite fuite mémoire)
+      let worst = 0;
+      for (let i = 1; i < particles.length; i++) {
+        if (particles[i].life < particles[worst].life) worst = i;
+      }
+      particles[worst].life = 0;
+      return particles[worst];
+    }
+    const p = {
+      x: 0, y: 0, vx: 0, vy: 0,
+      life: 0, max: 1, size: 2,
+      color: "#fff", gravity: 340, glow: false,
+    };
+    particles.push(p);
+    return p;
+  }
+
+  /** Avance runPhase (wrap 2π) ; true si demi-période franchie → footstep */
+  function advanceRunPhase(entity, delta) {
+    const prev = entity.runPhase || 0;
+    const next = prev + delta;
+    const stepped = ((prev / Math.PI) | 0) !== ((next / Math.PI) | 0);
+    let phase = next % RUN_PHASE_TAU;
+    if (phase < 0) phase += RUN_PHASE_TAU;
+    entity.runPhase = phase;
+    entity.runFrame = ((phase / (Math.PI / 3)) | 0) % 6;
+    return stepped;
+  }
 
   function burst(x, y, opts) {
     const n = opts.n || 8;
@@ -7759,17 +7815,18 @@ on</button>
         ? (Math.PI * 2 * i) / n
         : Math.random() * Math.PI * 2;
       const sp = opts.speed || (70 + Math.random() * 150);
-      particles.push({
-        x, y,
-        vx: Math.cos(ang) * sp * (opts.ring ? 1 : (0.4 + Math.random())),
-        vy: Math.sin(ang) * sp * (opts.ring ? 1 : (0.4 + Math.random())) + (opts.up || 0),
-        life: opts.life || (0.35 + Math.random() * 0.4),
-        max: opts.life || 0.6,
-        size: opts.size || (2 + (Math.random() * 3 | 0)),
-        color: opts.color || C.accent,
-        gravity: opts.gravity !== undefined ? opts.gravity : 340,
-        glow: !!opts.glow,
-      });
+
+      const p = getFreeParticle(); // Recyclage !
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(ang) * sp * (opts.ring ? 1 : (0.4 + Math.random()));
+      p.vy = Math.sin(ang) * sp * (opts.ring ? 1 : (0.4 + Math.random())) + (opts.up || 0);
+      p.life = opts.life || (0.35 + Math.random() * 0.4);
+      p.max = p.life;
+      p.size = opts.size || (2 + (Math.random() * 3 | 0));
+      p.color = opts.color || C.accent;
+      p.gravity = opts.gravity !== undefined ? opts.gravity : 340;
+      p.glow = !!opts.glow;
     }
   }
 
@@ -7778,18 +7835,17 @@ on</button>
   }
 
   function dust(x, y) {
-    particles.push({
-      x: x + (Math.random() - 0.5) * 12,
-      y,
-      vx: (Math.random() - 0.5) * 45,
-      vy: -25 - Math.random() * 35,
-      life: 0.25 + Math.random() * 0.2,
-      max: 0.45,
-      size: 2 + (Math.random() * 2 | 0),
-      color: "rgba(170,185,205,0.6)",
-      gravity: 90,
-      glow: false,
-    });
+    const p = getFreeParticle(); // Recyclage !
+    p.x = x + (Math.random() - 0.5) * 12;
+    p.y = y;
+    p.vx = (Math.random() - 0.5) * 45;
+    p.vy = -25 - Math.random() * 35;
+    p.life = 0.25 + Math.random() * 0.2;
+    p.max = 0.45;
+    p.size = 2 + (Math.random() * 2 | 0);
+    p.color = "rgba(170,185,205,0.6)";
+    p.gravity = 90;
+    p.glow = false;
   }
 
   /* ---- Juice : screen shake (trauma), textes flottants, flash plein écran ---- */
@@ -7906,13 +7962,14 @@ on</button>
   function updateVfx(dt) {
     updateJuice(dt);
     updateConfetti(dt);
-    for (let i = particles.length - 1; i >= 0; i--) {
+    for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += p.gravity * dt;
-      p.life -= dt;
-      if (p.life <= 0) particles.splice(i, 1);
+      if (p.life > 0) {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += p.gravity * dt;
+        p.life -= dt;
+      }
     }
     for (let i = shockwaves.length - 1; i >= 0; i--) {
       const s = shockwaves[i];
@@ -7935,7 +7992,8 @@ on</button>
     ctx.lineWidth = 1;
 
     for (const p of particles) {
-      const a = Math.max(0, p.life / p.max);
+      if (p.life <= 0) continue;
+      const a = Math.max(0, p.life / (p.max > 0 ? p.max : 1));
       ctx.globalAlpha = a;
       if (p.glow) {
         ctx.globalAlpha = a * 0.4;
@@ -7948,6 +8006,10 @@ on</button>
     drawFloaters();
   }
 
+  /**
+   * FillRect stable : Math.round (pas `| 0`) pour floats / sub-pixel,
+   * dims min 1 px pour ne pas faire disparaître les vieux dessins pixel-art.
+   */
   function fr(x, y, w, h, c) {
     ctx.fillStyle = c;
     const s = artScale;
@@ -7960,7 +8022,15 @@ on</button>
       );
       return;
     }
-    ctx.fillRect(x | 0, y | 0, w | 0, h | 0);
+    const iw = Math.round(w);
+    const ih = Math.round(h);
+    if (iw === 0 && ih === 0) return;
+    ctx.fillRect(
+      Math.round(x),
+      Math.round(y),
+      Math.max(1, iw),
+      Math.max(1, ih)
+    );
   }
 
   function glowRect(x, y, w, h, color, alpha) {
@@ -7975,6 +8045,7 @@ on</button>
      ÉTAT DU JEU & NIVEAU
      ============================================================ */
   let state = "menu";
+  let hitStopTime = 0;
   let camX = 0;
   let camY = 0;
   /** Zoom caméra menace CRS (1 = neutre, jusqu’à ~1.15) */
@@ -8032,6 +8103,14 @@ on</button>
       || (navigator.platform === "MacIntel" && (navigator.maxTouchPoints || 0) > 1);
   }
 
+  /** Safari iOS uniquement (A2HS n’est fiable que dans Safari). */
+  function isIosSafari() {
+    if (!isIosDevice()) return false;
+    const ua = navigator.userAgent || "";
+    if (/CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|DuckDuckGo|YaBrowser/i.test(ua)) return false;
+    return true;
+  }
+
   function isPwaTipDismissed() {
     try { return localStorage.getItem(PWA_TIP_KEY) === "1"; }
     catch (_) { return false; }
@@ -8039,29 +8118,31 @@ on</button>
 
   function dismissPwaTip() {
     try { localStorage.setItem(PWA_TIP_KEY, "1"); } catch (_) {}
-    if (el.pwaTip) el.pwaTip.classList.add("hidden");
+    if (el.pwaTip) {
+      el.pwaTip.classList.add("hidden");
+      el.pwaTip.setAttribute("aria-hidden", "true");
+    }
   }
 
-  /** Aide install PWA : mobile, dès la 2ᵉ mort, tant que pas installé / fermé */
-  function syncPwaTip(deathN, isWin) {
-    if (!el.pwaTip || !el.pwaTipSteps) return;
-    const show = !isWin
-      && isMobilePlatform()
-      && !isPwaInstalled()
-      && !isPwaTipDismissed()
-      && (deathN | 0) >= 2;
+  /**
+   * Indice install : Safari iOS, hors mode PWA, tant que non fermé.
+   * Visible sur menus (accueil / fin), masqué en jeu via CSS (.play-ui).
+   */
+  function syncPwaTip() {
+    if (!el.pwaTip) return;
+    const show = isIosSafari() && !isPwaInstalled() && !isPwaTipDismissed();
     if (!show) {
       el.pwaTip.classList.add("hidden");
+      el.pwaTip.setAttribute("aria-hidden", "true");
       return;
     }
-    if (isIosDevice()) {
+    if (el.pwaTipSteps) {
       el.pwaTipSteps.innerHTML =
-        "Safari → <strong>Partager</strong> → <strong>Sur l’écran d’accueil</strong>";
-    } else {
-      el.pwaTipSteps.innerHTML =
-        "Chrome → menu <strong>⋮</strong> → <strong>Installer l’app</strong> / écran d’accueil";
+        "Clique sur le bouton <strong>Partager</strong> en bas de ton écran, puis sélectionne "
+        + "<strong>Sur l’écran d’accueil</strong>.";
     }
     el.pwaTip.classList.remove("hidden");
+    el.pwaTip.setAttribute("aria-hidden", "false");
   }
 
   let best = loadBest();
@@ -8086,6 +8167,7 @@ on</button>
     jetIdle: 0,
     runFrame: 0,
     runTimer: 0,
+    runPhase: 0,
     breath: 0,
     moving: false,
     dreadLift: 0,
@@ -8101,6 +8183,8 @@ on</button>
     dodgeLean: 0,     // 0→1 lean d’esquive
     dodgeBoostT: 0,   // boost vitesse très court
     _px: 0, _py: 0,
+    coyoteTimer: 0,
+    jumpBufferTimer: 0,
   };
 
   let platforms = [];
@@ -8168,6 +8252,7 @@ on</button>
     player.onGround = true;
     player.runFrame = 0;
     player.runTimer = 0;
+    player.runPhase = 0;
     player.invuln = 0;
     spawnNoBlinkT = 2.2;
     camX = introCam.startX;
@@ -8206,15 +8291,12 @@ on</button>
       player.facing = -1;
       player.moving = uEnter < 0.98;
       if (player.moving) {
-        player.runTimer = (player.runTimer || 0) + dt;
-        while (player.runTimer >= 0.09) {
-          player.runTimer -= 0.09;
-          player.runFrame = (player.runFrame + 1) % 6;
-        }
-        player.dreadLift = 0.4 + Math.abs(Math.sin(player.runFrame * 0.9)) * 0.35;
-        player.dreadSwing = Math.sin(player.runFrame * 1.15) * 1.6;
+        advanceRunPhase(player, dt * 12);
+        player.dreadLift = 0.4 + Math.abs(Math.sin(player.runPhase * 2)) * 0.35;
+        player.dreadSwing = Math.sin(player.runPhase) * 1.6;
       } else {
         player.runFrame = 0;
+        player.runPhase = 0;
         player.dreadLift *= 0.9;
         player.dreadSwing *= 0.9;
       }
@@ -8228,7 +8310,13 @@ on</button>
       if (introCam.t >= INTRO_CONTROL_AT) unlockIntroControls();
     } else {
       // Contrôles libres : caméra suit le joueur, zoom/musique continuent
-      const targetX = Math.max(0, player.x - W * CAM_FOCUS_X);
+      // Caméra Look-Ahead : on décale la vue selon la vitesse actuelle
+      const maxSpd = Math.max(1, maxRunSpeed());
+      const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
+      // On ajoute jusqu'à 14% de champ de vision supplémentaire à l'avant
+      const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
+
+      const targetX = Math.max(0, player.x - W * dynamicFocusX);
       camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * dt));
       const targetY = Math.min(0, player.y - H * 0.52);
       camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * dt));
@@ -8271,6 +8359,7 @@ on</button>
     active: false,
     runFrame: 0,
     runTimer: 0,
+    runPhase: 0,
     breath: 0,
     moving: false,
     dreadLift: 0,
@@ -8300,6 +8389,7 @@ on</button>
       active: false,
       runFrame: 0,
       runTimer: 0,
+      runPhase: 0,
       breath: 0,
       moving: false,
       dreadLift: 0,
@@ -8342,6 +8432,7 @@ on</button>
     floaters.length = 0;
     screenTexts.length = 0;
     trauma = 0;
+    hitStopTime = 0;
     nextMilestone = 100;
     neonLights = [];
     rockets = [];
@@ -8374,7 +8465,7 @@ on</button>
       invuln: 0, hp: PLAYER_HP_MAX, hurtFlashT: 0, hpRegenDelay: 0,
       rocketArmor: 0, copKillTimer: 0, jetting: false,
       jetFuel: JET_FUEL_MAX, jetIdle: 0,
-      runFrame: 0, runTimer: 0, breath: 0, moving: false,
+      runFrame: 0, runTimer: 0, runPhase: 0, breath: 0, moving: false,
       dreadLift: 0, dreadSwing: 0,
       heavyChain: false, chainMsgT: 0, routeOrbT: 0,
       chemsFall: false,
@@ -8387,6 +8478,8 @@ on</button>
       jetReady: false,
       jetHoldTimer: 0,
       jetAwaitRelease: false,
+      coyoteTimer: 0,
+      jumpBufferTimer: 0,
     });
 
     /*
@@ -8931,11 +9024,7 @@ on</button>
       companion.x += Math.min(420 * dt, Math.max(-420 * dt, target - companion.x));
       companion.facing = 1;
       companion.moving = true;
-      companion.runTimer = (companion.runTimer || 0) + dt;
-      while (companion.runTimer >= 0.07) {
-        companion.runTimer -= 0.07;
-        companion.runFrame = (companion.runFrame + 1) % 6;
-      }
+      advanceRunPhase(companion, dt * 16);
       companion.y = GROUND_Y - companion.h;
       if (companion.x >= target - 4 || cine.t > 1.4) {
         cine.phase = "strike";
@@ -9054,6 +9143,7 @@ on</button>
       n: 10, speed: 90, up: -50, life: 0.32, gravity: 200,
       color: C.blue, size: 2, glow: true,
     });
+    hitStopTime = 0.05; // 50ms de pause dramatique
   }
 
   /** Plateformes flottantes qui oscillent (fin de parcours) + emportent le joueur */
@@ -9268,20 +9358,41 @@ on</button>
     }
     player.vx = Math.max(-top, Math.min(top, player.vx));
 
-    let jumpedThisFrame = false;
+    // --- COYOTE TIME & JUMP BUFFER ---
+    if (player.onGround) {
+      player.coyoteTimer = 0.12; // 120ms de tolérance après avoir quitté le sol
+    } else {
+      player.coyoteTimer = Math.max(0, (player.coyoteTimer || 0) - dt);
+    }
+
     if (keys.jumpPressed) {
-      if (player.onGround && player.jumpsLeft > 0) {
+      player.jumpBufferTimer = 0.15; // 150ms de mémoire de touche
+    } else {
+      player.jumpBufferTimer = Math.max(0, (player.jumpBufferTimer || 0) - dt);
+    }
+
+    let jumpedThisFrame = false;
+    // On vérifie le Buffer au lieu de la touche pressée à l'instant T
+    if (player.jumpBufferTimer > 0) {
+      // Premier saut avec Coyote Time
+      if (player.coyoteTimer > 0 && player.jumpsLeft > 0) {
         doJump(false);
         jumpedThisFrame = true;
-      } else if (!player.onGround && player.jumpsLeft > 0) {
+        player.jumpBufferTimer = 0; // Consomme l'action
+        player.coyoteTimer = 0;     // Consomme la tolérance
+      }
+      // Double saut (doit être un vrai nouvel appui, on vérifie keys.jumpPressed)
+      else if (!player.onGround && player.jumpsLeft > 0 && keys.jumpPressed) {
         doJump(true);
         jumpedThisFrame = true;
+        player.jumpBufferTimer = 0;
         // Après le 2e saut : jetpack = nouvel appui OU maintien ~1 s
         player.jetReady = false;
         player.jetHoldTimer = 0;
         player.jetAwaitRelease = true;
       }
     }
+    // ---------------------------------
 
     // Jetpack : uniquement après le 2e saut — pas auto sur le même maintien
     const JET_DRAIN = 0.5;        // ~2 s plein régime
@@ -9426,8 +9537,8 @@ on</button>
       if (player.jetting) targetLift = Math.max(targetLift, 5.5);
       targetSwing = -player.facing * (1.4 + Math.min(3.5, Math.abs(player.vx) / 70));
     } else if (player.moving && Math.abs(player.vx) > 15) {
-      targetLift = 0.35 + Math.abs(Math.sin(player.runFrame * 0.9)) * 0.4;
-      targetSwing = Math.sin(player.runFrame * 1.2) * 2.2 - player.facing * 0.5;
+      targetLift = 0.35 + Math.abs(Math.sin(player.runPhase * 2)) * 0.4;
+      targetSwing = Math.sin(player.runPhase) * 2.2 - player.facing * 0.5;
     } else {
       targetLift = Math.sin(player.breath * 2.2) * 0.2;
       targetSwing = Math.sin(player.breath * 1.6) * 0.45;
@@ -9436,14 +9547,9 @@ on</button>
     player.dreadSwing += (targetSwing - player.dreadSwing) * Math.min(1, 11 * dt);
 
     if (player.moving && player.onGround && Math.abs(player.vx) > 15) {
-      const prevFrame = player.runFrame;
-      player.runTimer += dt;
-      const stepDur = hasShoes() ? 0.065 : 0.08;
-      while (player.runTimer >= stepDur) {
-        player.runTimer -= stepDur;
-        player.runFrame = (player.runFrame + 1) % 6;
-      }
-      if (player.runFrame !== prevFrame && (player.runFrame === 0 || player.runFrame === 3)) {
+      const rate = hasShoes() ? 16 : 14;
+      const deltaPhase = (Math.abs(player.vx) / Math.max(1, top)) * dt * rate;
+      if (advanceRunPhase(player, deltaPhase)) {
         const spd = Math.min(1, Math.abs(player.vx) / top);
         AudioFX.footstep(spd);
       }
@@ -9455,6 +9561,7 @@ on</button>
     } else if (!player.jetting) {
       player.runFrame = 0;
       player.runTimer = 0;
+      player.runPhase = 0;
       dustTimer = 0;
     }
 
@@ -10500,18 +10607,18 @@ on</button>
     companion.dreadLift += ((player.dreadLift * 0.85) - companion.dreadLift) * Math.min(1, 10 * dt);
     companion.dreadSwing += ((player.dreadSwing * 0.9) - companion.dreadSwing) * Math.min(1, 12 * dt);
 
-    if (companion.moving) {
-      companion.runTimer += dt;
-      while (companion.runTimer >= 0.08) {
-        companion.runTimer -= 0.08;
-        companion.runFrame = (companion.runFrame + 1) % 6;
-      }
-      if (Math.abs(companion.x - prevX) > 0.5 && companion.y >= GROUND_Y - companion.h - 2) {
+    if (companion.moving && companion.y >= GROUND_Y - companion.h - 2) {
+      advanceRunPhase(
+        companion,
+        (Math.abs(player.vx) / Math.max(1, maxRunSpeed())) * dt * 14
+      );
+      if (Math.abs(companion.x - prevX) > 0.5) {
         dustTimer += dt * 0.35;
       }
     } else {
       companion.runFrame = 0;
       companion.runTimer = 0;
+      companion.runPhase = 0;
     }
 
     // Animation du titre feat
@@ -10605,7 +10712,7 @@ on</button>
       "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
       "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
 
-    syncPwaTip(deathN | 0, win);
+    syncPwaTip();
 
     // Sous Boutique : charges restantes Jetpack / Air Max
     if (el.endRemain) {
@@ -10812,6 +10919,8 @@ on</button>
     try { AudioFX.setIntroFade(1); } catch (_) {}
     ensureMenuMusic();
     AudioFX.updateRunMusic(false, false, true);
+    syncPhoneLayoutClass();
+    syncPwaTip();
   }
 
   /** Sync barre verte + vignette rouge blessure */
@@ -10897,6 +11006,7 @@ on</button>
         color: "#ff5060", size: 2, glow: true,
       });
       syncHpBar();
+      hitStopTime = 0.12; // 120ms de pause (plus punitif)
       return true;
     }
     // Déjà touché : mort
@@ -12246,18 +12356,28 @@ on</button>
       ctx.scale((face < 0 ? 1 : -1) * (o.w / artW), o.h / artH);
       ctx.translate(-artW / 2, -artH);
     }
-    // Idle — doudoune hiver + matraque ; alerte = bras
+    // Idle + course fluide (time) — doudoune hiver + matraque ; alerte = bras
     const idle = Math.sin(time * (angry ? 4.2 : 2.1) + screenX * 0.05) * (angry ? 1.1 : 0.6) * (1 - a * 0.7);
     const batonSwing = Math.sin(time * (angry ? 3.2 : 1.4) + screenX * 0.08) * (angry ? 2.4 : 1.2);
     const armUp = a * (angry ? 9 : 7);
-    const by = idle;
+    const copPhase = time * 10 + (o.x * 0.05);
+    const speedMult = angry ? 1.5 : 1;
+    const runAnim = !o._downed;
+    const copBounce = runAnim ? Math.abs(Math.sin(copPhase * speedMult)) : 0;
+    const copOffsetY = Math.round(copBounce * 2);
+    const copLegSwing = runAnim ? Math.sin(copPhase * speedMult) : 0;
+    const by = idle + copOffsetY;
     const sx = 0;
 
-    // Jambes
-    fr(sx + 5, by + 28, 6, 12, coatD);
-    fr(sx + 15, by + 28, 6, 12, coatD);
-    fr(sx + 4, by + 38, 8, 4, C.shoe);
-    fr(sx + 14, by + 38, 8, 4, C.shoe);
+    // Jambes (oscillation fluide)
+    const leg1X = sx + 5 + Math.round(copLegSwing * 3);
+    const leg1Y = by + 28 - Math.round(Math.max(0, copLegSwing * 3));
+    const leg2X = sx + 15 - Math.round(copLegSwing * 3);
+    const leg2Y = by + 28 - Math.round(Math.max(0, -copLegSwing * 3));
+    fr(leg1X, leg1Y, 6, 12, coatD);
+    fr(leg2X, leg2Y, 6, 12, coatD);
+    fr(leg1X - 1, leg1Y + 10, 8, 4, C.shoe);
+    fr(leg2X - 1, leg2Y + 10, 8, 4, C.shoe);
 
     // Doudoune matelassée (plus large)
     fr(sx + 3, by + 12, 20, 18, coat);
@@ -12502,11 +12622,15 @@ on</button>
     const f = player.facing;
     const inAir = !player.onGround;
     const moving = player.moving && player.onGround && Math.abs(player.vx) > 15;
-    const frame = moving ? player.runFrame : 0;
     const breath = (!moving && player.onGround) ? Math.sin(player.breath * 2.5) * 1.2 : 0;
     const pinkAura = player.rocketArmor > 0;
     const lean = player.dodgeLean || 0;
     const spinning = (player.spinT || 0) > 0;
+
+    // Course fluide (remplace les frames discrètes)
+    const runBounce = moving ? Math.abs(Math.sin(player.runPhase * 2)) : 0;
+    const legSwing = moving ? Math.sin(player.runPhase) : 0;
+    const torsoOffsetY = Math.round(runBounce * 2);
 
     // Aura derrière le perso (gros halo qui charge)
     if (pinkAura) drawPinkCamembertAura(px, py, player.w, player.h);
@@ -12529,6 +12653,7 @@ on</button>
     beginCharDraw(px, py, f, player.w, player.h);
 
     let legL = 0, legR = 0, bodyBob = breath, arm = breath * 0.35;
+    let legSwingX = 0;
     if (spinning) {
       // Boule style Sonic pendant le salto
       legL = -6; legR = -6; bodyBob = 1; arm = -5;
@@ -12537,16 +12662,11 @@ on</button>
     } else if (inAir) {
       legL = -4; legR = -2; bodyBob = -2; arm = -3;
     } else if (moving) {
-      const table = [
-        [0, 0, 0, 0],
-        [-5, 4, -1, 3],
-        [-2, 2, 0, 1],
-        [1, 1, 1, 0],
-        [4, -5, -1, -3],
-        [2, -2, 0, -1],
-      ];
-      const t = table[frame] || table[0];
-      legL = t[0]; legR = t[1]; bodyBob = t[2]; arm = t[3];
+      legL = Math.round(legSwing * 5);
+      legR = Math.round(-legSwing * 5);
+      bodyBob = -torsoOffsetY;
+      arm = Math.round(legSwing * 3);
+      legSwingX = Math.round(legSwing * 3);
     }
 
     const by = 2 + bodyBob;
@@ -12568,20 +12688,20 @@ on</button>
 
     // Neige (~700 m) : même perso / physiques, nouveaux habits (inspi PNG)
     if (hasWinterSkinZone()) {
-      drawPlayerWinterBody(by, arm, legL, legR, torsoH, waistY, nike);
+      drawPlayerWinterBody(by, arm, legL, legR, torsoH, waistY, nike, legSwingX);
       if (player.invuln > 0.2 && spawnNoBlinkT <= 0 && !isIntroCam()) {
         ctx.globalAlpha = 0.18 + Math.sin(time * 14) * 0.1;
         fr(8, by + 4, 16, 40, C.mag);
         ctx.globalAlpha = 1;
       }
     } else {
-      fr(10, lTop, 6, 10 + legL, pant);
-      drawCharShoe(9, waistY + 10 + legL, nike);
-      if (!tee) fr(10, lTop, 2, 9 + legL, C.stripe);
+      fr(10 + legSwingX, lTop, 6, 10 + legL, pant);
+      drawCharShoe(9 + legSwingX, waistY + 10 + legL, nike);
+      if (!tee) fr(10 + legSwingX, lTop, 2, 9 + legL, C.stripe);
 
-      fr(17, rTop, 6, 10 + legR, pant);
-      drawCharShoe(16, waistY + 10 + legR, nike);
-      if (!tee) fr(21, rTop, 2, 9 + legR, C.stripe2);
+      fr(17 - legSwingX, rTop, 6, 10 + legR, pant);
+      drawCharShoe(16 - legSwingX, waistY + 10 + legR, nike);
+      if (!tee) fr(21 - legSwingX, rTop, 2, 9 + legR, C.stripe2);
 
       if (tee) {
         // T-shirt (silhouette, pas un bloc plein)
@@ -12681,9 +12801,12 @@ on</button>
 
     const f = companion.facing;
     const inAir = companion.y < GROUND_Y - companion.h - 2;
-    const moving = companion.moving;
-    const frame = moving ? companion.runFrame : 0;
+    const moving = companion.moving && !inAir;
     const breath = (!moving) ? Math.sin(companion.breath * 2.5) * 1.2 : 0;
+
+    const runBounce = moving ? Math.abs(Math.sin((companion.runPhase || 0) * 2)) : 0;
+    const legSwing = moving ? Math.sin(companion.runPhase || 0) : 0;
+    const torsoOffsetY = Math.round(runBounce * 2);
 
     const stripe = "#e8b040";
     const stripe2 = "#c07040";
@@ -12694,32 +12817,28 @@ on</button>
     beginCharDraw(px, py, f, companion.w, companion.h);
 
     let legL = 0, legR = 0, bodyBob = breath, arm = breath * 0.35;
+    let legSwingX = 0;
     if (inAir) {
       legL = -4; legR = -2; bodyBob = -2; arm = -3;
     } else if (moving) {
-      const table = [
-        [0, 0, 0, 0],
-        [-5, 4, -1, 3],
-        [-2, 2, 0, 1],
-        [1, 1, 1, 0],
-        [4, -5, -1, -3],
-        [2, -2, 0, -1],
-      ];
-      const t = table[frame] || table[0];
-      legL = t[0]; legR = t[1]; bodyBob = t[2]; arm = t[3];
+      legL = Math.round(legSwing * 5);
+      legR = Math.round(-legSwing * 5);
+      bodyBob = -torsoOffsetY;
+      arm = Math.round(legSwing * 3);
+      legSwingX = Math.round(legSwing * 3);
     }
 
     const by = 2 + bodyBob;
     const torsoH = 22;
     const waistY = by + 12 + torsoH;
 
-    fr(10, waistY + Math.max(0, -legL), 6, 10 + legL, suit);
-    fr(9, waistY + 10 + legL, 8, 5, C.shoe);
-    fr(10, waistY + Math.max(0, -legL), 2, 9 + legL, stripe);
+    fr(10 + legSwingX, waistY + Math.max(0, -legL), 6, 10 + legL, suit);
+    fr(9 + legSwingX, waistY + 10 + legL, 8, 5, C.shoe);
+    fr(10 + legSwingX, waistY + Math.max(0, -legL), 2, 9 + legL, stripe);
 
-    fr(17, waistY + Math.max(0, -legR), 6, 10 + legR, suit);
-    fr(16, waistY + 10 + legR, 8, 5, C.shoe);
-    fr(21, waistY + Math.max(0, -legR), 2, 9 + legR, stripe2);
+    fr(17 - legSwingX, waistY + Math.max(0, -legR), 6, 10 + legR, suit);
+    fr(16 - legSwingX, waistY + 10 + legR, 8, 5, C.shoe);
+    fr(21 - legSwingX, waistY + Math.max(0, -legR), 2, 9 + legR, stripe2);
 
     fr(8, by + 12, 17, torsoH, suit);
     fr(9, by + 13, 15, 4, suitL);
@@ -12808,8 +12927,9 @@ on</button>
    * Tenue neige (inspi PNG) — même squelette animé que le perso de base.
    * Combinaison blanche + cagoule + sangle / sacoche. Jambes = legL / legR.
    */
-  function drawPlayerWinterBody(by, arm, legL, legR, torsoH, waistY, nike) {
+  function drawPlayerWinterBody(by, arm, legL, legR, torsoH, waistY, nike, legSwingX) {
     const th = torsoH || 22;
+    const sxL = legSwingX || 0;
     const W0 = "#f2f4f6"; // blanc principal
     const W1 = "#e0e4ea"; // ombre soft
     const W2 = "#c4cad4"; // ombre
@@ -12826,31 +12946,31 @@ on</button>
     const lLen = 10 + legL;
     const rLen = 10 + legR;
 
-    // —— Jambes (animées) ——
-    fr(9, lTop, 7, lLen, OUT);
-    fr(10, lTop, 6, lLen, W0);
-    fr(10, lTop + 1, 2, Math.max(1, lLen - 2), W1);
-    fr(14, lTop + 3, 2, Math.max(1, lLen - 5), W2);
+    // —— Jambes (animées, swing fluide) ——
+    fr(9 + sxL, lTop, 7, lLen, OUT);
+    fr(10 + sxL, lTop, 6, lLen, W0);
+    fr(10 + sxL, lTop + 1, 2, Math.max(1, lLen - 2), W1);
+    fr(14 + sxL, lTop + 3, 2, Math.max(1, lLen - 5), W2);
     // Genouillère / patch (jambe G)
-    fr(11, lTop + Math.max(2, (lLen * 0.45) | 0), 4, 3, W3);
-    fr(12, lTop + Math.max(2, (lLen * 0.45) | 0) + 1, 2, 1, OUT);
+    fr(11 + sxL, lTop + Math.max(2, (lLen * 0.45) | 0), 4, 3, W3);
+    fr(12 + sxL, lTop + Math.max(2, (lLen * 0.45) | 0) + 1, 2, 1, OUT);
 
-    fr(16, rTop, 7, rLen, OUT);
-    fr(17, rTop, 6, rLen, W0);
-    fr(20, rTop + 1, 2, Math.max(1, rLen - 2), W2);
-    fr(17, rTop + 2, 2, Math.max(1, rLen - 4), W1);
+    fr(16 - sxL, rTop, 7, rLen, OUT);
+    fr(17 - sxL, rTop, 6, rLen, W0);
+    fr(20 - sxL, rTop + 1, 2, Math.max(1, rLen - 2), W2);
+    fr(17 - sxL, rTop + 2, 2, Math.max(1, rLen - 4), W1);
 
     // Bottes blanches (Nike = semelle rouge discrète)
     const ly = waistY + 10 + legL;
     const ry = waistY + 10 + legR;
-    fr(9, ly, 8, 5, OUT);
-    fr(10, ly, 7, 4, W0);
-    fr(10, ly + 1, 5, 1, "#ffffff");
-    fr(10, ly + 3, 7, 1, nike ? "#a01020" : W3);
-    fr(16, ry, 8, 5, OUT);
-    fr(17, ry, 7, 4, W0);
-    fr(17, ry + 1, 5, 1, "#ffffff");
-    fr(17, ry + 3, 7, 1, nike ? "#a01020" : W3);
+    fr(9 + sxL, ly, 8, 5, OUT);
+    fr(10 + sxL, ly, 7, 4, W0);
+    fr(10 + sxL, ly + 1, 5, 1, "#ffffff");
+    fr(10 + sxL, ly + 3, 7, 1, nike ? "#a01020" : W3);
+    fr(16 - sxL, ry, 8, 5, OUT);
+    fr(17 - sxL, ry, 7, 4, W0);
+    fr(17 - sxL, ry + 1, 5, 1, "#ffffff");
+    fr(17 - sxL, ry + 3, 7, 1, nike ? "#a01020" : W3);
 
     // —— Torse combinaison bouffante ——
     fr(7, by + 11, 19, th + 3, OUT);
@@ -13313,6 +13433,12 @@ on</button>
     if (dt < 0) dt = 0;
     // Audio / sync restent en temps réel ; physique & anim = × GAME_SPEED
     const realDt = dt;
+    // --- GESTION DU HIT-STOP ---
+    // Compte à rebours en temps réel (realDt) ; physique figée (dt=0) sans bloquer l’audio.
+    if (hitStopTime > 0) {
+      hitStopTime = Math.max(0, hitStopTime - realDt);
+      dt = 0;
+    }
     const gdt = dt * GAME_SPEED;
     time += gdt;
 
@@ -13323,7 +13449,11 @@ on</button>
         if (isIntroCam()) {
           updateIntroCam(gdt);
         } else {
-          const targetX = player.x - W * CAM_FOCUS_X;
+          // Caméra Look-Ahead : décalage selon la vitesse (clamp anti-spike)
+          const maxSpd = Math.max(1, maxRunSpeed());
+          const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
+          const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
+          const targetX = Math.max(0, player.x - W * dynamicFocusX);
           camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
           if (camX < 0) camX = 0;
           // Caméra verticale : suit le perso (ciel / jetpack), ancrée au sol sinon
@@ -14104,12 +14234,14 @@ on</button>
   refreshLoadoutUI();
   syncMuteBtn();
   resetLevel();
+  syncPwaTip();
   requestAnimationFrame(frame);
 
   // PWA — installable iOS (Partager → Sur l’écran d’accueil) + Android
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
+      syncPwaTip();
     });
   }
 })();

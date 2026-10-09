@@ -1,8 +1,9 @@
-/* Hauts-de-Seine Rush 92 — service worker PWA */
-const CACHE = "hds-rush-92-v2";
+/* 92 Rush — service worker PWA */
+const CACHE = "hds-rush-92-v3";
 const PRECACHE = [
   "./",
   "./index.html",
+  "./manifest.json",
   "./manifest.webmanifest",
   "./assets/minia.png",
   "./assets/apple-touch-icon.png",
