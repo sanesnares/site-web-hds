@@ -428,6 +428,8 @@
       gap: 0;
       padding: 4px 2px;
       transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Hub Listenify / scroll éventuel sur petits écrans */
+      touch-action: pan-y;
     }
 
     #start-screen.launching .wait-ui {
@@ -923,6 +925,42 @@
     }
 
     .btn.btn-shop.hidden { display: none !important; }
+
+    .btn.btn-listenify {
+      margin-top: 10px;
+      letter-spacing: 0.14em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        linear-gradient(180deg, #5a3840 0%, #2a181c 46%, #160c10 52%, #3a2428 100%);
+      box-shadow:
+        0 0 0 1px rgba(255, 239, 194, 0.55),
+        0 0 0 3px rgba(122, 84, 87, 0.45),
+        0 5px 0 #0a0608,
+        0 8px 22px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      color: #ffefc2;
+    }
+    a.btn.btn-listenify:hover {
+      filter: brightness(1.08);
+      color: #fff8e8;
+    }
+
+    .btn.btn-admin {
+      margin-top: 10px;
+      letter-spacing: 0.14em;
+      background:
+        linear-gradient(180deg, #3a5068 0%, #1a2838 46%, #0c141c 52%, #2a3848 100%);
+      box-shadow:
+        0 0 0 1px rgba(61, 196, 255, 0.7),
+        0 0 0 3px rgba(40, 100, 140, 0.35),
+        0 5px 0 #061018,
+        0 8px 22px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    .btn.btn-admin.hidden { display: none !important; }
 
     .btn.btn-admin-off {
       margin-top: 10px;
@@ -2089,6 +2127,155 @@
       #minimap .pin { animation: none; opacity: 1; }
     }
 
+    /* —— Radio « now playing » (pochette + titre défilant) —— */
+    .now-radio {
+      position: absolute;
+      z-index: 56;
+      left: max(12px, env(safe-area-inset-left));
+      bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: min(210px, 46vw);
+      padding: 7px 12px 7px 7px;
+      border-radius: 999px;
+      background:
+        linear-gradient(165deg, rgba(255,255,255,0.07), transparent 42%),
+        rgba(6, 10, 16, 0.82);
+      border: 1px solid rgba(255, 239, 194, 0.22);
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px) saturate(1.1);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
+      pointer-events: auto;
+      touch-action: manipulation;
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+    }
+    .now-radio__disc {
+      position: relative;
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.25),
+        0 2px 8px rgba(0, 0, 0, 0.4);
+      animation: now-radio-spin 6.5s linear infinite;
+    }
+    .now-radio__disc img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .now-radio__meta {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .now-radio__live {
+      font-family: var(--font-arcade);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #7CFFB2;
+      text-shadow: 0 0 8px rgba(124, 255, 178, 0.45);
+    }
+    .now-radio__live::before {
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: #7CFFB2;
+      box-shadow: 0 0 6px #7CFFB2;
+      vertical-align: 0;
+      animation: now-radio-pulse 1.2s ease-in-out infinite;
+    }
+    .now-radio__marquee {
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 88%, transparent 100%);
+    }
+    .now-radio__track {
+      display: flex;
+      width: max-content;
+      gap: 28px;
+      animation: now-radio-marquee 11s linear infinite;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      color: rgba(255, 248, 236, 0.92);
+    }
+    .now-radio.is-muted {
+      opacity: 0.55;
+    }
+    .now-radio.is-muted .now-radio__disc,
+    .now-radio.is-muted .now-radio__track,
+    .now-radio.is-muted .now-radio__live::before {
+      animation-play-state: paused;
+    }
+    .now-radio.is-muted .now-radio__live {
+      color: rgba(200, 210, 220, 0.7);
+      text-shadow: none;
+    }
+    .now-radio.is-muted .now-radio__live::before {
+      background: rgba(200, 210, 220, 0.7);
+      box-shadow: none;
+    }
+    @keyframes now-radio-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes now-radio-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(calc(-50% - 14px)); }
+    }
+    @keyframes now-radio-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .now-radio__disc,
+      .now-radio__track,
+      .now-radio__live::before { animation: none !important; }
+    }
+    html.phone-portrait .now-radio {
+      left: max(10px, env(safe-area-inset-left));
+      right: auto;
+      top: max(12px, env(safe-area-inset-top));
+      bottom: auto;
+      width: min(168px, 48vw);
+      padding: 5px 10px 5px 5px;
+      gap: 8px;
+    }
+    html.phone-portrait .now-radio__disc {
+      width: 30px;
+      height: 30px;
+    }
+    html.phone-portrait .now-radio__track { font-size: 10px; }
+    html.phone-portrait .now-radio__live { font-size: 7px; }
+    html.phone-landscape .now-radio {
+      left: max(10px, env(safe-area-inset-left));
+      bottom: max(10px, env(safe-area-inset-bottom));
+      width: min(180px, 36vw);
+    }
+    html.platform-desktop .now-radio {
+      bottom: max(78px, calc(env(safe-area-inset-bottom) + 70px));
+    }
+
     /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
     .audio-btns {
       position: absolute;
@@ -2370,6 +2557,9 @@
       backdrop-filter: blur(12px) saturate(1.1);
       -webkit-backdrop-filter: blur(12px) saturate(1.1);
       z-index: 22;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     #pause-screen::before {
       content: "";
@@ -2418,6 +2608,278 @@
     #pause-main.hidden {
       display: none !important;
     }
+
+    /* —— Mini-hub Ysemo (Listenify) —— */
+    .ysemo-hub {
+      --ys-bg: #050505;
+      --ys-fg: #ffffff;
+      --ys-accent: #7a5457;
+      --ys-cream: #ffefc2;
+      --ys-glass: rgba(255, 255, 255, 0.05);
+      --ys-line: rgba(255, 255, 255, 0.12);
+      position: relative;
+      z-index: 3;
+      width: min(248px, 88vw);
+      margin: 12px auto 4px;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 18px;
+      background: var(--ys-bg);
+      border: 1px solid var(--ys-line);
+      box-shadow:
+        0 12px 36px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(122, 84, 87, 0.25);
+      text-align: left;
+      pointer-events: auto;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .ysemo-hub * {
+      touch-action: manipulation;
+      pointer-events: auto;
+    }
+    .ysemo-hub a {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .ysemo-hub__hero {
+      position: relative;
+      display: block;
+      height: 112px;
+      overflow: hidden;
+      background: #160f10;
+    }
+    .ysemo-hub__hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 18%;
+      transform: scale(1.08);
+      filter: contrast(1.04) saturate(1.05);
+    }
+    .ysemo-hub__hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(5, 5, 5, 0.15) 0%,
+        rgba(5, 5, 5, 0.25) 45%,
+        rgba(5, 5, 5, 0.92) 100%
+      );
+      pointer-events: none;
+    }
+    .ysemo-hub__name {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 10px;
+      z-index: 2;
+      font-family: var(--font-display);
+      font-size: 42px;
+      line-height: 0.85;
+      letter-spacing: -0.04em;
+      text-align: center;
+      color: transparent;
+      -webkit-text-stroke: 1.1px var(--ys-cream);
+      text-stroke: 1.1px var(--ys-cream);
+      pointer-events: none;
+    }
+    .ysemo-hub__open {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      z-index: 2;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.82);
+      pointer-events: none;
+    }
+    .ysemo-hub__actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 10px 6px;
+    }
+    .ysemo-hub__cta {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .ysemo-hub__cta--ghost {
+      border-color: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 0;
+      background: transparent;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+    .ysemo-hub__cta:hover,
+    .ysemo-hub__cta:focus-visible {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #fff;
+      outline: none;
+    }
+    .ysemo-hub__cta-play {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      display: inline-grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .ysemo-hub__cta-play::before {
+      content: "";
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 3.5px 0 3.5px 6px;
+      border-color: transparent transparent transparent #fff;
+      margin-left: 1px;
+    }
+    .ysemo-hub__latest {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 10px 8px;
+      padding: 8px;
+      border-radius: 12px;
+      background: var(--ys-glass);
+      border: 1px solid var(--ys-line);
+      transition: background 0.18s ease;
+    }
+    .ysemo-hub__latest:hover,
+    .ysemo-hub__latest:focus-visible {
+      background: rgba(255, 255, 255, 0.09);
+      outline: none;
+    }
+    .ysemo-hub__latest img {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #1a1214;
+    }
+    .ysemo-hub__latest-meta {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .ysemo-hub__latest-meta em {
+      font-style: normal;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 239, 194, 0.7);
+    }
+    .ysemo-hub__latest-meta strong {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ysemo-hub__latest-meta span {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .ysemo-hub__rows {
+      display: flex;
+      gap: 8px;
+      padding: 0 10px 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      scrollbar-width: none;
+    }
+    .ysemo-hub__rows::-webkit-scrollbar { display: none; }
+    .ysemo-hub__rows a {
+      flex: 0 0 auto;
+      width: 52px;
+      display: block;
+    }
+    .ysemo-hub__rows img {
+      display: block;
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #1a1214;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+    .ysemo-hub__rows a:hover img,
+    .ysemo-hub__rows a:focus-visible img {
+      transform: scale(1.04);
+      border-color: rgba(255, 239, 194, 0.45);
+    }
+    .ysemo-hub__foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 12px 10px;
+    }
+    .ysemo-hub__foot a {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+    }
+    .ysemo-hub__foot a:hover,
+    .ysemo-hub__foot a:focus-visible {
+      color: #fff;
+      outline: none;
+    }
+
+    #pause-screen .ysemo-hub {
+      margin-top: 16px;
+      width: min(260px, 86vw);
+    }
+
+    html.phone-portrait .ysemo-hub {
+      width: min(220px, 78vw);
+      margin: 8px auto 2px;
+      border-radius: 14px;
+    }
+    html.phone-portrait .ysemo-hub__hero { height: 84px; }
+    html.phone-portrait .ysemo-hub__name { font-size: 32px; top: 6px; }
+    html.phone-portrait .ysemo-hub__latest img { width: 38px; height: 38px; }
+    html.phone-portrait .ysemo-hub__rows { display: none; }
+    html.phone-portrait #pause-screen .ysemo-hub {
+      width: min(210px, 72vw);
+      margin-top: 10px;
+    }
+    html.phone-portrait #pause-screen .ysemo-hub__hero { height: 72px; }
+    html.phone-portrait #pause-screen .ysemo-hub__actions { padding-top: 8px; }
 
     /* ============================================================
        UX v2 — AAA polish layer (glass, tactile buttons, motion)
@@ -2896,6 +3358,69 @@
       from { opacity: 0.45; }
       to { opacity: 1; }
     }
+
+    /* Flash rouge blessure police (2 s puis fade) */
+    #fx-vignette::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(
+        ellipse 85% 80% at 50% 50%,
+        transparent 35%,
+        rgba(255, 36, 48, 0.38) 100%
+      );
+      transition: opacity 0.35s ease-out;
+    }
+    html.hurt #fx-vignette::before {
+      opacity: var(--hurt-opacity, 0.85);
+      transition: opacity 0.15s ease-out;
+    }
+
+    /* Barre de vie verte — PC en bas, mobile en haut */
+    .hp-bar {
+      position: absolute;
+      left: 50%;
+      translate: -50% 0;
+      width: min(200px, 42vw);
+      height: 9px;
+      z-index: 12;
+      pointer-events: none;
+      border-radius: 999px;
+      background: rgba(4, 10, 18, 0.72);
+      border: 1px solid rgba(120, 220, 140, 0.35);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .hp-bar:not(.hidden) { opacity: 1; }
+    .hp-bar.hidden { display: none !important; }
+    .hp-bar i {
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform-origin: left center;
+      transform: scaleX(1);
+      border-radius: inherit;
+      background: linear-gradient(90deg, #2ecc71 0%, #7CFFB2 55%, #b8ffd0 100%);
+      box-shadow: 0 0 12px rgba(80, 255, 140, 0.45);
+      transition: transform 0.18s ease-out;
+    }
+    html.platform-desktop.play-ui .hp-bar {
+      top: auto;
+      bottom: max(18px, env(safe-area-inset-bottom) + 14px);
+    }
+    html.phone-portrait.play-ui .hp-bar,
+    html.phone-landscape.play-ui .hp-bar {
+      bottom: auto;
+      top: max(10px, env(safe-area-inset-top) + 8px);
+    }
+    html.phone-portrait.play-ui .hp-bar {
+      width: min(160px, 48vw);
+      height: 7px;
+    }
     #fx-flash {
       z-index: 19;
       opacity: 0;
@@ -2939,6 +3464,9 @@
     <canvas id="game" width="960" height="540"></canvas>
     <div id="fx-vignette" aria-hidden="true"></div>
     <div id="fx-flash" aria-hidden="true"></div>
+    <div id="hp-bar" class="hp-bar hidden" aria-label="Vie" aria-hidden="true">
+      <i id="hp-fill"></i>
+    </div>
 
     <div id="hud">
       <div class="hud-box">
@@ -2957,6 +3485,21 @@
       </div>
     </div>
 
+    <a id="now-radio" class="now-radio" href="https://ysemo.listenify.app/ysemo/phenomene-raven" target="_blank" rel="noopener noreferrer" aria-label="Radio : Phénomène Raven — Ysemo">
+      <span class="now-radio__disc" aria-hidden="true">
+        <img src="assets/pochette.png" alt="" width="72" height="72" draggable="false" decoding="async" />
+      </span>
+      <span class="now-radio__meta">
+        <span class="now-radio__live">En direct</span>
+        <span class="now-radio__marquee">
+          <span class="now-radio__track">
+            <span>Phénomène Raven — Ysemo · Radio 92</span>
+            <span aria-hidden="true">Phénomène Raven — Ysemo · Radio 92</span>
+          </span>
+        </span>
+      </span>
+    </a>
+
     <div class="audio-btns">
       <button class="btn-mute" id="btn-music" type="button" aria-label="Musique">musique
 on</button>
@@ -2971,6 +3514,7 @@ on</button>
       <p class="subtitle" id="pause-sub">Son étouffé · partie figée</p>
       <div id="pause-main" class="btn-row">
         <button class="btn" id="btn-resume" type="button">Reprendre</button>
+        <a class="btn btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
         <button class="btn btn-pause-home" id="btn-pause-home" type="button">Retour accueil</button>
       </div>
       <div id="pause-confirm" class="btn-row hidden">
@@ -2978,6 +3522,42 @@ on</button>
         <button class="btn" id="btn-pause-yes" type="button">Oui</button>
         <button class="btn btn-pause-home" id="btn-pause-no" type="button">Non</button>
       </div>
+      <aside class="ysemo-hub" aria-label="Ysemo sur Listenify">
+        <a class="ysemo-hub__hero" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">
+          <img src="https://ptykqzkffoynkggwoikk.supabase.co/storage/v1/object/public/artist-media/artists/40c23e81-f3f9-40e5-9553-c82171bea8a7/hero/3d90f5b8-066c-4b08-a877-f1888df99fca.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+          <span class="ysemo-hub__name" aria-hidden="true">YSEMO</span>
+          <span class="ysemo-hub__open">Hub Listenify ↗</span>
+        </a>
+        <div class="ysemo-hub__actions">
+          <a class="ysemo-hub__cta" href="https://ysemo.listenify.app/#streaming" target="_blank" rel="noopener noreferrer" aria-label="Écouter">
+            <span class="ysemo-hub__cta-play" aria-hidden="true"></span>
+            Écouter
+          </a>
+          <a class="ysemo-hub__cta ysemo-hub__cta--ghost" href="https://ysemo.listenify.app/#clips" target="_blank" rel="noopener noreferrer" aria-label="Regarder">
+            Regarder <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+        <a class="ysemo-hub__latest" href="https://ysemo.listenify.app/ysemo/phenomene-raven" target="_blank" rel="noopener noreferrer" aria-label="Écouter Phénomène Raven de Ysemo">
+          <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d6/db/60/d6db6025-6555-03c7-eb5b-610b0400ee1b/artwork.jpg/200x200bb.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+          <span class="ysemo-hub__latest-meta">
+            <em>Dernière sortie</em>
+            <strong>Phénomène Raven</strong>
+            <span>Ysemo</span>
+          </span>
+        </a>
+        <div class="ysemo-hub__rows" aria-label="Discographie">
+          <a href="https://ysemo.listenify.app/ysemo/playlist" target="_blank" rel="noopener noreferrer" aria-label="Écouter Playlist de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ca/b1/b8/cab1b8eb-76f0-c75b-9e18-9f312bbccec8/artwork.jpg/200x200bb.jpg" alt="Playlist" loading="lazy" decoding="async" draggable="false" /></a>
+          <a href="https://ysemo.listenify.app/ysemo/slabstar-2" target="_blank" rel="noopener noreferrer" aria-label="Écouter Slabstar 2 de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b0/f3/3c/b0f33cdb-c8ba-ad40-f5cf-5fdb5851858b/artwork.jpg/200x200bb.jpg" alt="Slabstar 2" loading="lazy" decoding="async" draggable="false" /></a>
+          <a href="https://ysemo.listenify.app/ysemo/energy" target="_blank" rel="noopener noreferrer" aria-label="Écouter Energy de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3c/0f/fd/3c0ffd0a-fead-b89a-493b-f044b32d4214/artwork.jpg/200x200bb.jpg" alt="Energy" loading="lazy" decoding="async" draggable="false" /></a>
+          <a href="https://ysemo.listenify.app/ysemo/diamants-naturels" target="_blank" rel="noopener noreferrer" aria-label="Écouter Diamants Naturels de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/c8/9e/6d/c89e6dd9-2cc3-ef49-cc50-fc1669242d51/artwork.jpg/200x200bb.jpg" alt="Diamants Naturels" loading="lazy" decoding="async" draggable="false" /></a>
+          <a href="https://ysemo.listenify.app/ysemo/traquenard" target="_blank" rel="noopener noreferrer" aria-label="Écouter Traquenard de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/74/91/eb/7491ebf4-f8e4-17be-3ff0-2ae7cab91d03/artwork.jpg/200x200bb.jpg" alt="Traquenard" loading="lazy" decoding="async" draggable="false" /></a>
+          <a href="https://ysemo.listenify.app/ysemo/iced-out" target="_blank" rel="noopener noreferrer" aria-label="Écouter Iced Out de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/46/96/5b/46965b52-045d-fc3e-d968-222297dbd415/artwork.jpg/200x200bb.jpg" alt="Iced Out" loading="lazy" decoding="async" draggable="false" /></a>
+        </div>
+        <div class="ysemo-hub__foot">
+          <a href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">ysemo.listenify.app</a>
+          <a href="https://www.listenify.app/" target="_blank" rel="noopener noreferrer" aria-label="Listenify — page d’accueil">Listenify</a>
+        </div>
+      </aside>
       <p class="hint" id="pause-hint">P ou Échap pour reprendre</p>
     </div>
 
@@ -3025,9 +3605,47 @@ on</button>
           </div>
           <div class="btn-row">
             <button class="btn" id="btn-start" type="button">Jouer</button>
+            <a class="btn btn-listenify" id="btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
             <button class="btn btn-shop hidden" id="btn-shop" type="button">Boutique</button>
+            <button class="btn btn-admin" id="btn-admin" type="button">Admin</button>
             <button class="btn btn-admin-off hidden" id="btn-admin-off" type="button">Admin OFF</button>
           </div>
+          <aside class="ysemo-hub" aria-label="Ysemo sur Listenify">
+            <a class="ysemo-hub__hero" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">
+              <img src="https://ptykqzkffoynkggwoikk.supabase.co/storage/v1/object/public/artist-media/artists/40c23e81-f3f9-40e5-9553-c82171bea8a7/hero/3d90f5b8-066c-4b08-a877-f1888df99fca.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+              <span class="ysemo-hub__name" aria-hidden="true">YSEMO</span>
+              <span class="ysemo-hub__open">Hub Listenify ↗</span>
+            </a>
+            <div class="ysemo-hub__actions">
+              <a class="ysemo-hub__cta" href="https://ysemo.listenify.app/#streaming" target="_blank" rel="noopener noreferrer" aria-label="Écouter">
+                <span class="ysemo-hub__cta-play" aria-hidden="true"></span>
+                Écouter
+              </a>
+              <a class="ysemo-hub__cta ysemo-hub__cta--ghost" href="https://ysemo.listenify.app/#clips" target="_blank" rel="noopener noreferrer" aria-label="Regarder">
+                Regarder <span aria-hidden="true">↓</span>
+              </a>
+            </div>
+            <a class="ysemo-hub__latest" href="https://ysemo.listenify.app/ysemo/phenomene-raven" target="_blank" rel="noopener noreferrer" aria-label="Écouter Phénomène Raven de Ysemo">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d6/db/60/d6db6025-6555-03c7-eb5b-610b0400ee1b/artwork.jpg/200x200bb.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+              <span class="ysemo-hub__latest-meta">
+                <em>Dernière sortie</em>
+                <strong>Phénomène Raven</strong>
+                <span>Ysemo</span>
+              </span>
+            </a>
+            <div class="ysemo-hub__rows" aria-label="Discographie">
+              <a href="https://ysemo.listenify.app/ysemo/playlist" target="_blank" rel="noopener noreferrer" aria-label="Écouter Playlist de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ca/b1/b8/cab1b8eb-76f0-c75b-9e18-9f312bbccec8/artwork.jpg/200x200bb.jpg" alt="Playlist" loading="lazy" decoding="async" draggable="false" /></a>
+              <a href="https://ysemo.listenify.app/ysemo/slabstar-2" target="_blank" rel="noopener noreferrer" aria-label="Écouter Slabstar 2 de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b0/f3/3c/b0f33cdb-c8ba-ad40-f5cf-5fdb5851858b/artwork.jpg/200x200bb.jpg" alt="Slabstar 2" loading="lazy" decoding="async" draggable="false" /></a>
+              <a href="https://ysemo.listenify.app/ysemo/energy" target="_blank" rel="noopener noreferrer" aria-label="Écouter Energy de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3c/0f/fd/3c0ffd0a-fead-b89a-493b-f044b32d4214/artwork.jpg/200x200bb.jpg" alt="Energy" loading="lazy" decoding="async" draggable="false" /></a>
+              <a href="https://ysemo.listenify.app/ysemo/diamants-naturels" target="_blank" rel="noopener noreferrer" aria-label="Écouter Diamants Naturels de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/c8/9e/6d/c89e6dd9-2cc3-ef49-cc50-fc1669242d51/artwork.jpg/200x200bb.jpg" alt="Diamants Naturels" loading="lazy" decoding="async" draggable="false" /></a>
+              <a href="https://ysemo.listenify.app/ysemo/traquenard" target="_blank" rel="noopener noreferrer" aria-label="Écouter Traquenard de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/74/91/eb/7491ebf4-f8e4-17be-3ff0-2ae7cab91d03/artwork.jpg/200x200bb.jpg" alt="Traquenard" loading="lazy" decoding="async" draggable="false" /></a>
+              <a href="https://ysemo.listenify.app/ysemo/iced-out" target="_blank" rel="noopener noreferrer" aria-label="Écouter Iced Out de Ysemo"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/46/96/5b/46965b52-045d-fc3e-d968-222297dbd415/artwork.jpg/200x200bb.jpg" alt="Iced Out" loading="lazy" decoding="async" draggable="false" /></a>
+            </div>
+            <div class="ysemo-hub__foot">
+              <a href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">ysemo.listenify.app</a>
+              <a href="https://www.listenify.app/" target="_blank" rel="noopener noreferrer" aria-label="Listenify — page d’accueil">Listenify</a>
+            </div>
+          </aside>
           <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
             <p class="admin-pin-label">Code admin</p>
             <div class="admin-pin-dots" id="admin-pin-dots" aria-hidden="true">
@@ -3283,7 +3901,7 @@ on</button>
   const CHAR_H = 96;
   /** L au carré — 80 % de la taille du perso principal */
   const COMPANION_SCALE = 0.8;
-  const COMPANION_NAME = "L au carré";
+  const COMPANION_NAME = "L    au    carré";
   /** Voix d’approche : YS à 15 m, puis L1→L2 à 5 m */
   const COMPANION_VOICE_METERS = 5;
   const COMPANION_YS_METERS = 15;
@@ -3305,8 +3923,15 @@ on</button>
   const PX_PER_METER = 18; // compteur m (était 12 → ~1,5× plus lent)
   const FINISH_METERS = 930; // arrivée = table + win (ligne au sol au même jalon)
   const TABLE_METERS = 930;
-  const ROCKET_START_METERS = 350; // roquettes seulement après ce jalon
+  const ROCKET_START_METERS = 500; // roquettes seulement après ce jalon
+  const METRO_AT_METERS = 800;     // métro aérien : traverse 800 → 900 m
+  const METRO_SPAN_METERS = 100;
   const WORLD_LEN = FINISH_METERS * PX_PER_METER + 360;
+  /** Vie joueur vs CRS : 2 PV — 1er coup = blessure + regen, 2e = mort */
+  const PLAYER_HP_MAX = 2;
+  const HP_HURT_FLASH = 2.0;   // écran rouge (s)
+  const HP_REGEN_DELAY = 2.0;  // attendre la fin du rouge avant regen
+  const HP_REGEN_RATE = 3.2;   // PV / s une fois la regen lancée (~0.6 s pour 1→2)
   const CAM_LERP = 6.5;
   /** Ancrage horizontal caméra (0 = bord gauche) — plus bas = plus de terrain à droite (réaction mobile) */
   const CAM_FOCUS_X = 0.24;
@@ -3401,6 +4026,7 @@ on</button>
     shop: document.getElementById("shop-screen"),
     pause: document.getElementById("pause-screen"),
     btnPause: document.getElementById("btn-pause"),
+    nowRadio: document.getElementById("now-radio"),
     btnMusic: document.getElementById("btn-music"),
     btnSfx: document.getElementById("btn-sfx"),
     btnShop: document.getElementById("btn-shop"),
@@ -3419,10 +4045,14 @@ on</button>
     flash: document.getElementById("fx-flash"),
     minimap: document.getElementById("minimap"),
     waitMap: document.getElementById("wait-map"),
+    btnAdmin: document.getElementById("btn-admin"),
     btnAdminOff: document.getElementById("btn-admin-off"),
+    btnListenify: document.getElementById("btn-listenify"),
     adminPin: document.getElementById("admin-pin"),
     adminPinDots: document.getElementById("admin-pin-dots"),
     adminPinPad: document.getElementById("admin-pin-pad"),
+    hpBar: document.getElementById("hp-bar"),
+    hpFill: document.getElementById("hp-fill"),
   };
 
   let launching = false;
@@ -3435,15 +4065,19 @@ on</button>
   let adminBrandTapT = 0;
 
   function syncAdminUI() {
-    if (el.btnAdminOff) {
-      el.btnAdminOff.classList.toggle("hidden", !isAdmin());
+    const on = isAdmin();
+    if (el.btnAdmin) {
+      el.btnAdmin.classList.toggle("hidden", on);
     }
-    if (el.adminPin && isAdmin()) {
+    if (el.btnAdminOff) {
+      el.btnAdminOff.classList.toggle("hidden", !on);
+    }
+    if (el.adminPin && on) {
       el.adminPin.classList.add("hidden");
       el.adminPin.setAttribute("aria-hidden", "true");
     }
     try {
-      document.documentElement.classList.toggle("admin-on", isAdmin());
+      document.documentElement.classList.toggle("admin-on", on);
     } catch (_) {}
   }
 
@@ -4695,15 +5329,16 @@ on</button>
       }
     }
 
-    /** Même chaîne radio que les flics, volume COMP_VOICE_VOL */
-    function playCompanionSpatial(buf, companionX, playerMidX, rate) {
+    /** Même chaîne radio que les flics, volume COMP_VOICE_VOL (* volMult) */
+    function playCompanionSpatial(buf, companionX, playerMidX, rate, volMult) {
       const ctx = ensureCtx();
       if (!ctx || !unlocked || sfxMuted || !buf) return false;
       if (ctx.state !== "running") resumeCtx();
       ensureGraph();
       const sp0 = spatialParams(companionX, playerMidX);
       // Volume companion plafonné plus bas que FLIC_VOL
-      const volScale = COMP_VOICE_VOL / FLIC_VOL;
+      const vm = (volMult != null && volMult > 0) ? volMult : 1;
+      const volScale = (COMP_VOICE_VOL * vm) / FLIC_VOL;
       const targetVol = Math.max(0.0001, sp0.vol * volScale);
       if (targetVol < 0.012) return false;
       pruneCompVoices();
@@ -4826,7 +5461,7 @@ on</button>
       const px = playerMidX || 0;
       const cx = companionMidX != null ? companionMidX : null;
 
-      // L2 enchaîné après L1, pan à jour sur la position live
+      // L2 enchaîné peu après L1 (rapproché), volume plus bas
       if (pendingL2At && performance.now() >= pendingL2At) {
         pendingL2At = 0;
         if (!sfxMuted) {
@@ -4834,7 +5469,8 @@ on</button>
             companionBufs.l2,
             cx != null ? cx : px,
             px,
-            1.38
+            1.38,
+            0.48
           );
         }
       }
@@ -4861,7 +5497,7 @@ on</button>
     /** File d’attente L2 (après L1) — positions relues au tick */
     let pendingL2At = 0;
 
-    /** 5 m : Lsound1 puis Lsound2 ×1.38 */
+    /** 5 m : Lsound1 puis Lsound2 ×1.38 (L2 plus tôt + plus bas) */
     function playCompanionLine(companionX, playerMidX) {
       if (sfxMuted) return;
       const cx = companionX || 0;
@@ -4869,8 +5505,8 @@ on</button>
       const start = () => {
         playCompanionSpatial(companionBufs.l1, cx, px, 1);
         const d1 = companionBufs.l1 ? companionBufs.l1.duration : 0.8;
-        // Enchaîne L2 dès la fin de L1 (léger recouvrement)
-        pendingL2At = performance.now() + Math.max(120, d1 * 1000 - 40);
+        // L2 collé à L1 (~220 ms après le début, fort recouvrement)
+        pendingL2At = performance.now() + Math.max(140, Math.min(260, d1 * 1000 * 0.28));
       };
       if (companionBufs.l1) start();
       else loadCompanionVoice().then(start).catch(() => {});
@@ -6059,9 +6695,9 @@ on</button>
     touchRoot.addEventListener("touchcancel", onTouchEnd, { passive: false });
   }
 
-  // Empêche le scroll / zoom page pendant la partie (iOS)
+  // Empêche le scroll / zoom page pendant la partie (iOS) — pas en pause (hub / menus)
   document.addEventListener("touchmove", (e) => {
-    if (state === "play" && el.touch && el.touch.classList.contains("visible")) {
+    if (state === "play" && !paused && el.touch && el.touch.classList.contains("visible")) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -6195,8 +6831,12 @@ on</button>
   tableImg.src = "assets/table.png";
   const flecheImg = new Image();
   flecheImg.src = "assets/flecheskin.png";
+  const metroImg = new Image();
+  metroImg.src = "assets/metro-aerien.png";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
   let levelProps = [];
+  /** Métro aérien (800–900 m) */
+  let metro = null;
   /** Confettis de victoire */
   const confetti = [];
 
@@ -6305,21 +6945,72 @@ on</button>
     }
   }
 
+  /**
+   * Table de fin — pixel art (inspirée du PNG pique-nique), style monde HDS.
+   * Pas de blit PNG : rectangles fr() comme le reste du décor.
+   */
   function drawFinishTable(px, py, w, h) {
-    if (tableImg.complete && tableImg.naturalWidth > 0) {
-      ctx.save();
-      ctx.imageSmoothingEnabled = true;
-      if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(tableImg, px, py, w, h);
-      ctx.restore();
-      ctx.imageSmoothingEnabled = false;
-      return;
+    const s = Math.max(1, Math.floor(w / 48));
+    const u = (n) => n * s;
+    // Ancrage bas-gauche du « art » dans la boîte
+    const ox = px + Math.floor((w - u(48)) * 0.5);
+    const oy = py + h - u(36);
+
+    // Bancs
+    fr(ox + u(2), oy + u(22), u(16), u(3), "#6a4a30");
+    fr(ox + u(30), oy + u(22), u(16), u(3), "#6a4a30");
+    fr(ox + u(4), oy + u(25), u(3), u(10), "#3a2818");
+    fr(ox + u(13), oy + u(25), u(3), u(10), "#3a2818");
+    fr(ox + u(32), oy + u(25), u(3), u(10), "#3a2818");
+    fr(ox + u(41), oy + u(25), u(3), u(10), "#3a2818");
+
+    // Pieds table
+    fr(ox + u(10), oy + u(18), u(3), u(16), "#3a2818");
+    fr(ox + u(35), oy + u(18), u(3), u(16), "#3a2818");
+    fr(ox + u(11), oy + u(18), u(1), u(16), "#5a4030");
+    fr(ox + u(36), oy + u(18), u(1), u(16), "#5a4030");
+
+    // Plateau bois
+    fr(ox + u(4), oy + u(14), u(40), u(5), "#8a6040");
+    fr(ox + u(4), oy + u(14), u(40), u(1), "#c09060");
+    fr(ox + u(4), oy + u(18), u(40), u(1), "#5a4030");
+
+    // Nappes damier (bleu / violet)
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 2; j++) {
+        const c = ((i + j) & 1) ? "#7ec8e8" : "#3a7aaa";
+        fr(ox + u(6 + i * 2), oy + u(12 + j * 2), u(2), u(2), c);
+      }
     }
-    // Fallback pixel table
-    fr(px + 4, py + h * 0.42, w - 8, 6, "#5a4030");
-    fr(px + 10, py + h * 0.48, 5, h * 0.5, "#3a2818");
-    fr(px + w - 15, py + h * 0.48, 5, h * 0.5, "#3a2818");
-    fr(px + 2, py + h * 0.38, w - 4, 8, "#8a6040");
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 2; j++) {
+        const c = ((i + j) & 1) ? "#c8a0d8" : "#6a3888";
+        fr(ox + u(24 + i * 2), oy + u(12 + j * 2), u(2), u(2), c);
+      }
+    }
+
+    // Pichet + verres (jus)
+    fr(ox + u(8), oy + u(6), u(5), u(6), "#a8d8f0");
+    fr(ox + u(9), oy + u(7), u(3), u(4), "#e8a040");
+    fr(ox + u(12), oy + u(7), u(2), u(2), "#a8d8f0");
+    fr(ox + u(14), oy + u(9), u(2), u(3), "#a8d8f0");
+    fr(ox + u(14), oy + u(10), u(2), u(2), "#e8a040");
+    fr(ox + u(17), oy + u(9), u(2), u(3), "#a8d8f0");
+    fr(ox + u(17), oy + u(10), u(2), u(2), "#e8a040");
+
+    // Panier + baguettes / fruits
+    fr(ox + u(22), oy + u(7), u(10), u(6), "#5a3820");
+    fr(ox + u(23), oy + u(6), u(8), u(2), "#f0a8c0");
+    fr(ox + u(24), oy + u(4), u(2), u(5), "#d4a060");
+    fr(ox + u(27), oy + u(3), u(2), u(6), "#c49050");
+    fr(ox + u(29), oy + u(5), u(2), u(2), "#f0d040");
+    fr(ox + u(26), oy + u(8), u(2), u(2), "#e04040");
+
+    // Assiette raisins
+    fr(ox + u(35), oy + u(9), u(7), u(3), "#c04040");
+    fr(ox + u(36), oy + u(8), u(2), u(2), "#50a050");
+    fr(ox + u(38), oy + u(7), u(2), u(2), "#8040a0");
+    fr(ox + u(40), oy + u(8), u(2), u(2), "#50a050");
   }
 
   /** PNJ fin de course — flecheskin.png (face gauche), sinon silhouette noire vers la table */
@@ -6900,6 +7591,9 @@ on</button>
     facing: 1,
     jumpsLeft: 2,
     invuln: 0,
+    hp: PLAYER_HP_MAX,
+    hurtFlashT: 0,
+    hpRegenDelay: 0,
     rocketArmor: 0,
     copKillTimer: 0,
     jetting: false,
@@ -6930,6 +7624,72 @@ on</button>
   let neonLights = [];
   /** Trappe « chems » (~461–472 m) : sol / trappe étroite / sol */
   let trapDoor = null;
+  /**
+   * Cinématique mur de CRS : lock joueur → L au carré tue le boss → unlock.
+   * null | { phase, t, boss, hitN }
+   */
+  let cine = null;
+
+  /** Intro caméra après Jouer : pan gauche → zoom perso (4 s) */
+  const INTRO_CAM_DUR = 4;
+  let introCam = null; // null | { t, startX, endX, startZ, endZ }
+
+  function isIntroCam() {
+    return !!(introCam && introCam.t < INTRO_CAM_DUR);
+  }
+
+  function isCinematic() {
+    return !!(cine && cine.phase && cine.phase !== "done");
+  }
+
+  function isPlayerLocked() {
+    return isCinematic() || isIntroCam();
+  }
+
+  function beginIntroCam() {
+    const endX = Math.max(0, player.x - W * CAM_FOCUS_X);
+    introCam = {
+      t: 0,
+      startX: 0,
+      endX,
+      startZ: 0.72,
+      endZ: 1,
+    };
+    camX = 0;
+    camY = 0;
+    threatZoom = 1;
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function updateIntroCam(dt) {
+    if (!introCam) return;
+    introCam.t += dt;
+    const u = easeInOutCubic(Math.min(1, introCam.t / INTRO_CAM_DUR));
+    introCam.endX = Math.max(0, player.x - W * CAM_FOCUS_X);
+    camX = introCam.startX + (introCam.endX - introCam.startX) * u;
+    camY += (0 - camY) * Math.min(1, 8 * dt);
+    if (introCam.t >= INTRO_CAM_DUR) {
+      camX = introCam.endX;
+      introCam = null;
+    }
+  }
+
+  function introCamZoom() {
+    if (!introCam) return 1;
+    const u = easeInOutCubic(Math.min(1, introCam.t / INTRO_CAM_DUR));
+    return introCam.startZ + (introCam.endZ - introCam.startZ) * u;
+  }
+
+  function findBossObstacle() {
+    for (let i = 0; i < obstacles.length; i++) {
+      const o = obstacles[i];
+      if (o && o.kind === "boss" && !o._cineDead) return o;
+    }
+    return null;
+  }
 
   // L au carré vers ~500 m
   const LE_L_MEET_X = 500 * PX_PER_METER;
@@ -6959,6 +7719,8 @@ on</button>
     activeAge: 0,
     voicePlayed: false,
     ysPlayed: false,
+    cineAttack: false,
+    atkVy: 0,
   };
 
   function resetCompanion() {
@@ -6985,6 +7747,8 @@ on</button>
       activeAge: 0,
       voicePlayed: false,
       ysPlayed: false,
+      cineAttack: false,
+      atkVy: 0,
     });
   }
 
@@ -7021,6 +7785,9 @@ on</button>
     levelProps = [];
     confetti.length = 0;
     trapDoor = null;
+    metro = null;
+    cine = null;
+    introCam = null;
     camCount = 0;
     maxReachX = 0;
     camX = 0;
@@ -7036,7 +7803,8 @@ on</button>
       x: 100, y: GROUND_Y - CHAR_H, vx: 0, vy: 0,
       w: CHAR_W, h: CHAR_H,
       onGround: true, facing: 1, jumpsLeft: 2,
-      invuln: 0, rocketArmor: 0, copKillTimer: 0, jetting: false,
+      invuln: 0, hp: PLAYER_HP_MAX, hurtFlashT: 0, hpRegenDelay: 0,
+      rocketArmor: 0, copKillTimer: 0, jetting: false,
       jetFuel: JET_FUEL_MAX, jetIdle: 0,
       runFrame: 0, runTimer: 0, breath: 0, moving: false,
       dreadLift: 0, dreadSwing: 0,
@@ -7297,8 +8065,8 @@ on</button>
 
     // Table de fin (~930 m) + PNJ Fleche juste après (face à la table)
     {
-      const tw = 86;
-      const th = 72;
+      const tw = 112;
+      const th = 84;
       const tx = TABLE_METERS * M - tw * 0.5;
       const ty = GROUND_Y - th;
       levelProps.push({ kind: "table", x: tx, y: ty, w: tw, h: th });
@@ -7354,6 +8122,30 @@ on</button>
       h: 72,
       bob: 0.8,
     });
+
+    // Métro aérien : viaduc fixe 800→900 m, rame qui traverse R→L une fois
+    {
+      const zone0 = METRO_AT_METERS * PX_PER_METER;
+      const zone1 = (METRO_AT_METERS + METRO_SPAN_METERS) * PX_PER_METER;
+      const tw = 300;
+      const th = Math.round(tw * (516 / 1024));
+      const deckY = GROUND_Y - 168;
+      metro = {
+        zone0,
+        zone1,
+        deckY,
+        w: tw,
+        h: th,
+        // Départ hors champ à droite de la zone, arrivée hors champ à gauche
+        x: zone1 + 80,
+        y: deckY - th + 38,
+        vx: -((zone1 - zone0) + tw + 160) / 9.5, // ~9.5 s pour traverser les 100 m
+        armed: false,
+        active: false,
+        done: false,
+        warnShown: false,
+      };
+    }
 
     // Plus de halos / néons sous les plateformes
 
@@ -7467,7 +8259,190 @@ on</button>
     return true;
   }
 
+  function startBossCinematic(boss) {
+    if (!boss || cine) return;
+    cine = { phase: "lock", t: 0, boss, hitN: 0, nextHitAt: 0 };
+    companion.cineAttack = true;
+    companion.atkVy = 0;
+    companion.active = true;
+    companion.featPhase = "name";
+    companion.featText = COMPANION_NAME;
+    // Ancre le joueur juste devant le mur
+    const stopX = Math.min(player.x, boss.x - player.w - 36);
+    player.x = Math.max(player.x - 8, stopX);
+    player.vx = 0;
+    player.vy = 0;
+    player.facing = 1;
+    player.onGround = true;
+    player.y = GROUND_Y - player.h;
+    player.invuln = Math.max(player.invuln || 0, 2);
+    // L se téléporte près du joueur s’il était resté loin
+    companion.x = player.x - companion.w - 6;
+    companion.y = GROUND_Y - companion.h;
+    companion.facing = 1;
+    companion.moving = false;
+    boss._alertT = 1.5;
+    boss._faceDir = -1;
+    boss._cineLock = true;
+    keys.left = keys.right = keys.jump = keys.action = false;
+    keys.jumpPressed = keys.actionPressed = false;
+    screenText("L AU CARRÉ", { color: C.accent, size: 40, y: H * 0.22, life: 1.5 });
+    AudioFX.power();
+    addTrauma(0.2);
+  }
+
+  function finishBossCinematic() {
+    if (!cine) return;
+    const boss = cine.boss;
+    if (boss) {
+      boss._cineDead = true;
+      boss._downed = true;
+      boss._spent = true;
+      const idx = obstacles.indexOf(boss);
+      if (idx >= 0) obstacles.splice(idx, 1);
+    }
+    companion.cineAttack = false;
+    companion.atkVy = 0;
+    companion.y = GROUND_Y - companion.h;
+    companion.facing = 1;
+    cine = null;
+    floatText(player.x + player.w * 0.5, player.y - 24, "GO !", {
+      color: C.accent, size: 18, life: 1.1,
+    });
+    AudioFX.collect();
+  }
+
+  /**
+   * Cinématique mur de CRS :
+   * lock → L charge → frappes → boss tombe → passage libre
+   */
+  function updateBossCinematic(dt) {
+    if (!cine || cine.phase === "done") return;
+    const boss = cine.boss;
+    if (!boss || boss._cineDead) {
+      finishBossCinematic();
+      return;
+    }
+    cine.t += dt;
+    boss._alertT = 1.2;
+    boss._faceDir = -1;
+    boss._cineLock = true;
+
+    if (cine.phase === "lock") {
+      // L se place devant le joueur, face au boss
+      const guardX = player.x + player.w + 10;
+      companion.x += (guardX - companion.x) * Math.min(1, 8 * dt);
+      companion.y += ((GROUND_Y - companion.h) - companion.y) * Math.min(1, 10 * dt);
+      companion.facing = 1;
+      companion.moving = Math.abs(companion.x - guardX) > 4;
+      if (cine.t >= 0.55) {
+        cine.phase = "charge";
+        cine.t = 0;
+        companion.moving = true;
+        floatText(companion.x + companion.w * 0.5, companion.y - 12, "À MOI", {
+          color: "#ffe566", size: 14, life: 0.8,
+        });
+      }
+      return;
+    }
+
+    if (cine.phase === "charge") {
+      const target = boss.x - companion.w - 8;
+      companion.x += Math.min(420 * dt, Math.max(-420 * dt, target - companion.x));
+      companion.facing = 1;
+      companion.moving = true;
+      companion.runTimer = (companion.runTimer || 0) + dt;
+      while (companion.runTimer >= 0.07) {
+        companion.runTimer -= 0.07;
+        companion.runFrame = (companion.runFrame + 1) % 6;
+      }
+      companion.y = GROUND_Y - companion.h;
+      if (companion.x >= target - 4 || cine.t > 1.4) {
+        cine.phase = "strike";
+        cine.t = 0;
+        cine.hitN = 0;
+        cine.nextHitAt = 0.12;
+        companion.atkVy = -380;
+      }
+      return;
+    }
+
+    if (cine.phase === "strike") {
+      // Saut / combo de L sur le mur
+      companion.atkVy += GRAVITY * 1.05 * dt;
+      companion.y += companion.atkVy * dt;
+      if (companion.y >= GROUND_Y - companion.h) {
+        companion.y = GROUND_Y - companion.h;
+        companion.atkVy = 0;
+      }
+      companion.facing = 1;
+      companion.moving = true;
+      companion.x += (boss.x - companion.w * 0.35 - companion.x) * Math.min(1, 6 * dt);
+
+      if (cine.t >= cine.nextHitAt && cine.hitN < 3) {
+        cine.hitN += 1;
+        cine.nextHitAt = cine.t + 0.38;
+        companion.atkVy = -320 - cine.hitN * 20;
+        const hx = boss.x + boss.w * 0.35;
+        const hy = boss.y + boss.h * 0.45;
+        AudioFX.dodge();
+        addTrauma(0.28 + cine.hitN * 0.06);
+        flashScreen("rgba(255, 220, 80, 0.25)");
+        addShockwave(hx, hy, C.accent);
+        burst(hx, hy, {
+          n: 18, ring: true, speed: 160, life: 0.4, gravity: 50,
+          color: cine.hitN === 3 ? "#ff4050" : C.accent, size: 3, glow: true,
+        });
+        floatText(hx, boss.y + 20, cine.hitN === 3 ? "FINISH" : "HIT", {
+          color: cine.hitN === 3 ? "#ff6b5a" : C.accent, size: 15, life: 0.7,
+        });
+        boss.x += 10 + cine.hitN * 4;
+        boss._alertT = 1.5;
+        if (cine.hitN >= 3) {
+          cine.phase = "fall";
+          cine.t = 0;
+          boss._downed = true;
+          boss._downT = 0;
+          boss._knockDir = 1;
+          boss._knockVx = 140;
+          boss.y = GROUND_Y - 28;
+          AudioFX.power();
+          addTrauma(0.55);
+          screenText("MUR ABATTU", { color: "#ff6b5a", size: 42, y: H * 0.26, life: 1.4 });
+        }
+      }
+      return;
+    }
+
+    if (cine.phase === "fall") {
+      companion.y = GROUND_Y - companion.h;
+      companion.moving = false;
+      companion.facing = 1;
+      if (boss._knockVx) {
+        boss.x += boss._knockVx * dt;
+        boss._knockVx *= Math.exp(-2.8 * dt);
+      }
+      boss.y = GROUND_Y - 28;
+      boss._downT = (boss._downT || 0) + dt;
+      // Fondu / écrasement
+      const shrink = Math.max(0.35, 1 - cine.t * 0.55);
+      if (boss.baseW == null) { boss.baseW = boss.w; boss.baseH = boss.h; }
+      boss.w = Math.max(40, Math.round((boss.baseW || 170) * shrink));
+      boss.h = Math.max(24, Math.round(28 + (boss.baseH || 380) * 0.08 * (1 - cine.t)));
+      if (cine.t >= 1.15) {
+        burst(boss.x + boss.w * 0.5, GROUND_Y - 20, {
+          n: 28, ring: true, speed: 200, life: 0.55, gravity: 80,
+          color: "#ff4050", size: 4, glow: true,
+        });
+        finishBossCinematic();
+      }
+      return;
+    }
+  }
+
   function stompCop(o) {
+    // Pendant la cinématique : seul L peut « tuer » le boss
+    if (o && o.kind === "boss") return;
     const dir = player.facing || (player.vx >= 0 ? 1 : -1);
     o._nearMissDone = true;
     o._spent = false;
@@ -7626,6 +8601,41 @@ on</button>
 
   function updatePlayer(dt) {
     updateMovingPlatforms(dt);
+
+    // Déclenche cinématique face au mur de CRS (pas pendant l’intro cam)
+    if (!cine && !isIntroCam()) {
+      const boss = findBossObstacle();
+      if (boss && player.x + player.w >= boss.x - 210) {
+        startBossCinematic(boss);
+      }
+    }
+    if (isPlayerLocked()) {
+      if (isCinematic()) updateBossCinematic(dt);
+      // Physique figée / freinage — pas d’input
+      player.moving = false;
+      player.jetting = false;
+      player.vx *= Math.exp(-10 * dt);
+      if (Math.abs(player.vx) < 8) player.vx = 0;
+      if (!player.onGround) {
+        player.vy += GRAVITY * dt;
+        if (player.vy > 620) player.vy = 620;
+      } else {
+        player.vy = 0;
+      }
+      player._px = player.x;
+      player._py = player.y;
+      player.x += player.vx * dt;
+      player.y += player.vy * dt;
+      resolvePlatforms();
+      player.invuln = Math.max(player.invuln || 0, isIntroCam() ? 0.2 : 0.4);
+      maxReachX = Math.max(maxReachX, player.x + player.w);
+      updatePlayerHp(dt);
+      if (player.invuln > 0) player.invuln -= dt;
+      updateCompanion(dt);
+      keys.jumpPressed = false;
+      keys.actionPressed = false;
+      return;
+    }
 
     const wantL = keys.left, wantR = keys.right;
     const ctrl = player.onGround ? 1 : AIR_CTRL;
@@ -7959,17 +8969,13 @@ on</button>
             n: 16, ring: true, speed: 150, life: 0.4, gravity: 30,
             color: C.spec, size: 3, glow: true,
           });
-        } else {
-          die(
-            hit.kind === "boss" ? "boss"
-              : hit.kind === "angry" ? "angry"
-              : "police"
-          );
-          return;
+        } else if (!hurtFromPolice(hit)) {
+          return; // mort
         }
       }
     }
 
+    updatePlayerHp(dt);
     if (player.invuln > 0) player.invuln -= dt;
     else if (hitStalactite()) {
       die("spike");
@@ -7977,6 +8983,8 @@ on</button>
     }
 
     if (updateHazardsFromSky(dt)) return;
+
+    updateMetro(dt);
 
     // Arrivée pile à 920 m (bord droit du perso sur la ligne)
     if (player.x + player.w >= finishX) {
@@ -7988,6 +8996,99 @@ on</button>
     updateCompanion(dt);
     keys.jumpPressed = false;
     keys.actionPressed = false;
+  }
+
+  /** Métro aérien : s’arme vers 800 m, traverse 100 m de droite à gauche */
+  function updateMetro(dt) {
+    if (!metro || metro.done) return;
+    const m = meters();
+    if (!metro.armed && m >= METRO_AT_METERS - 8) {
+      metro.armed = true;
+      metro.active = true;
+      metro.x = metro.zone1 + 80;
+      if (!metro.warnShown) {
+        metro.warnShown = true;
+        screenText("MÉTRO AÉRIEN", { color: "#9ad0ff", size: 34, y: H * 0.24, life: 1.6 });
+      }
+    }
+    if (!metro.active) return;
+    metro.x += metro.vx * dt;
+    if (metro.x + metro.w < metro.zone0 - 120) {
+      metro.active = false;
+      metro.done = true;
+    }
+  }
+
+  /** Viaduc fixe 800–900 m + rame qui passe (décor, pas de collision) */
+  function drawMetro() {
+    if (!metro) return;
+    const z0 = metro.zone0;
+    const z1 = metro.zone1;
+    const deckY = metro.deckY;
+    // Cull si loin de la caméra
+    if (sx(z1) < -80 || sx(z0) > W + 80) {
+      // rame peut encore être visible hors zone stricte
+      if (!metro.active || sx(metro.x + metro.w) < -40 || sx(metro.x) > W + 40) return;
+    }
+
+    const railY = sy(deckY);
+    const x0 = sx(z0);
+    const x1 = sx(z1);
+    const span = x1 - x0;
+
+    ctx.save();
+    // Piliers + tablier (métro aérien)
+    const pillarW = 18;
+    const pillarGap = 72;
+    for (let wx = z0 + 36; wx < z1; wx += pillarGap) {
+      const px = sx(wx);
+      if (px < -40 || px > W + 40) continue;
+      const ground = sy(GROUND_Y);
+      // Pilier
+      fr(px - pillarW * 0.5, railY + 6, pillarW, ground - railY - 6, "#4a5560");
+      fr(px - pillarW * 0.5 + 2, railY + 8, pillarW - 4, ground - railY - 10, "#3a434c");
+      // Contreventement léger
+      ctx.strokeStyle = "rgba(70, 82, 94, 0.85)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(px - 14, railY + 18);
+      ctx.lineTo(px + 14, ground - 24);
+      ctx.moveTo(px + 14, railY + 18);
+      ctx.lineTo(px - 14, ground - 24);
+      ctx.stroke();
+    }
+    // Tablier / voie
+    fr(x0 - 8, railY, span + 16, 10, "#5a6570");
+    fr(x0 - 6, railY + 2, span + 12, 4, "#7a8794");
+    fr(x0 - 4, railY - 3, span + 8, 4, "#2e3640");
+    // Rails
+    ctx.strokeStyle = "rgba(200, 210, 220, 0.55)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0, railY + 1);
+    ctx.lineTo(x1, railY + 1);
+    ctx.moveTo(x0, railY + 5);
+    ctx.lineTo(x1, railY + 5);
+    ctx.stroke();
+
+    // Rame
+    if (metro.active || (!metro.done && metro.armed)) {
+      const tx = sx(metro.x);
+      const ty = sy(metro.y);
+      if (tx < W + 40 && tx + metro.w > -40) {
+        if (metroImg.complete && metroImg.naturalWidth > 0) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(metroImg, tx, ty, metro.w, metro.h);
+        } else {
+          // Fallback pixel RER
+          fr(tx + 8, ty + metro.h * 0.28, metro.w - 16, metro.h * 0.42, "#6a9aa0");
+          fr(tx + 8, ty + metro.h * 0.48, metro.w - 16, 6, "#c04040");
+          fr(tx + 14, ty + metro.h * 0.32, 18, 14, "#1a2430");
+          fr(tx + metro.w - 40, ty + metro.h * 0.32, 18, 14, "#1a2430");
+        }
+      }
+    }
+    ctx.restore();
   }
 
   function spawnIceSpike() {
@@ -8651,6 +9752,15 @@ on</button>
       }
     }
 
+    // Cinématique boss : positions gérées par updateBossCinematic
+    if (companion.cineAttack || isCinematic()) {
+      if (companion.featPhase === "name") {
+        companion.featX = companion.x + companion.w * 0.5;
+        companion.featY = companion.y - 16;
+      }
+      return;
+    }
+
     // En attente à ~500 m — « L au carré » au-dessus
     if (!companion.active) {
       companion.facing = player.x < companion.x ? -1 : 1;
@@ -9001,6 +10111,89 @@ on</button>
     AudioFX.updateRunMusic(false, false, true);
   }
 
+  /** Sync barre verte + vignette rouge blessure */
+  function syncHpBar() {
+    const bar = el.hpBar;
+    const fill = el.hpFill;
+    if (!bar || !fill) return;
+    const show = state === "play";
+    bar.classList.toggle("hidden", !show);
+    bar.setAttribute("aria-hidden", show ? "false" : "true");
+    if (!show) {
+      try { document.documentElement.classList.remove("hurt"); } catch (_) {}
+      return;
+    }
+    const ratio = Math.max(0, Math.min(1, (player.hp || 0) / PLAYER_HP_MAX));
+    fill.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+    const flash = player.hurtFlashT || 0;
+    const root = document.documentElement;
+    if (flash > 0) {
+      root.classList.add("hurt");
+      // Plein ~0.4 s puis fade sur le reste des 2 s
+      const a = flash > HP_HURT_FLASH - 0.35
+        ? 0.9
+        : Math.max(0, flash / (HP_HURT_FLASH - 0.35)) * 0.85;
+      root.style.setProperty("--hurt-opacity", a.toFixed(3));
+    } else {
+      root.classList.remove("hurt");
+      root.style.removeProperty("--hurt-opacity");
+    }
+  }
+
+  function updatePlayerHp(dt) {
+    if (state !== "play") return;
+    if (player.hurtFlashT > 0) {
+      player.hurtFlashT = Math.max(0, player.hurtFlashT - dt);
+    }
+    if (player.hpRegenDelay > 0) {
+      player.hpRegenDelay = Math.max(0, player.hpRegenDelay - dt);
+    } else if (player.hp < PLAYER_HP_MAX) {
+      // Regen rapide après le flash rouge
+      player.hp = Math.min(PLAYER_HP_MAX, player.hp + HP_REGEN_RATE * dt);
+    }
+    syncHpBar();
+  }
+
+  /**
+   * Coup de CRS (sans bouclier) :
+   * — vie pleine → 1 PV, écran rouge 2 s, puis regen rapide
+   * — déjà blessé → mort
+   * @returns {boolean} false si la partie est finie
+   */
+  function hurtFromPolice(hit) {
+    if (isAdmin()) {
+      player.invuln = Math.max(player.invuln || 0, 0.5);
+      return true;
+    }
+    const kind = hit && hit.kind;
+    // Vie pleine : encaisse le 1er coup
+    if (player.hp >= PLAYER_HP_MAX - 0.01) {
+      player.hp = Math.max(0, PLAYER_HP_MAX - 1);
+      player.hurtFlashT = HP_HURT_FLASH;
+      player.hpRegenDelay = HP_REGEN_DELAY;
+      player.invuln = Math.max(player.invuln || 0, 0.7);
+      // Léger knockback pour sortir du overlap
+      const dir = (hit && (player.x + player.w * 0.5) < (hit.x + hit.w * 0.5)) ? -1 : 1;
+      player.vx = dir * Math.max(140, Math.abs(player.vx) * 0.4);
+      player.vy = Math.min(player.vy, -180);
+      player.onGround = false;
+      addTrauma(0.42);
+      flashScreen("rgba(255,50,60,0.45)");
+      floatText(player.x + player.w * 0.5, player.y - 10, "AÏE", {
+        color: "#ff6b7a", size: 15, life: 0.9,
+      });
+      burst(player.x + player.w * 0.5, player.y + player.h * 0.4, {
+        n: 12, speed: 110, life: 0.35, gravity: 40,
+        color: "#ff5060", size: 2, glow: true,
+      });
+      syncHpBar();
+      return true;
+    }
+    // Déjà touché : mort
+    die(kind === "boss" ? "boss" : kind === "angry" ? "angry" : "police");
+    return false;
+  }
+
   function die(reason) {
     if (state !== "play") return;
     // Mode admin : invincible (sauf victoire)
@@ -9010,6 +10203,14 @@ on</button>
       player.chemsFall = false;
       if (player.y > GROUND_Y - player.h) player.y = GROUND_Y - player.h - 2;
       return;
+    }
+    try {
+      document.documentElement.classList.remove("hurt");
+      document.documentElement.style.removeProperty("--hurt-opacity");
+    } catch (_) {}
+    if (el.hpBar) {
+      el.hpBar.classList.add("hidden");
+      el.hpBar.setAttribute("aria-hidden", "true");
     }
     if (paused) setPaused(false);
     AudioFX.stopAllFlicVoices();
@@ -10239,6 +11440,13 @@ on</button>
       }
 
       if (o.kind === "boss") {
+        // Pendant la cinématique : figé (L s’occupe de lui)
+        if (o._cineLock || isCinematic()) {
+          o._alertT = Math.max(o._alertT, 1.2);
+          o._faceDir = -1;
+          if (!o._downed) o.y = GROUND_Y - o.h;
+          continue;
+        }
         // Mur vivant : avance vers le joueur dès ~900 m
         o._alertT = Math.max(o._alertT, 1.2);
         o._faceDir = -1;
@@ -11275,11 +12483,13 @@ on</button>
       ctx.scale(1.025, 1.025);
       ctx.translate(-W / 2, -H / 2);
     }
-    if (threatZoom > 1.001 && state !== "menu") {
+    const introZ = introCamZoom();
+    const viewZ = (threatZoom > 1.001 ? threatZoom : 1) * introZ;
+    if (viewZ > 1.001 || viewZ < 0.998) {
       const ax = sx(player.x + player.w * 0.5);
       const ay = sy(player.y + player.h * 0.45);
       ctx.translate(ax, ay);
-      ctx.scale(threatZoom, threatZoom);
+      ctx.scale(viewZ, viewZ);
       ctx.translate(-ax, -ay);
     }
     drawSky();
@@ -11290,6 +12500,7 @@ on</button>
     drawWater();
     drawGround();
     drawFinish();
+    drawMetro();
     drawLevelProps();
     drawCollectibles();
     drawObstacles();
@@ -11356,12 +12567,16 @@ on</button>
       updatePlayer(gdt);
       // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
       if (state === "play") {
-        const targetX = player.x - W * CAM_FOCUS_X;
-        camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
-        if (camX < 0) camX = 0;
-        // Caméra verticale : suit le perso (ciel / jetpack), ancrée au sol sinon
-        const targetY = Math.min(0, player.y - H * 0.52);
-        camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * gdt));
+        if (isIntroCam()) {
+          updateIntroCam(gdt);
+        } else {
+          const targetX = player.x - W * CAM_FOCUS_X;
+          camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
+          if (camX < 0) camX = 0;
+          // Caméra verticale : suit le perso (ciel / jetpack), ancrée au sol sinon
+          const targetY = Math.min(0, player.y - H * 0.52);
+          camY += (targetY - camY) * (1 - Math.exp(-CAM_LERP * gdt));
+        }
         updateHud();
         updateSnow(gdt);
         AudioFX.setProgress(meters());
@@ -11369,10 +12584,10 @@ on</button>
         AudioFX.updateRunMusic(true, false);
         // Vent / ville : seulement à la course
         AudioFX.updateCityAmbience(
-          player.onGround && player.moving && Math.abs(player.vx) > 15
+          !isIntroCam() && player.onGround && player.moving && Math.abs(player.vx) > 15
         );
         // Sirène police à 20 s de jeu
-        AudioFX.tickPlaySiren(gdt);
+        if (!isIntroCam()) AudioFX.tickPlaySiren(gdt);
         AudioFX.updateCopsAudio(player, obstacles);
         try {
           AudioFX.updateCompanionVoices(
@@ -11381,7 +12596,7 @@ on</button>
           );
         } catch (_) {}
         updateCopsAnim(gdt);
-        updateThreatZoom(gdt);
+        if (!isIntroCam()) updateThreatZoom(gdt);
       }
     } else if (state === "play" && paused) {
       AudioFX.tickSync(realDt);
@@ -11688,6 +12903,8 @@ on</button>
     AudioFX.updateRunMusic(true, false);
     syncPhoneLayoutClass();
     resize();
+    syncHpBar();
+    beginIntroCam();
   }
 
   async function startGame() {
@@ -11799,6 +13016,16 @@ on</button>
       el.btnSfx.textContent = off ? "son\noff" : "son\non";
       el.btnSfx.setAttribute("aria-label", off ? "Activer les sons" : "Couper les sons");
     }
+    if (el.nowRadio) {
+      const off = AudioFX.isMusicMuted();
+      el.nowRadio.classList.toggle("is-muted", off);
+      el.nowRadio.setAttribute(
+        "aria-label",
+        off
+          ? "Radio en pause : Phénomène Raven — Ysemo"
+          : "Radio : Phénomène Raven — Ysemo"
+      );
+    }
   }
   function syncMuteBtn() { syncAudioBtns(); }
   syncAudioBtns();
@@ -11806,6 +13033,15 @@ on</button>
   document.getElementById("btn-start").addEventListener("click", startGame);
   document.getElementById("btn-retry").addEventListener("click", startGame);
 
+  // Admin : ouvre le pad PIN (toujours visible hors mode admin)
+  if (el.btnAdmin) {
+    el.btnAdmin.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isAdmin()) return;
+      openAdminPinPad();
+    });
+  }
   // Admin OFF (accueil)
   if (el.btnAdminOff) {
     el.btnAdminOff.addEventListener("click", (e) => {
@@ -11853,16 +13089,18 @@ on</button>
       }
     });
   }
-  // Saisie clavier du code (accueil)
+  // Saisie clavier du code (accueil) — affiche aussi le pad
   window.addEventListener("keydown", (e) => {
     if (state !== "menu" || isAdmin()) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key;
     if (k >= "0" && k <= "9") {
+      if (el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
       pushAdminDigit(k);
       return;
     }
     if (k === "Backspace") {
+      if (el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
       adminPinBuf = adminPinBuf.slice(0, -1);
       refreshAdminPinDots();
     }
