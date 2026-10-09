@@ -1966,6 +1966,136 @@
       opacity: 0.85;
     }
 
+    /* —— Guide tactile mobile (aide début de partie) —— */
+    .touch-guide {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.7s ease;
+    }
+    #touch.guide-on .touch-guide { opacity: 1; }
+    #touch.guide-on.guide-fade .touch-guide { opacity: 0; }
+    .touch-guide-split {
+      position: absolute;
+      left: 50%;
+      bottom: max(20px, env(safe-area-inset-bottom) + 12px);
+      width: 1px;
+      height: min(38%, 200px);
+      translate: -50% 0;
+      background: linear-gradient(
+        to top,
+        transparent 0%,
+        rgba(61, 196, 255, 0.08) 12%,
+        rgba(61, 196, 255, 0.42) 42%,
+        rgba(255, 229, 102, 0.22) 58%,
+        rgba(61, 196, 255, 0.12) 82%,
+        transparent 100%
+      );
+      box-shadow:
+        0 0 6px rgba(61, 196, 255, 0.35),
+        0 0 16px rgba(61, 196, 255, 0.18);
+      border-radius: 1px;
+    }
+    .touch-guide-left,
+    .touch-guide-right {
+      position: absolute;
+      bottom: max(36px, env(safe-area-inset-bottom) + 22px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      text-align: center;
+    }
+    .touch-guide-left {
+      left: 0;
+      width: 48%;
+    }
+    .touch-guide-right {
+      right: 0;
+      width: 52%;
+    }
+    .touch-guide-label {
+      font-family: var(--font-arcade);
+      font-size: clamp(10px, 2.6vw, 12px);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(220, 232, 244, 0.72);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+    }
+    .touch-guide-sub {
+      font-family: var(--font-ui);
+      font-size: clamp(11px, 2.8vw, 13px);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1.35;
+      color: rgba(200, 214, 230, 0.62);
+      max-width: 16em;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+    .touch-guide-sub strong {
+      color: rgba(255, 229, 102, 0.85);
+      font-weight: 700;
+    }
+    .touch-guide-stick {
+      position: relative;
+      width: 86px;
+      height: 86px;
+      opacity: 0.5;
+      transition: opacity 0.35s ease;
+    }
+    #touch.guide-stick-hide .touch-guide-stick {
+      opacity: 0;
+    }
+    .touch-guide-stick-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(238, 242, 248, 0.28);
+      background: rgba(8, 16, 28, 0.22);
+      box-shadow:
+        inset 0 0 0 1px rgba(61, 196, 255, 0.14),
+        0 0 14px rgba(61, 196, 255, 0.18);
+    }
+    .touch-guide-stick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 34px;
+      height: 34px;
+      margin: -17px 0 0 -17px;
+      border-radius: 50%;
+      background: rgba(61, 196, 255, 0.32);
+      border: 2px solid rgba(238, 242, 248, 0.4);
+      box-shadow: 0 0 10px rgba(61, 196, 255, 0.3);
+    }
+    html.phone-portrait .touch-guide-left { width: 52%; }
+    html.phone-portrait .touch-guide-right { width: 48%; }
+    html.phone-portrait .touch-guide-stick {
+      width: 96px;
+      height: 96px;
+    }
+    html.phone-portrait .touch-guide-stick-knob {
+      width: 38px;
+      height: 38px;
+      margin: -19px 0 0 -19px;
+    }
+    html.phone-landscape .touch-guide-split {
+      height: min(48%, 160px);
+      bottom: max(10px, env(safe-area-inset-bottom) + 6px);
+    }
+    html.phone-landscape .touch-guide-left,
+    html.phone-landscape .touch-guide-right {
+      bottom: max(16px, env(safe-area-inset-bottom) + 10px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .touch-guide { transition-duration: 0.15s !important; }
+      .touch-guide-stick { transition-duration: 0.1s !important; }
+    }
+
     /* Ordinateur : jamais de zones tactiles */
     html.platform-desktop #touch,
     html.platform-desktop #touch.visible {
@@ -2494,8 +2624,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      width: min(210px, 46vw);
-      padding: 7px 12px 7px 7px;
+      width: min(400px, 72vw);
+      padding: 7px 16px 7px 7px;
       border-radius: 999px;
       background:
         linear-gradient(165deg, rgba(255,255,255,0.07), transparent 42%),
@@ -2616,8 +2746,8 @@
       right: auto;
       top: max(10px, env(safe-area-inset-top));
       bottom: auto;
-      width: min(148px, 44vw);
-      padding: 4px 8px 4px 4px;
+      width: min(280px, 78vw);
+      padding: 4px 12px 4px 4px;
       gap: 6px;
       z-index: 45;
     }
@@ -2633,10 +2763,12 @@
       right: auto;
       top: auto;
       bottom: max(12px, calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + 10px));
-      width: min(200px, 62vw);
-      padding: 6px 12px 6px 6px;
+      width: min(380px, 88vw);
+      padding: 6px 16px 6px 6px;
       gap: 8px;
-      z-index: 58;
+      /* Sous #touch (z 15) : ne pas bloquer joystick / saut malgré la largeur ×2 */
+      z-index: 14;
+      pointer-events: none;
     }
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio__disc {
       width: 38px;
@@ -2648,8 +2780,8 @@
     html.phone-portrait.end-ui .now-radio {
       top: max(64px, calc(env(safe-area-inset-top) + 56px));
       bottom: auto;
-      width: min(150px, 44vw);
-      padding: 4px 8px 4px 4px;
+      width: min(290px, 78vw);
+      padding: 4px 12px 4px 4px;
       gap: 6px;
       z-index: 45;
     }
@@ -2663,8 +2795,8 @@
     html.phone-portrait.pause-ui .now-radio {
       top: auto;
       bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
-      width: min(168px, 52vw);
-      padding: 5px 10px 5px 5px;
+      width: min(320px, 84vw);
+      padding: 5px 14px 5px 5px;
       gap: 7px;
       z-index: 45;
     }
@@ -2678,8 +2810,8 @@
       left: max(10px, env(safe-area-inset-left));
       top: auto;
       bottom: max(10px, env(safe-area-inset-bottom));
-      width: min(220px, 42vw);
-      padding: 7px 12px 7px 7px;
+      width: min(400px, 62vw);
+      padding: 7px 16px 7px 7px;
     }
     html.phone-landscape .now-radio__disc {
       width: 40px;
@@ -2694,7 +2826,14 @@
     }
     html.platform-desktop .now-radio {
       bottom: max(16px, env(safe-area-inset-bottom));
+      width: min(420px, 38vw);
+      padding: 8px 18px 8px 8px;
       z-index: 56;
+    }
+    /* Desktop en jeu : radio visible mais ne vole pas les clics UI */
+    html.platform-desktop.play-ui .now-radio {
+      z-index: 14;
+      pointer-events: none;
     }
 
     /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
@@ -4488,6 +4627,20 @@ on</button>
     <div id="touch" aria-hidden="true">
       <div id="stick-zone" class="touch-zone" aria-label="Joystick déplacement"></div>
       <div id="jump-zone" class="touch-zone" aria-label="Saut / Jetpack"></div>
+      <div id="touch-guide" class="touch-guide" aria-hidden="true">
+        <div class="touch-guide-split" aria-hidden="true"></div>
+        <div class="touch-guide-left">
+          <p class="touch-guide-label">Joystick</p>
+          <div class="touch-guide-stick" aria-hidden="true">
+            <span class="touch-guide-stick-ring"></span>
+            <span class="touch-guide-stick-knob"></span>
+          </div>
+        </div>
+        <div class="touch-guide-right">
+          <p class="touch-guide-label">Toucher ici pour sauter</p>
+          <p class="touch-guide-sub">Puis encore en l’air pour le <strong>double saut</strong></p>
+        </div>
+      </div>
       <div id="stick-base" class="stick-base"></div>
       <div id="stick-knob" class="stick-knob"></div>
       <div id="jump-flash" class="jump-flash"></div>
@@ -7348,6 +7501,68 @@ on</button>
   let stickOriginY = 0;
   let jumpTouchId = null;
 
+  /* Guide tactile : visible ~5–10 s au début, accélère si le joueur touche */
+  let touchGuideEndTimer = 0;
+  let touchGuideFadeTimer = 0;
+  let touchGuideHits = 0;
+  const TOUCH_GUIDE_MS = 8000;
+
+  function clearTouchGuideTimers() {
+    if (touchGuideEndTimer) { clearTimeout(touchGuideEndTimer); touchGuideEndTimer = 0; }
+    if (touchGuideFadeTimer) { clearTimeout(touchGuideFadeTimer); touchGuideFadeTimer = 0; }
+  }
+
+  function hideTouchGuide(immediate) {
+    const root = el && el.touch ? el.touch : document.getElementById("touch");
+    if (!root) return;
+    clearTouchGuideTimers();
+    if (immediate || !root.classList.contains("guide-on")) {
+      root.classList.remove("guide-on", "guide-fade", "guide-stick-hide");
+      return;
+    }
+    root.classList.add("guide-fade");
+    touchGuideFadeTimer = setTimeout(() => {
+      root.classList.remove("guide-on", "guide-fade", "guide-stick-hide");
+      touchGuideFadeTimer = 0;
+    }, 720);
+  }
+
+  function scheduleTouchGuideEnd(ms) {
+    if (touchGuideEndTimer) clearTimeout(touchGuideEndTimer);
+    touchGuideEndTimer = setTimeout(() => {
+      touchGuideEndTimer = 0;
+      hideTouchGuide(false);
+    }, Math.max(100, ms));
+  }
+
+  function showTouchGuide() {
+    if (!isTouch()) return;
+    const root = el && el.touch ? el.touch : document.getElementById("touch");
+    if (!root) return;
+    clearTouchGuideTimers();
+    touchGuideHits = 0;
+    root.classList.add("guide-on");
+    root.classList.remove("guide-fade", "guide-stick-hide");
+    let hold = TOUCH_GUIDE_MS;
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) hold = 3500;
+    } catch (_) {}
+    scheduleTouchGuideEnd(hold);
+  }
+
+  function noteTouchGuideInteract(kind) {
+    const root = el && el.touch ? el.touch : document.getElementById("touch");
+    if (!root || !root.classList.contains("guide-on") || root.classList.contains("guide-fade")) return;
+    touchGuideHits++;
+    if (kind === "stick") root.classList.add("guide-stick-hide");
+    // Plus le joueur touche, plus l’aide s’efface vite
+    const remain = touchGuideHits >= 4 ? 350
+      : touchGuideHits >= 3 ? 900
+      : touchGuideHits >= 2 ? 1600
+      : 2600;
+    scheduleTouchGuideEnd(remain);
+  }
+
   function setMoveKeys(left, right) {
     keys.left = !!left;
     keys.right = !!right;
@@ -7419,11 +7634,13 @@ on</button>
       if (stickTouchId == null && touchInZone(t, stickZone)) {
         e.preventDefault();
         stickTouchId = t.identifier;
+        noteTouchGuideInteract("stick");
         showStickAt(t.clientX, t.clientY);
         updateStickFrom(t.clientX, t.clientY);
       } else if (jumpTouchId == null && touchInZone(t, jumpZone)) {
         e.preventDefault();
         jumpTouchId = t.identifier;
+        noteTouchGuideInteract("jump");
         setJumpKey(true);
       }
     }
@@ -7523,6 +7740,7 @@ on</button>
     try {
       if (!mobile && typeof el !== "undefined" && el && el.touch) {
         el.touch.classList.remove("visible");
+        try { hideTouchGuide(true); } catch (_) {}
       }
     } catch (_) {}
   }
@@ -8218,6 +8436,24 @@ on</button>
     p.glow = false;
   }
 
+  /** Fumée d’échappement scooter (derrière, sens opposé à la course) */
+  function scooterSmoke(x, y, face) {
+    const p = getFreeParticle();
+    const back = face >= 0 ? -1 : 1;
+    p.x = x + back * (4 + Math.random() * 6);
+    p.y = y - 2 - Math.random() * 4;
+    p.vx = back * (18 + Math.random() * 28) + (Math.random() - 0.5) * 8;
+    p.vy = -12 - Math.random() * 22;
+    p.life = 0.28 + Math.random() * 0.22;
+    p.max = p.life;
+    p.size = 2 + (Math.random() * 3 | 0);
+    p.color = Math.random() < 0.45
+      ? "rgba(150,158,170,0.55)"
+      : "rgba(90,96,108,0.5)";
+    p.gravity = -20;
+    p.glow = false;
+  }
+
   /* ---- Juice : screen shake (trauma), textes flottants, flash plein écran ---- */
   const floaters = [];
   const screenTexts = [];
@@ -8628,6 +8864,8 @@ on</button>
     coyoteTimer: 0,
     jumpBufferTimer: 0,
     onScooter: false,
+    scooterWheel: 0,
+    scooterSmokeT: 0,
   };
 
   let platforms = [];
@@ -8924,6 +9162,8 @@ on</button>
       coyoteTimer: 0,
       jumpBufferTimer: 0,
       onScooter: false,
+      scooterWheel: 0,
+      scooterSmokeT: 0,
     });
 
     /*
@@ -8950,18 +9190,13 @@ on</button>
     // Après la trappe → sol collé (pas de trou juste après)
     let cx = TRAP_X + TRAP_W;
     let segN = 0;
-    const gapFloatXs = [];
     while (cx < FINISH_AT - 60) {
       const runM = 18 + (segN % 6) * 3; // 18–33 m
       const gap = 120 + (segN % 5) * 12;
       let w = runM * M;
       if (cx + w >= FINISH_AT - 40) w = FINISH_AT + 220 - cx;
       groundSegs.push([cx, w]);
-      const nextGapStart = cx + w;
-      if (nextGapStart + gap < FINISH_AT - 80) {
-        gapFloatXs.push(nextGapStart - 100);
-      }
-      cx = nextGapStart + gap;
+      cx = cx + w + gap;
       segN++;
     }
     if (cx < FINISH_AT + 200) {
@@ -8972,11 +9207,31 @@ on</button>
       if (w < 40) continue;
       platforms.push({ x, y: GROUND_Y, w, h: H - GROUND_Y + 40, type: "ground" });
     }
+
     trapDoor = {
       x: TRAP_X, y: GROUND_Y, w: TRAP_W, h: H - GROUND_Y + 40,
       type: "trap", open: false,
     };
     platforms.push(trapDoor);
+
+    /** Tous les trous (début + post-trappe) pour clearance saut / bonus */
+    const gapMids = [];
+    {
+      const gs = platforms
+        .filter((p) => p.type === "ground")
+        .slice()
+        .sort((a, b) => a.x - b.x);
+      for (let gi = 0; gi < gs.length - 1; gi++) {
+        const a = gs[gi];
+        const b = gs[gi + 1];
+        const x0 = a.x + a.w;
+        const x1 = b.x;
+        if (x1 - x0 < 90) continue;
+        // Ignore trappe chems (étroite, pas un saut de parcours)
+        if (x0 < trapDoor.x + trapDoor.w && x1 > trapDoor.x) continue;
+        gapMids.push({ x0, x1, mid: (x0 + x1) * 0.5 });
+      }
+    }
 
     levelProps.push({
       kind: "parkingSign",
@@ -9063,38 +9318,68 @@ on</button>
       return true;
     }
 
-    // Plateformes au-dessus de la tête (sol y 448, tête ≈ 352) — y plus petit = plus haut
+    /**
+     * Corridor de saut : pic simple ~161 px au-dessus du stand.
+     * Toute float « basse » (y trop grand) au-dessus d’un trou bloque le saut.
+     */
+    const JUMP_PEAK_PX = Math.round((JUMP_V * JUMP_V) / (2 * GRAVITY));
+    const JUMP_TOP_Y = GROUND_Y - CHAR_H - JUMP_PEAK_PX; // ~191
+    // Plateformes au-dessus des trous : assez hautes pour laisser le saut libre (+ marge)
+    const GAP_FLOAT_MAX_Y = Math.min(128, JUMP_TOP_Y - 56);
+
+    function overlapsGapZone(fx, fw, pad) {
+      const x0 = fx - pad;
+      const x1 = fx + fw + pad;
+      for (let gi = 0; gi < gapMids.length; gi++) {
+        const g = gapMids[gi];
+        if (x0 < g.x1 && x1 > g.x0) return true;
+      }
+      return false;
+    }
+
+    // Routes hautes (y petit = haut) — plus de plafond bas au-dessus des sauts
     const floats = [
-      [52 * M - 120, 280, 112],
-      [1740 - 115, 265, 118],
-      [2729 - 110, 250, 120],
-      [3507 - 108, 240, 124],
-      [4254 - 105, 230, 126],
-      [4970 - 102, 220, 128],
-      [5655 - 100, 210, 130],
-      [6309 - 98, 200, 132],
-      [TRAP_X - 260, 190, 136],
-      // Juste après Le L (~500 m) — bien au-dessus de la tête
-      [LE_L_MEET_X + 160, 195, 124],
-      [LE_L_MEET_X + 420, 185, 118],
-      [LE_L_MEET_X + 720, 175, 120],
+      // Anciennes plateformes « front de trou » remontées (étaient à y 200–280)
+      [52 * M + 40, 118, 100],
+      [1740 + 80, 112, 104],
+      [2729 + 70, 108, 108],
+      [3507 + 60, 104, 110],
+      [4254 + 55, 100, 112],
+      [4970 + 50, 98, 114],
+      [5655 + 48, 96, 116],
+      [6309 + 45, 94, 118],
+      [TRAP_X - 200, 110, 120],
+      // Après Le L — routes hautes, hors trajectoire de saut sol
+      [LE_L_MEET_X + 200, 108, 110],
+      [LE_L_MEET_X + 520, 100, 108],
+      [LE_L_MEET_X + 860, 96, 112],
     ];
-    for (let i = 0; i < gapFloatXs.length; i++) {
-      const fx = gapFloatXs[i];
-      const fy = 175 - (i % 5) * 8;
-      floats.push([fx, fy, 120 + (i % 4) * 6]);
+    // 1 plateforme haute sur 2 trous (centre du gap) — jamais basse
+    for (let i = 0; i < gapMids.length; i++) {
+      if (i % 2 !== 0) continue;
+      const g = gapMids[i];
+      const fw = 100 + (i % 3) * 8;
+      const fx = g.mid - fw * 0.5;
+      const fy = Math.min(GAP_FLOAT_MAX_Y, 100 + (i % 3) * 8);
+      floats.push([fx, fy, fw]);
     }
     // Ciel jetpack — jusqu’à l’arrivée
     for (let i = 0; i < 16; i++) {
       floats.push([500 + i * 1050, 50 + (i % 4) * 28, 120 + (i % 3) * 10]);
     }
     for (let i = 0; i < floats.length; i++) {
-      const [x, y, w] = floats[i];
+      let [x, y, w] = floats[i];
       if (x > FINISH_AT + 40) continue;
-      const sky = y < 200;
+      // Garde-fou : au-dessus d’un trou, remonter ou jeter les plateformes bloquantes
+      if (overlapsGapZone(x, w, 36) && y > GAP_FLOAT_MAX_Y) {
+        y = GAP_FLOAT_MAX_Y - (i % 2) * 6;
+      }
+      // Zone d’approche de trou (hors ciel) : pas de plateforme basse
+      if (y > GAP_FLOAT_MAX_Y + 20 && overlapsGapZone(x, w, 90)) continue;
+      const sky = y < 140;
       if (!sky && !floatClearsCops(x, w)) continue;
       const moveAmp = sky ? 0
-        : (x < 3400 ? 0 : x < 7000 ? 24 : x < 12000 ? 36 : 48);
+        : (x < 3400 ? 0 : x < 7000 ? 20 : x < 12000 ? 30 : 40);
       const moveSpeed = 1.0 + (x / WORLD_LEN) * 1.3;
       platforms.push({
         x, y, w, h: 16, type: "float",
@@ -9105,27 +9390,72 @@ on</button>
       });
     }
 
-    // Camemberts sur tout le trajet (roses : très rares)
-    const CAM_SZ = 74; // ~−3 % vs 76
-    for (let i = 0; i < 28; i++) {
-      const x = 280 + i * 580 + (i % 3) * 24;
-      if (x > FINISH_AT - 80) break;
-      // Juste après Le L : coincé dans la plateforme flottante → retiré
-      if (i === 4) continue;
-      let y = GROUND_Y - 92 - (i % 3) * 22;
-      if (i % 5 === 0) y = 290;
-      if (i % 7 === 0) y = 250;
-      let onGround = false;
-      for (const p of platforms) {
-        if (p.type === "ground" && x >= p.x && x <= p.x + p.w) { onGround = true; break; }
+    // Camemberts : espacés + quelques récompenses au-dessus sauts / flics
+    const CAM_SZ = 74;
+    const CAM_MIN_SEP = 52 * M; // ~52 m entre camemberts normaux
+    const camXs = [];
+    function camTooClose(wx, sep) {
+      const s = sep != null ? sep : CAM_MIN_SEP;
+      for (let ci = 0; ci < camXs.length; ci++) {
+        if (Math.abs(camXs[ci] - wx) < s) return true;
       }
-      if (!onGround && i % 2 === 0) continue;
-      collectibles.push({ x, y, w: CAM_SZ, h: CAM_SZ, taken: false, bob: Math.random() * 6.28, special: false });
+      return false;
     }
-    // Roses de base (avant 500 m) + 1 rose ~50 m avant chaque gros obstacle (≥500 m)
+    function placeCam(wx, wy, opts) {
+      if (wx < 200 || wx > FINISH_AT - 80) return false;
+      if (camTooClose(wx, opts && opts.sep)) return false;
+      let onGround = false;
+      for (let pi = 0; pi < platforms.length; pi++) {
+        const p = platforms[pi];
+        if (p.type === "ground" && wx + CAM_SZ * 0.5 >= p.x && wx + CAM_SZ * 0.5 <= p.x + p.w) {
+          onGround = true;
+          break;
+        }
+      }
+      if (opts && opts.requireGround && !onGround) return false;
+      collectibles.push({
+        x: wx, y: wy, w: CAM_SZ, h: CAM_SZ,
+        taken: false,
+        bob: (opts && opts.bob != null) ? opts.bob : Math.random() * 6.28,
+        special: !!(opts && opts.special),
+      });
+      camXs.push(wx);
+      return true;
+    }
+
+    // Fil conducteur au sol — plus aéré (~55 m)
+    for (let i = 0; i < 18; i++) {
+      const x = 420 + i * (55 * M) + (i % 2) * 18;
+      if (Math.abs(x - LE_L_MEET_X) < 180) continue;
+      const y = GROUND_Y - 96 - (i % 2) * 14;
+      placeCam(x, y, { requireGround: true });
+    }
+
+    // Récompenses au-dessus de certains trous (trajectoire de saut, 1/2)
+    for (let i = 0; i < gapMids.length; i++) {
+      if (i % 2 !== 0) continue;
+      const g = gapMids[i];
+      const x = g.mid - CAM_SZ * 0.5;
+      const y = GROUND_Y - 158 - (i % 3) * 10; // dans l’arc de saut, sous les floats hautes
+      placeCam(x, y, { bob: 0.6 + i * 0.35, sep: 36 * M });
+    }
+
+    // Récompenses au-dessus de certains flics (guide / timing) — pas le boss, pas le pack angry dense
+    let copCamN = 0;
+    for (let oi = 0; oi < obstacles.length; oi++) {
+      const o = obstacles[oi];
+      if (!o || o.kind === "boss" || o.kind === "angry") continue;
+      copCamN++;
+      if (copCamN % 2 !== 0) continue; // 1 sur 2
+      const x = o.x + o.w * 0.25 - CAM_SZ * 0.35;
+      const y = o.y - CAM_SZ - 10; // juste au-dessus de la tête du flic
+      placeCam(x, y, { bob: 1.1 + oi * 0.2, sep: 40 * M });
+    }
+
+    // Roses : rares, espacées, devant les gros obstacles
     const pinkSpots = [
-      [3800, GROUND_Y - 110],
-      [7000 - 50 * M, GROUND_Y - 112], // avant le riot ~389 m
+      [3800, GROUND_Y - 118],
+      [7000 - 50 * M, GROUND_Y - 120],
     ];
     function pinkYAt(wx) {
       for (let pi = 0; pi < platforms.length; pi++) {
@@ -9135,8 +9465,7 @@ on</button>
           return p.y - CAM_SZ - 6;
         }
       }
-      // Hauteur de saut / double saut — bien placé sur la trajectoire
-      return GROUND_Y - 108 - ((Math.abs(wx * 3) % 3) * 8);
+      return GROUND_Y - 118 - ((Math.abs(wx * 3) % 3) * 8);
     }
     const FROM_M = 500 * M;
     const LEAD = 50 * M;
@@ -9147,22 +9476,17 @@ on</button>
         || (o.kind === "crs" && o.x >= FROM_M);
       if (!hard) continue;
       if (o.x < FROM_M) continue;
-      // Jamais sur / après la ligne des 920 m
       if (o.x >= FINISH_AT) continue;
       const px = o.x - LEAD;
       if (px < FROM_M - 40 || px >= FINISH_AT - 40) continue;
-      // Une seule rose pour un pack (angry) / obstacles trop proches
-      if (hardPinkXs.some((x) => Math.abs(x - px) < 28 * M)) continue;
+      if (hardPinkXs.some((x) => Math.abs(x - px) < 36 * M)) continue;
+      if (camTooClose(px, 30 * M)) continue;
       hardPinkXs.push(px);
       pinkSpots.push([px, pinkYAt(px)]);
     }
     for (let i = 0; i < pinkSpots.length; i++) {
       const [px, py] = pinkSpots[i];
-      if (px >= FINISH_AT - 40) continue; // respecte l’arrivée à 920 m
-      collectibles.push({
-        x: px, y: py, w: CAM_SZ, h: CAM_SZ,
-        taken: false, bob: 0.4 + i * 1.1, special: true,
-      });
+      placeCam(px, py, { special: true, bob: 0.4 + i * 1.1, sep: 30 * M });
     }
 
     // Garde-fou : la ligne d’arrivée reste exactement à FINISH_METERS
@@ -10073,6 +10397,27 @@ on</button>
       dustTimer = 0;
     }
 
+    // Scooter en roulant : roue arrière + fumée ; perso aligné sur le sens
+    if (player.onScooter && Math.abs(player.vx) > 18) {
+      const scootFace = player.vx >= 0 ? 1 : -1;
+      player.facing = scootFace;
+      player.scooterWheel = (player.scooterWheel || 0)
+        + dt * (8 + Math.min(22, Math.abs(player.vx) / 28));
+      player.scooterSmokeT = (player.scooterSmokeT || 0) + dt;
+      if (player.scooterSmokeT > 0.045) {
+        player.scooterSmokeT = 0;
+        scooterSmoke(
+          player.x + player.w * 0.5 - scootFace * (player.w * 0.42),
+          player.y + player.h - 10,
+          scootFace
+        );
+      }
+    } else if (player.onScooter) {
+      // À l’arrêt sans input : face droite (départ). Sinon respecte G/D.
+      if (!keys.left && !keys.right) player.facing = 1;
+      player.scooterSmokeT = 0;
+    }
+
     syncScooterCollectibles();
     for (const c of collectibles) {
       if (c.taken) continue;
@@ -10083,8 +10428,11 @@ on</button>
       if (aabb(player, { x: c.x, y: cy, w: c.w, h: c.h })) {
         c.taken = true;
         if (isScooter) {
-          // facing joueur conservé ; drawScooterSprite aligne le PNG (face gauche)
+          // Départ logique : face à la course (droite) ; le draw suit ensuite la vitesse
           player.onScooter = true;
+          player.facing = 1;
+          player.scooterWheel = 0;
+          player.scooterSmokeT = 0;
           AudioFX.power();
           addTrauma(0.1);
           floatText(c.x + c.w * 0.5, cy - 8, "SCOOTER !", {
@@ -11339,6 +11687,7 @@ on</button>
 
   function showEndOverlay(withFade) {
     el.touch.classList.remove("visible");
+    hideTouchGuide(true);
     stickTouchId = null;
     jumpTouchId = null;
     if (stickBase) stickBase.classList.remove("show");
@@ -11399,9 +11748,10 @@ on</button>
       if (stickKnob) stickKnob.classList.remove("show");
       if (jumpFlash) jumpFlash.classList.remove("show");
       if (el.touch) el.touch.classList.remove("visible");
+      hideTouchGuide(true);
     } else {
       resetPauseConfirmUI();
-      if (isTouch()) el.touch.classList.add("visible");
+      if (isTouch() && el.touch) el.touch.classList.add("visible");
     }
     try { syncPhoneLayoutClass(); } catch (_) {}
   }
@@ -11439,6 +11789,7 @@ on</button>
       el.end.classList.remove("show", "win-mode");
     }
     el.touch.classList.remove("visible");
+    hideTouchGuide(true);
     stickTouchId = null;
     jumpTouchId = null;
     if (stickBase) stickBase.classList.remove("show");
@@ -11543,6 +11894,7 @@ on</button>
 
     // Impact immédiat : Tape Stop + Sub-Drop ; GO en fondu synchrone
     el.touch.classList.remove("visible");
+    hideTouchGuide(true);
     const tapePromise = AudioFX.tapeStopGameOver();
     // Début du fondu à mi-parcours (~0.35 s) pour coller au VariFi
     setTimeout(() => showEndOverlay(true), 350);
@@ -12621,12 +12973,13 @@ on</button>
         const phase = time * 2.2 + (c.bob || 0);
         const bobY = Math.sin(phase) * 2;
         const cy = sy(c.y);
+        // À l’arrêt sur plateforme : face à droite (prêt à démarrer)
         drawScooterSprite(
           cx + c.w * 0.5,
           cy + c.h,
           c.w,
           c.h,
-          c.facing != null ? c.facing : 1,
+          1,
           { bob: bobY, lean: Math.sin(phase * 0.5) * 0.03, mode: "idle" }
         );
         continue;
@@ -12655,9 +13008,9 @@ on</button>
   }
 
   /**
-   * Scooter PNG (face à gauche, comme flecheskin). facing > 0 → miroir vers la droite.
-   * Ancré au centre bas (roues au sol). Pas de flip vertical.
-   * opts: { bob, lean, mode: "idle"|"move" }
+   * Scooter PNG (face à gauche). facing > 0 → miroir vers la droite (sens de course).
+   * Ancré au centre bas. opts: { bob, lean, mode, wheelSpin, smokePhase }
+   * Art local : avant = −x, arrière / échappement = +x.
    */
   function drawScooterSprite(anchorX, feetY, sw, sh, facing, opts) {
     const o = opts || {};
@@ -12666,24 +13019,74 @@ on</button>
     const face = facing < 0 ? -1 : 1;
     const bob = o.bob || 0;
     const lean = o.lean || 0;
+    const moving = o.mode === "move";
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     ctx.translate(anchorX, feetY + bob);
-    // Inclinaison avant en espace monde (avant le flip art)
     if (lean) ctx.rotate(face * lean);
-    // Art source = gauche ; miroir seulement pour course à droite
+    // Art source = gauche ; miroir si on regarde / roule à droite
     if (face > 0) ctx.scale(-1, 1);
     if (scooterImg.complete && scooterImg.naturalWidth > 0) {
       ctx.drawImage(scooterImg, -w * 0.5, -h + 2, w, h);
     } else {
-      // Fallback pixel si image pas prête (aussi face gauche)
       fr(-w * 0.4, -h * 0.55, w * 0.75, h * 0.35, "#e02020");
       fr(-w * 0.15, -h * 0.7, w * 0.35, h * 0.18, "#101018");
       fr(-w * 0.38, -10, 10, 10, "#181818");
       fr(w * 0.18, -10, 10, 10, "#181818");
     }
+
+    // Roue arrière (côté +x dans l’art face gauche)
+    const rearX = w * 0.27;
+    const rearY = -h * 0.14;
+    const wheelR = Math.max(4, h * 0.125);
+    if (moving && o.wheelSpin != null) {
+      ctx.save();
+      ctx.translate(rearX, rearY);
+      ctx.rotate(o.wheelSpin);
+      ctx.strokeStyle = "rgba(210, 220, 235, 0.8)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, wheelR * 0.92, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * -wheelR * 0.78, Math.sin(a) * -wheelR * 0.78);
+        ctx.lineTo(Math.cos(a) * wheelR * 0.78, Math.sin(a) * wheelR * 0.78);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(40, 44, 52, 0.85)";
+      ctx.beginPath();
+      ctx.arc(0, 0, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Fumée légère derrière (échappement, +x local)
+    if (moving) {
+      const sp = o.smokePhase != null ? o.smokePhase : time;
+      for (let i = 0; i < 4; i++) {
+        const a = (sp * 2.4 + i * 0.37) % 1;
+        const px = rearX + 6 + a * 16;
+        const py = rearY - 1 - a * 11 - Math.sin(sp * 5 + i) * 1.5;
+        const r = 1.5 + a * 3.5;
+        ctx.globalAlpha = (1 - a) * 0.38;
+        ctx.fillStyle = i % 2 === 0 ? "rgba(160,168,180,0.9)" : "rgba(95,102,114,0.85)";
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
     ctx.restore();
     ctx.imageSmoothingEnabled = false;
+  }
+
+  /** Sens visuel scooter : en roulant → vitesse ; à l’arrêt → facing joueur (défaut droite) */
+  function scooterFacing() {
+    if (Math.abs(player.vx) > 18) return player.vx > 0 ? 1 : -1;
+    return player.facing < 0 ? -1 : 1;
   }
 
   function copAlertAmt(t) {
@@ -13138,9 +13541,10 @@ on</button>
     const legSwing = (!onScooter && moving) ? Math.sin(player.runPhase) : 0;
     const torsoOffsetY = Math.round(runBounce * 2);
 
-    // Scooter : même facing que le joueur + idle bob / lean course
+    // Scooter : arrêt face droite ; course = sens vitesse + roue / fumée
     if (onScooter) {
       const scootMoving = moving || Math.abs(player.vx) > 20;
+      const scootFace = scooterFacing();
       const scootBob = scootMoving
         ? Math.sin(player.runPhase * 2) * 1.6
         : Math.sin(player.breath * 2.5) * 1.1;
@@ -13152,8 +13556,14 @@ on</button>
         py + player.h + 2,
         78,
         60,
-        f,
-        { bob: scootBob, lean: scootLean, mode: scootMoving ? "move" : "idle" }
+        scootFace,
+        {
+          bob: scootBob,
+          lean: scootLean,
+          mode: scootMoving ? "move" : "idle",
+          wheelSpin: player.scooterWheel || 0,
+          smokePhase: time,
+        }
       );
     }
 
@@ -14317,7 +14727,10 @@ on</button>
     }
     if (el.minimap) el.minimap.classList.add("visible");
     if (el.shop) el.shop.classList.add("hidden");
-    if (isTouch() && el.touch) el.touch.classList.add("visible");
+    if (isTouch() && el.touch) {
+      el.touch.classList.add("visible");
+      showTouchGuide();
+    }
     keys.left = keys.right = keys.jump = keys.action = false;
     keys.jumpPressed = keys.actionPressed = false;
     stickTouchId = null;
