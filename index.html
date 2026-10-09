@@ -924,6 +924,82 @@
 
     .btn.btn-shop.hidden { display: none !important; }
 
+    .btn.btn-admin-off {
+      margin-top: 10px;
+      letter-spacing: 0.12em;
+      background:
+        linear-gradient(180deg, #6a2838 0%, #3a1420 46%, #200810 52%, #4a1828 100%);
+      box-shadow:
+        0 0 0 1px rgba(255, 120, 140, 0.85),
+        0 0 0 3px rgba(180, 40, 60, 0.35),
+        0 5px 0 #120408,
+        0 8px 22px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+    .btn.btn-admin-off.hidden { display: none !important; }
+
+    .admin-pin {
+      margin: 10px auto 0;
+      width: min(220px, 86vw);
+      padding: 12px 12px 10px;
+      border-radius: 12px;
+      background: rgba(6, 12, 22, 0.92);
+      border: 1px solid rgba(61, 196, 255, 0.35);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    }
+    .admin-pin.hidden { display: none !important; }
+    .admin-pin-label {
+      margin: 0 0 8px;
+      text-align: center;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(220, 235, 255, 0.75);
+    }
+    .admin-pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .admin-pin-dots i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(61, 196, 255, 0.55);
+      background: transparent;
+    }
+    .admin-pin-dots i.on {
+      background: var(--accent, #ffe566);
+      border-color: var(--accent, #ffe566);
+      box-shadow: 0 0 10px rgba(255, 229, 102, 0.55);
+    }
+    .admin-pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .admin-pin-pad button {
+      appearance: none;
+      border: 1px solid rgba(140, 190, 230, 0.28);
+      background: rgba(20, 36, 56, 0.9);
+      color: #eef4fa;
+      font-family: var(--font-arcade);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .admin-pin-pad button:active { filter: brightness(1.15); }
+    .admin-pin-pad .admin-pin-ok {
+      background: linear-gradient(180deg, #2a6a9c, #143c5c);
+      border-color: rgba(61, 196, 255, 0.55);
+    }
+    .admin-pin-pad .admin-pin-x { color: rgba(255, 180, 190, 0.9); }
+
     .btn-row {
       display: flex;
       flex-direction: column;
@@ -2598,6 +2674,65 @@
     }
     #btn-start:hover, #btn-retry:hover, #btn-resume:hover { animation-play-state: paused; }
 
+    /* Accueil — Jouer invite au clic : scintille + avance de temps en temps */
+    #start-screen:not(.hidden):not(.launching) #btn-start {
+      animation:
+        cta-joue-nudge 5.4s var(--ease-spring) infinite,
+        cta-joue-glow 5.4s ease-in-out infinite,
+        cta-ring 5.4s ease-out infinite;
+    }
+    #start-screen:not(.hidden):not(.launching) #btn-start::after {
+      background: linear-gradient(
+        115deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 255, 255, 0.7) 49%,
+        rgba(255, 229, 102, 0.45) 52%,
+        transparent 62%,
+        transparent 100%
+      );
+      background-size: 260% 100%;
+      background-position: 140% 0;
+      opacity: 0;
+      mix-blend-mode: soft-light;
+      animation: cta-joue-shimmer 5.4s ease-in-out infinite;
+    }
+    @keyframes cta-joue-nudge {
+      0%, 70%, 100% { translate: 0 0; scale: 1; }
+      76% { translate: 0 -4px; scale: 1.06; }
+      82% { translate: 0 -2px; scale: 1.03; }
+      88% { translate: 0 -5px; scale: 1.07; }
+      94% { translate: 0 0; scale: 1; }
+    }
+    @keyframes cta-joue-glow {
+      0%, 70%, 100% {
+        filter: brightness(1);
+        text-shadow: 0 0 10px rgba(61, 196, 255, 0.55);
+      }
+      76%, 88% {
+        filter: brightness(1.2) saturate(1.15);
+        text-shadow:
+          0 0 14px rgba(61, 196, 255, 0.85),
+          0 0 28px rgba(255, 229, 102, 0.45);
+      }
+    }
+    @keyframes cta-joue-shimmer {
+      0%, 70% { background-position: 140% 0; opacity: 0; }
+      76% { opacity: 0.85; }
+      88% { background-position: -40% 0; opacity: 0.55; }
+      94%, 100% { background-position: -40% 0; opacity: 0; }
+    }
+    #start-screen.launching #btn-start {
+      animation: none;
+    }
+    #start-screen #btn-start:hover {
+      animation-play-state: paused;
+    }
+    #start-screen #btn-start:hover::after {
+      animation-play-state: paused;
+      opacity: 0.35;
+    }
+
     /* Ripple généré en JS */
     .fx-ripple {
       position: absolute;
@@ -2786,6 +2921,7 @@
     /* ---------- Accessibilité : mouvement réduit ---------- */
     @media (prefers-reduced-motion: reduce) {
       #btn-start, #btn-retry, #btn-resume,
+      #start-screen #btn-start::after,
       .skin-card.selected, .shop-item.owned,
       .amb-particles i, html.danger #fx-vignette::after,
       .hud-box strong.bump, .shop-bank strong.bump { animation: none !important; }
@@ -2890,6 +3026,27 @@ on</button>
           <div class="btn-row">
             <button class="btn" id="btn-start" type="button">Jouer</button>
             <button class="btn btn-shop hidden" id="btn-shop" type="button">Boutique</button>
+            <button class="btn btn-admin-off hidden" id="btn-admin-off" type="button">Admin OFF</button>
+          </div>
+          <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
+            <p class="admin-pin-label">Code admin</p>
+            <div class="admin-pin-dots" id="admin-pin-dots" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </div>
+            <div class="admin-pin-pad" id="admin-pin-pad">
+              <button type="button" data-d="1">1</button>
+              <button type="button" data-d="2">2</button>
+              <button type="button" data-d="3">3</button>
+              <button type="button" data-d="4">4</button>
+              <button type="button" data-d="5">5</button>
+              <button type="button" data-d="6">6</button>
+              <button type="button" data-d="7">7</button>
+              <button type="button" data-d="8">8</button>
+              <button type="button" data-d="9">9</button>
+              <button type="button" data-d="x" class="admin-pin-x">⌫</button>
+              <button type="button" data-d="0">0</button>
+              <button type="button" data-d="ok" class="admin-pin-ok">OK</button>
+            </div>
           </div>
           <p class="hint">
             <span class="hint-kb">Clavier : ← → · Espace (Saut / Jetpack) · E / X (Action)<br /></span>
@@ -3124,13 +3281,17 @@ on</button>
   const CHAR_ART_H = 52;
   const CHAR_W = 64;
   const CHAR_H = 96;
-  /** Le L — 80 % de la taille du perso principal */
+  /** L au carré — 80 % de la taille du perso principal */
   const COMPANION_SCALE = 0.8;
+  const COMPANION_NAME = "L au carré";
+  /** Voix d’approche : YS à 15 m, puis L1→L2 à 5 m */
+  const COMPANION_VOICE_METERS = 5;
+  const COMPANION_YS_METERS = 15;
   const COMPANION_W = Math.round(CHAR_W * COMPANION_SCALE);
   const COMPANION_H = Math.round(CHAR_H * COMPANION_SCALE);
   const GRAVITY = 1450;
-  const JUMP_V = -455;
-  const DJUMP_V = -385;
+  const JUMP_V = -683;   // ×1.5 (ex -455)
+  const DJUMP_V = -578;  // ×1.5 (ex -385)
   const JET_FUEL_MAX = 1.25;   // +25 % de carburant de départ
   const JET_THRUST = 1680;     // poussée verticale (plus fort)
   const JET_VY_CAP = -340;     // vitesse montée max au jetpack
@@ -3142,8 +3303,10 @@ on</button>
   const MAX_RUN_SHOES = 340;
   const AIR_CTRL = 0.8;
   const PX_PER_METER = 18; // compteur m (était 12 → ~1,5× plus lent)
-  const FINISH_METERS = 920; // ligne d’arrivée finale (ne pas déplacer)
-  const WORLD_LEN = FINISH_METERS * PX_PER_METER + 280;
+  const FINISH_METERS = 930; // arrivée = table + win (ligne au sol au même jalon)
+  const TABLE_METERS = 930;
+  const ROCKET_START_METERS = 350; // roquettes seulement après ce jalon
+  const WORLD_LEN = FINISH_METERS * PX_PER_METER + 360;
   const CAM_LERP = 6.5;
   /** Ancrage horizontal caméra (0 = bord gauche) — plus bas = plus de terrain à droite (réaction mobile) */
   const CAM_FOCUS_X = 0.24;
@@ -3153,6 +3316,19 @@ on</button>
   const STORAGE_KEY = "hds92_best_v4";
   const CATCH_KEY = "hds92_police_catches";
   const META_KEY = "hds92_meta_v1";
+  const ADMIN_KEY = "hds92_admin_v1";
+  const ADMIN_PIN = "4889";
+  let adminMode = false;
+  try { adminMode = localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) {}
+  function isAdmin() { return !!adminMode; }
+  function setAdminMode(on, silent) {
+    adminMode = !!on;
+    try { localStorage.setItem(ADMIN_KEY, adminMode ? "1" : "0"); } catch (_) {}
+    try { syncAdminUI(); } catch (_) {}
+    if (adminMode && !silent) {
+      try { screenText("ADMIN ON", { color: "#ff8aa0", size: 36, y: H * 0.22, life: 1.6 }); } catch (_) {}
+    }
+  }
   const SHOP = {
     shoes: { price: 3, label: "Nike Air Max", uses: 3, consumable: true },
     jetpack: { price: 20, label: "Jetpack", uses: 2, consumable: true },
@@ -3243,10 +3419,82 @@ on</button>
     flash: document.getElementById("fx-flash"),
     minimap: document.getElementById("minimap"),
     waitMap: document.getElementById("wait-map"),
+    btnAdminOff: document.getElementById("btn-admin-off"),
+    adminPin: document.getElementById("admin-pin"),
+    adminPinDots: document.getElementById("admin-pin-dots"),
+    adminPinPad: document.getElementById("admin-pin-pad"),
   };
 
   let launching = false;
   let paused = false;
+
+  /* —— Mode admin (PIN 4889) —— */
+  let adminPinBuf = "";
+  let adminPinLastT = 0;
+  let adminBrandTaps = 0;
+  let adminBrandTapT = 0;
+
+  function syncAdminUI() {
+    if (el.btnAdminOff) {
+      el.btnAdminOff.classList.toggle("hidden", !isAdmin());
+    }
+    if (el.adminPin && isAdmin()) {
+      el.adminPin.classList.add("hidden");
+      el.adminPin.setAttribute("aria-hidden", "true");
+    }
+    try {
+      document.documentElement.classList.toggle("admin-on", isAdmin());
+    } catch (_) {}
+  }
+
+  function refreshAdminPinDots() {
+    if (!el.adminPinDots) return;
+    const dots = el.adminPinDots.querySelectorAll("i");
+    for (let i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle("on", i < adminPinBuf.length);
+    }
+  }
+
+  function resetAdminPinBuf() {
+    adminPinBuf = "";
+    refreshAdminPinDots();
+  }
+
+  function tryAcceptAdminPin() {
+    if (adminPinBuf === ADMIN_PIN) {
+      setAdminMode(true);
+      resetAdminPinBuf();
+      if (el.adminPin) {
+        el.adminPin.classList.add("hidden");
+        el.adminPin.setAttribute("aria-hidden", "true");
+      }
+      return true;
+    }
+    if (adminPinBuf.length >= 4) {
+      resetAdminPinBuf();
+    }
+    return false;
+  }
+
+  function pushAdminDigit(d) {
+    const now = performance.now();
+    if (now - adminPinLastT > 3500) adminPinBuf = "";
+    adminPinLastT = now;
+    if (!/^[0-9]$/.test(d)) return;
+    if (adminPinBuf.length >= 4) adminPinBuf = "";
+    adminPinBuf += d;
+    refreshAdminPinDots();
+    if (adminPinBuf.length >= 4) tryAcceptAdminPin();
+  }
+
+  function openAdminPinPad() {
+    if (isAdmin() || !el.adminPin) return;
+    el.adminPin.classList.remove("hidden");
+    el.adminPin.setAttribute("aria-hidden", "false");
+    resetAdminPinBuf();
+  }
+
+  syncAdminUI();
 
   /* ============================================================
      AUDIO — musique interactive (beat + acap sync)
@@ -3311,6 +3559,7 @@ on</button>
     let acapGain = null;
     let acapFilter = null;
     let musicMaster = null;
+    let musicHiCut = null; // hi-cut global (accueil plus sombre)
     let busFilter = null; // lowpass global (pause)
     let busGain = null;
     /** Mix final : SFX + musique → makeup → limiteur → sortie */
@@ -3487,7 +3736,7 @@ on</button>
       // Musique (hors bus) — sur mobile, ne pas cancel les ramps du gate
       if (musicMaster) {
         const musicOn = !musicMuted && musicAllowed && musicStarted && musicGateMode !== "off";
-        const musicTarget = musicOn ? 1 : 0.0001;
+        const musicTarget = musicOn ? musicGateTargetGain(musicGateMode) : 0.0001;
         const cur = Math.max(0.0001, musicMaster.gain.value || 0.0001);
         if (!soft || Math.abs(cur - musicTarget) > 0.08) {
           musicMaster.gain.cancelScheduledValues(t);
@@ -3577,7 +3826,7 @@ on</button>
       applyMuteLevels();
     }
 
-    /** Graphe : BufferSources → beat gain | acap lowpass → master (horloge AudioContext unique) */
+    /** Graphe : BufferSources → beat gain | acap lowpass → master → hi-cut → limiteur */
     function ensureGraph() {
       const ctx = ensureBus();
       if (!ctx || graphReady) return ctx;
@@ -3585,8 +3834,14 @@ on</button>
       musicMaster = ctx.createGain();
       // Hors bus pause (filtre SFX) mais dans le limiteur master
       musicMaster.gain.value = 0.0001;
-      if (masterInput) musicMaster.connect(masterInput);
-      else musicMaster.connect(ctx.destination);
+
+      musicHiCut = ctx.createBiquadFilter();
+      musicHiCut.type = "lowpass";
+      musicHiCut.frequency.value = 20000;
+      musicHiCut.Q.value = 0.85;
+      musicMaster.connect(musicHiCut);
+      if (masterInput) musicHiCut.connect(masterInput);
+      else musicHiCut.connect(ctx.destination);
 
       beatGain = ctx.createGain();
       beatGain.gain.value = BEAT_VOL;
@@ -4293,10 +4548,11 @@ on</button>
         try { await withTimeout(ctx.resume().catch(() => {}), 500); } catch (_) {}
         kickSilentBuffer(ctx);
       }
-      // Précharge musique / flics / jump immédiatement en fond
+      // Précharge musique / flics / jump / voix companion immédiatement en fond
       loadMusicBuffers().catch(() => {});
       loadFlicBuffers().catch(() => {});
       loadJumpBuffer().catch(() => {});
+      loadCompanionVoice().catch(() => {});
       // Sur mobile : kick silencieux WebAudio suffit ; HTMLAudio play/pause peut glitcher iOS
       if (!mobileAudio()) {
         await Promise.all([
@@ -4384,6 +4640,248 @@ on</button>
           return null;
         });
       return jumpLoadPromise;
+    }
+
+    /**
+     * Voix L au carré — mix type flic (walkie + pan + distance), volumes bas.
+     * 15 m → Yssound1 (×1.25) ; 5 m → Lsound1 puis Lsound2 (×1.38)
+     */
+    const COMP_VOICE_URLS = {
+      l1: "sounds/Lsound1.wav",
+      l2: "sounds/Lsound2.wav",
+      ys: "sounds/Yssound1.wav",
+    };
+    const companionBufs = { l1: null, l2: null, ys: null };
+    let companionVoiceLoad = null;
+    const activeCompVoices = [];
+    const COMP_VOICE_VOL = 0.28; // plus bas que les flics (0.60)
+
+    function loadCompanionVoice() {
+      if (companionBufs.l1 && companionBufs.l2 && companionBufs.ys) {
+        return Promise.resolve(companionBufs);
+      }
+      if (companionVoiceLoad) return companionVoiceLoad;
+      const ctx = ensureCtx();
+      if (!ctx) return Promise.resolve(companionBufs);
+      companionVoiceLoad = Promise.all(Object.keys(COMP_VOICE_URLS).map(async (key) => {
+        if (companionBufs[key]) return;
+        try {
+          const res = await fetch(COMP_VOICE_URLS[key]);
+          if (!res.ok) throw new Error("comp voice " + key);
+          const raw = await res.arrayBuffer();
+          companionBufs[key] = await ctx.decodeAudioData(raw.slice(0));
+        } catch (_) {
+          companionBufs[key] = null;
+        }
+      })).then(() => companionBufs).finally(() => {
+        if (!companionBufs.l1 && !companionBufs.l2 && !companionBufs.ys) {
+          companionVoiceLoad = null;
+        }
+      });
+      return companionVoiceLoad;
+    }
+
+    function pruneCompVoices() {
+      const now = performance.now();
+      for (let i = activeCompVoices.length - 1; i >= 0; i--) {
+        const v = activeCompVoices[i];
+        if (!v || !v.alive || (v.killAt && now >= v.killAt)) {
+          if (v) {
+            v.alive = false;
+            try { v.src.stop(); } catch (_) {}
+          }
+          activeCompVoices.splice(i, 1);
+        }
+      }
+    }
+
+    /** Même chaîne radio que les flics, volume COMP_VOICE_VOL */
+    function playCompanionSpatial(buf, companionX, playerMidX, rate) {
+      const ctx = ensureCtx();
+      if (!ctx || !unlocked || sfxMuted || !buf) return false;
+      if (ctx.state !== "running") resumeCtx();
+      ensureGraph();
+      const sp0 = spatialParams(companionX, playerMidX);
+      // Volume companion plafonné plus bas que FLIC_VOL
+      const volScale = COMP_VOICE_VOL / FLIC_VOL;
+      const targetVol = Math.max(0.0001, sp0.vol * volScale);
+      if (targetVol < 0.012) return false;
+      pruneCompVoices();
+
+      const soft = mobileAudio();
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = rate || 1;
+
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 480;
+      hp.Q.value = 0.7;
+
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 1450;
+      bp.Q.value = 1.35;
+
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 2600;
+      lp.Q.value = 0.8;
+
+      const drive = ctx.createWaveShaper();
+      drive.curve = makeWalkieCurve(3.4);
+      drive.oversample = soft ? "none" : "2x";
+
+      const peaking = ctx.createBiquadFilter();
+      peaking.type = "peaking";
+      peaking.frequency.value = 1800;
+      peaking.Q.value = 1.1;
+      peaking.gain.value = soft ? 2.0 : 2.6;
+
+      const mix = ctx.createGain();
+      mix.gain.value = 1;
+
+      const t0 = ctx.currentTime;
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0, t0);
+      gainNode.gain.linearRampToValueAtTime(targetVol, t0 + (soft ? 0.04 : 0.018));
+
+      let panNode = null;
+      if (ctx.createStereoPanner) {
+        panNode = ctx.createStereoPanner();
+        panNode.pan.value = sp0.pan;
+      }
+
+      if (!soft) {
+        const click = ctx.createOscillator();
+        const clickG = ctx.createGain();
+        click.type = "triangle";
+        click.frequency.value = 2100;
+        const clickPeak = Math.min(0.018, targetVol * 0.05);
+        clickG.gain.setValueAtTime(0, t0);
+        clickG.gain.linearRampToValueAtTime(clickPeak, t0 + 0.012);
+        clickG.gain.linearRampToValueAtTime(0, t0 + 0.045);
+        click.connect(clickG);
+        clickG.connect(hp);
+        try {
+          click.start(t0);
+          click.stop(t0 + 0.05);
+        } catch (_) {}
+      }
+
+      src.connect(hp);
+      hp.connect(bp);
+      bp.connect(drive);
+      drive.connect(lp);
+      lp.connect(peaking);
+
+      if (soft) {
+        peaking.connect(mix);
+      } else {
+        const dry = ctx.createGain();
+        dry.gain.value = 0.78;
+        const wet = ctx.createGain();
+        wet.gain.value = 0.28;
+        const conv = ctx.createConvolver();
+        conv.buffer = getFlicReverbIR(ctx);
+        const verbLp = ctx.createBiquadFilter();
+        verbLp.type = "lowpass";
+        verbLp.frequency.value = 3200;
+        verbLp.Q.value = 0.7;
+        peaking.connect(dry);
+        peaking.connect(conv);
+        conv.connect(verbLp);
+        verbLp.connect(wet);
+        dry.connect(mix);
+        wet.connect(mix);
+      }
+      if (panNode) {
+        mix.connect(panNode);
+        panNode.connect(gainNode);
+      } else {
+        mix.connect(gainNode);
+      }
+      out(gainNode);
+
+      const rateSafe = Math.max(0.5, rate || 1);
+      const durMs = Math.max(300, ((buf.duration || 1) / rateSafe) * 1000);
+      const voice = {
+        src, pan: panNode, gain: gainNode,
+        x: companionX, alive: true,
+        killAt: performance.now() + durMs + 180,
+        volScale,
+      };
+      activeCompVoices.push(voice);
+      src.onended = () => { voice.alive = false; };
+      try {
+        src.start(0);
+        return true;
+      } catch (_) {
+        voice.alive = false;
+        return false;
+      }
+    }
+
+    function updateCompanionVoices(playerMidX, companionMidX) {
+      const px = playerMidX || 0;
+      const cx = companionMidX != null ? companionMidX : null;
+
+      // L2 enchaîné après L1, pan à jour sur la position live
+      if (pendingL2At && performance.now() >= pendingL2At) {
+        pendingL2At = 0;
+        if (!sfxMuted) {
+          playCompanionSpatial(
+            companionBufs.l2,
+            cx != null ? cx : px,
+            px,
+            1.38
+          );
+        }
+      }
+
+      if (!activeCompVoices.length) return;
+      const ctx = ensureCtx();
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      const volScale = COMP_VOICE_VOL / FLIC_VOL;
+      for (let i = activeCompVoices.length - 1; i >= 0; i--) {
+        const v = activeCompVoices[i];
+        if (!v.alive) {
+          activeCompVoices.splice(i, 1);
+          continue;
+        }
+        if (cx != null) v.x = cx;
+        const sp = spatialParams(v.x, px);
+        const vol = Math.max(0.0001, sp.vol * (v.volScale || volScale));
+        if (v.pan) v.pan.pan.setTargetAtTime(sp.pan, t, 0.04);
+        v.gain.gain.setTargetAtTime(vol, t, 0.05);
+      }
+    }
+
+    /** File d’attente L2 (après L1) — positions relues au tick */
+    let pendingL2At = 0;
+
+    /** 5 m : Lsound1 puis Lsound2 ×1.38 */
+    function playCompanionLine(companionX, playerMidX) {
+      if (sfxMuted) return;
+      const cx = companionX || 0;
+      const px = playerMidX || 0;
+      const start = () => {
+        playCompanionSpatial(companionBufs.l1, cx, px, 1);
+        const d1 = companionBufs.l1 ? companionBufs.l1.duration : 0.8;
+        // Enchaîne L2 dès la fin de L1 (léger recouvrement)
+        pendingL2At = performance.now() + Math.max(120, d1 * 1000 - 40);
+      };
+      if (companionBufs.l1) start();
+      else loadCompanionVoice().then(start).catch(() => {});
+    }
+
+    /** 15 m : Yssound1 ×1.25 */
+    function playCompanionYs(companionX, playerMidX) {
+      if (sfxMuted) return;
+      const fire = () => playCompanionSpatial(companionBufs.ys, companionX || 0, playerMidX || 0, 1.25);
+      if (companionBufs.ys) fire();
+      else loadCompanionVoice().then(fire).catch(() => {});
     }
 
     /** Compteur double saut : souvent (≈2/3), et force 1 fois toutes les 5 */
@@ -4541,8 +5039,11 @@ on</button>
     let tapeGen = 0;
 
     // Musique : ON accueil + course + pause + victoire | OFF game over
+    // Accueil = −7 dB vs niveau jeu + hi-cut
     const RUN_MUSIC_ON = 1;
+    const RUN_MUSIC_MENU = dbToGain(-7); // ≈ 0.447
     const RUN_MUSIC_OFF = 0.0001;
+    const MENU_HICUT_HZ = 3400; // hi-cut accueil (beat + acap)
     let runMusicOn = false;
     let musicGateMode = "off"; // off | menu | run | pause | win
 
@@ -4553,6 +5054,24 @@ on</button>
 
     function isMusicGateOn(mode) {
       return mode === "run" || mode === "pause" || mode === "win" || mode === "menu";
+    }
+
+    function musicGateTargetGain(mode) {
+      if (mode === "off") return RUN_MUSIC_OFF;
+      if (mode === "menu") return RUN_MUSIC_MENU;
+      return RUN_MUSIC_ON;
+    }
+
+    /** Hi-cut global : sombre à l’accueil, ouvert en jeu */
+    function applyMusicHiCut(mode, instant) {
+      if (!musicHiCut || !ac) return;
+      const freq = mode === "menu" ? MENU_HICUT_HZ : 20000;
+      const now = ac.currentTime;
+      try {
+        musicHiCut.frequency.cancelScheduledValues(now);
+        if (instant) musicHiCut.frequency.setValueAtTime(freq, now);
+        else musicHiCut.frequency.setTargetAtTime(freq, now, mode === "menu" ? 0.06 : 0.1);
+      } catch (_) {}
     }
 
     function setMusicGate(mode, force) {
@@ -4573,10 +5092,11 @@ on</button>
       }
       musicGateMode = mode;
       runMusicOn = isMusicGateOn(mode);
+      applyMusicHiCut(mode, !!force);
       // Mute musique : applyMuteLevels gère le gain — ne pas écraser ici
       if (musicMuted) return;
       const now = ac.currentTime;
-      const target = mode === "off" ? RUN_MUSIC_OFF : RUN_MUSIC_ON;
+      const target = musicGateTargetGain(mode);
       // Déjà assez proche → skip (évite clicks)
       if (!force && Math.abs(curGain - target) < 0.04) return;
       musicMaster.gain.cancelScheduledValues(now);
@@ -4709,7 +5229,8 @@ on</button>
         // Ne jamais forcer le gain si la session a été annulée (mort / reset)
         if (musicSessionOk(gen) && !musicMuted && musicMaster && ac) {
           musicMaster.gain.cancelScheduledValues(ac.currentTime);
-          musicMaster.gain.setValueAtTime(RUN_MUSIC_ON, ac.currentTime);
+          musicMaster.gain.setValueAtTime(musicGateTargetGain(gate), ac.currentTime);
+          applyMusicHiCut(gate, true);
         }
       } catch (_) {
         musicStarted = false;
@@ -5304,6 +5825,11 @@ on</button>
       },
       /** Cri court du perso touché par un CRS — « oi ! » */
       oi() { playOiSfx(); },
+      /** Voix de L au carré — L1→L2 (5 m) / YS (15 m), mix type flic */
+      companionLine(cx, px) { playCompanionLine(cx, px); },
+      companionYs(cx, px) { playCompanionYs(cx, px); },
+      updateCompanionVoices,
+      preloadCompanionVoice() { return loadCompanionVoice().catch(() => {}); },
       win() {
         stopAllFlicVoices();
         // Fin de niveau réussie : musique reste active
@@ -5665,8 +6191,14 @@ on</button>
   teeBackImg.src = "assets/skin1_back.png";
   const camembertImg = new Image();
   camembertImg.src = "assets/camembert.png?v=sprite2";
+  const tableImg = new Image();
+  tableImg.src = "assets/table.png";
+  const flecheImg = new Image();
+  flecheImg.src = "assets/flecheskin.png";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
   let levelProps = [];
+  /** Confettis de victoire */
+  const confetti = [];
 
   /** Logo poitrine — petit print centré (pas un bloc plein) */
   function drawTeeChestLogo(x, y, w, h, facing) {
@@ -5765,8 +6297,63 @@ on</button>
         ctx.drawImage(teeBackImg, px, py, p.w, p.h);
         ctx.restore();
         ctx.imageSmoothingEnabled = false;
+      } else if (p.kind === "table") {
+        drawFinishTable(px, sy(p.y), p.w, p.h);
+      } else if (p.kind === "fleche") {
+        drawFlecheNpc(px, sy(p.y), p.w, p.h, p.facing || -1);
       }
     }
+  }
+
+  function drawFinishTable(px, py, w, h) {
+    if (tableImg.complete && tableImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(tableImg, px, py, w, h);
+      ctx.restore();
+      ctx.imageSmoothingEnabled = false;
+      return;
+    }
+    // Fallback pixel table
+    fr(px + 4, py + h * 0.42, w - 8, 6, "#5a4030");
+    fr(px + 10, py + h * 0.48, 5, h * 0.5, "#3a2818");
+    fr(px + w - 15, py + h * 0.48, 5, h * 0.5, "#3a2818");
+    fr(px + 2, py + h * 0.38, w - 4, 8, "#8a6040");
+  }
+
+  /** PNJ fin de course — flecheskin.png (face gauche), sinon silhouette noire vers la table */
+  function drawFlecheNpc(px, py, w, h, facing) {
+    // facing -1 = regarde la table (à gauche) ; art PNG déjà orienté à gauche
+    const face = facing < 0 ? -1 : 1;
+    if (flecheImg.complete && flecheImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      if (face > 0) {
+        ctx.translate(px + w, py);
+        ctx.scale(-1, 1);
+        ctx.drawImage(flecheImg, 0, 0, w, h);
+      } else {
+        ctx.drawImage(flecheImg, px, py, w, h);
+      }
+      ctx.restore();
+      return;
+    }
+    // Silhouette noire (attente flecheskin.png)
+    ctx.save();
+    ctx.translate(px + w / 2, py + h);
+    ctx.scale(face * (w / 32), h / 52);
+    ctx.translate(-16, -52);
+    ctx.fillStyle = "#050508";
+    ctx.fillRect(10, 2, 12, 12);
+    ctx.fillRect(9, 14, 14, 18);
+    ctx.fillRect(4, 16, 7, 14);
+    ctx.fillRect(21, 16, 7, 14);
+    ctx.fillRect(9, 32, 6, 16);
+    ctx.fillRect(17, 32, 6, 16);
+    ctx.fillRect(7, 46, 8, 4);
+    ctx.fillRect(17, 46, 8, 4);
+    ctx.restore();
   }
 
   /** Scale temporaire pour densifier le pixel-art des personnages */
@@ -6198,6 +6785,7 @@ on</button>
 
   function updateVfx(dt) {
     updateJuice(dt);
+    updateConfetti(dt);
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.x += p.vx * dt;
@@ -6282,6 +6870,7 @@ on</button>
   let maxReachX = 0;
   let rockets = [];
   let rocketTimer = 0;
+  let rocketWarnShown = false;
   let fallingSpikes = [];
   let spikeTimer = 0;
 
@@ -6342,8 +6931,10 @@ on</button>
   /** Trappe « chems » (~461–472 m) : sol / trappe étroite / sol */
   let trapDoor = null;
 
-  // Le L vers ~500 m
+  // L au carré vers ~500 m
   const LE_L_MEET_X = 500 * PX_PER_METER;
+  const COMPANION_VOICE_PX = COMPANION_VOICE_METERS * PX_PER_METER;
+  const COMPANION_YS_PX = COMPANION_YS_METERS * PX_PER_METER;
 
   const companion = {
     w: COMPANION_W, h: COMPANION_H,
@@ -6366,6 +6957,8 @@ on</button>
     featX: 0,
     featY: 0,
     activeAge: 0,
+    voicePlayed: false,
+    ysPlayed: false,
   };
 
   function resetCompanion() {
@@ -6390,6 +6983,8 @@ on</button>
       featX: LE_L_MEET_X + 16,
       featY: GROUND_Y - 120,
       activeAge: 0,
+      voicePlayed: false,
+      ysPlayed: false,
     });
   }
 
@@ -6420,9 +7015,11 @@ on</button>
     neonLights = [];
     rockets = [];
     rocketTimer = 0;
+    rocketWarnShown = false;
     fallingSpikes = [];
     spikeTimer = 0;
     levelProps = [];
+    confetti.length = 0;
     trapDoor = null;
     camCount = 0;
     maxReachX = 0;
@@ -6562,6 +7159,8 @@ on</button>
         _downed: false,
         _nearMissDone: false,
         _grazeArmed: false,
+        _angryDash: false,
+        _angryParked: false,
       });
       placedCops.push(x);
     }
@@ -6693,8 +7292,27 @@ on</button>
       });
     }
 
-    // Garde-fou : la ligne d’arrivée reste exactement à 920 m
+    // Garde-fou : la ligne d’arrivée reste exactement à FINISH_METERS
     finishX = FINISH_AT;
+
+    // Table de fin (~930 m) + PNJ Fleche juste après (face à la table)
+    {
+      const tw = 86;
+      const th = 72;
+      const tx = TABLE_METERS * M - tw * 0.5;
+      const ty = GROUND_Y - th;
+      levelProps.push({ kind: "table", x: tx, y: ty, w: tw, h: th });
+      const fw = 52;
+      const fh = 96;
+      levelProps.push({
+        kind: "fleche",
+        x: tx + tw + 18,
+        y: GROUND_Y - fh,
+        w: fw,
+        h: fh,
+        facing: -1, // regarde la table (à gauche)
+      });
+    }
 
     // Easter egg — 320 m, très haut (jetpack only) ; placeholder rond blanc
     collectibles.push({
@@ -6786,34 +7404,66 @@ on</button>
     };
   }
 
+  /** Bande tête (haut de hitbox) — zone de stomp */
+  function copHeadBand(o) {
+    const hb = copHitbox(o);
+    const band = Math.max(14, Math.floor(hb.h * 0.34));
+    return { x: hb.x, y: hb.y, w: hb.w, h: band, full: hb };
+  }
+
   /**
-   * Stomp précis sur la tête d’un CRS :
-   * — retombée (vy > 0) depuis au-dessus
-   * — pieds dans une fine bande au sommet de la hitbox
-   * — centre du joueur bien aligné sur le crâne (fenêtre étroite)
+   * Hitbox corps (sans la tête) — contact mortel.
+   * Évite de tuer le joueur qui retombe clairement sur le crâne.
+   */
+  function copBodyHitbox(o) {
+    const head = copHeadBand(o);
+    const hb = head.full;
+    return {
+      x: hb.x,
+      y: hb.y + head.h,
+      w: hb.w,
+      h: Math.max(8, hb.h - head.h),
+    };
+  }
+
+  /**
+   * Stomp tête CRS (fiable) :
+   * — retombée (vy > 0)
+   * — pieds qui croisent / entrent dans la bande tête depuis au-dessus
+   * — overlap horizontal correct
    */
   function isPreciseHeadStomp(o) {
     if (!o || o._spent || o._downed) return false;
-    if (player.vy < 90) return false; // doit clairement descendre
-    if (player.onGround) return false;
-
-    const hb = copHitbox(o);
-    const headTop = hb.y;
-    const headMidX = hb.x + hb.w * 0.5;
-    // Zone tête : ~42 % de la largeur, centrée — il faut viser
-    const headHalfW = Math.max(5, hb.w * 0.21);
+    // Seuil bas : au début de la retombée vy est encore faible
+    if (player.vy < 28) return false;
+    // onGround après resolvePlatforms peut être vrai si les pieds
+    // snappent le sol juste après un stomp raté — on ignore si pieds encore hauts
     const feet = player.y + player.h;
+    if (player.onGround && feet >= GROUND_Y - 4) return false;
+
+    const head = copHeadBand(o);
+    const hb = head.full;
+    const headTop = head.y;
+    const headBot = head.y + head.h;
     const prevFeet = (player._py != null ? player._py : player.y) + player.h;
     const pmx = player.x + player.w * 0.5;
+    const headMidX = hb.x + hb.w * 0.5;
 
-    // Venait d’au-dessus (pieds avant au-dessus / au ras de la tête)
-    if (prevFeet > headTop + 10) return false;
-    // Pied maintenant dans la bande de stomp (pas trop profond = corps)
-    if (feet < headTop - 4 || feet > headTop + 16) return false;
-    // Alignement horizontal précis
-    if (Math.abs(pmx - headMidX) > headHalfW + player.w * 0.12) return false;
-    // Chevauchement réel avec le haut de la hitbox
-    if (player.x + player.w <= hb.x + 2 || player.x >= hb.x + hb.w - 2) return false;
+    // Pieds venaient d’au-dessus (pas déjà enfoncés dans le torse)
+    if (prevFeet > headBot + 6) return false;
+
+    // Traversée de la ligne de tête ce frame, OU pieds encore dans la bande
+    const crossed = prevFeet <= headTop + 10 && feet >= headTop - 4;
+    const inHeadBand = feet >= headTop - 8 && feet <= headBot + 6;
+    if (!crossed && !inHeadBand) return false;
+
+    // Trop profond = collision corps (sauf si on vient juste de croiser)
+    if (!crossed && feet > headBot + 8) return false;
+
+    // Alignement horizontal (plus tolérant qu’avant)
+    const maxOff = hb.w * 0.52 + player.w * 0.18;
+    if (Math.abs(pmx - headMidX) > maxOff) return false;
+    if (player.x + player.w <= hb.x + 1 || player.x >= hb.x + hb.w - 1) return false;
     return true;
   }
 
@@ -6835,6 +7485,8 @@ on</button>
     player.jumpsLeft = Math.max(player.jumpsLeft, 1);
     player.jumpsUsedThisAir = Math.min(player.jumpsUsedThisAir || 0, 1);
     player.copKillTimer = 0;
+    // Mini-invuln : évite mort frame suivante (grow / charge / overlap)
+    player.invuln = Math.max(player.invuln || 0, 0.22);
     updateJumpHud();
 
     const mx = player.x + player.w * 0.5;
@@ -7092,12 +7744,29 @@ on</button>
       }
     }
 
+    // Mode admin : vol libre (Espace / Action = monter)
+    if (isAdmin() && state === "play") {
+      const flyUp = keys.jump || keys.action;
+      if (flyUp) {
+        player.jetting = true;
+        player.vy = Math.min(player.vy, -320);
+        player.vy -= 900 * dt;
+        if (player.vy < -420) player.vy = -420;
+        grav = 0;
+      } else if (!player.onGround) {
+        grav = GRAVITY * 0.22;
+        if (player.vy > 220) player.vy = 220;
+      }
+      player.invuln = Math.max(player.invuln || 0, 0.35);
+    }
+
     player.vy += grav * dt;
     const maxFall = player.jetting ? 160 : 620;
     if (player.vy > maxFall) player.vy = maxFall;
 
-    // Plafond soft du monde ciel
-    if (player.y < -80) { player.y = -80; if (player.vy < 0) player.vy = 0; }
+    // Plafond soft du monde ciel (plus haut en admin)
+    const ceilY = isAdmin() ? -520 : -80;
+    if (player.y < ceilY) { player.y = ceilY; if (player.vy < 0) player.vy = 0; }
 
     player._px = player.x;
     player._py = player.y;
@@ -7251,23 +7920,26 @@ on</button>
     if (player.chainMsgT > 0) player.chainMsgT = Math.max(0, player.chainMsgT - dt);
     if (player.routeOrbT > 0) player.routeOrbT = Math.max(0, player.routeOrbT - dt);
 
-    // Stomp tête d’abord (sinon le corps touche aussi → mort)
+    // Stomp tête d’abord (tous les CRS éligibles), puis contact corps
     let stomped = false;
     for (let i = 0; i < obstacles.length; i++) {
       const o = obstacles[i];
       if (!isPreciseHeadStomp(o)) continue;
       stompCop(o);
       stomped = true;
-      break;
+      // Continue : multi-stomp si plusieurs têtes sous les pieds
     }
 
-    // Contact CRS : mort immédiate, sauf stomp / bouclier rose
+    // Contact corps CRS : mort (hitbox sans tête si on retombe)
     if (!stomped && player.invuln <= 0) {
       let hit = null;
+      const falling = player.vy > 20;
       for (let i = 0; i < obstacles.length; i++) {
         const o = obstacles[i];
         if (o._spent || o._downed) continue;
-        if (aabb(player, copHitbox(o))) { hit = o; break; }
+        // En retombée : corps seulement (la tête = stomp)
+        const box = falling ? copBodyHitbox(o) : copHitbox(o);
+        if (aabb(player, box)) { hit = o; break; }
       }
       if (hit) {
         hit._alertT = Math.max(hit._alertT || 0, 1.2);
@@ -7288,7 +7960,11 @@ on</button>
             color: C.spec, size: 3, glow: true,
           });
         } else {
-          die(hit.kind === "boss" ? "boss" : "police");
+          die(
+            hit.kind === "boss" ? "boss"
+              : hit.kind === "angry" ? "angry"
+              : "police"
+          );
           return;
         }
       }
@@ -7409,7 +8085,7 @@ on</button>
     return false;
   }
 
-  /** Roquettes hors hiver ; en neige → pics de glace */
+  /** Roquettes hors hiver (après ROCKET_START_METERS) ; en neige → pics de glace */
   function updateHazardsFromSky(dt) {
     if (isWinter()) {
       rockets.length = 0;
@@ -7417,6 +8093,19 @@ on</button>
       return updateFallingSpikes(dt);
     }
     fallingSpikes.length = 0;
+
+    const m = meters();
+    if (m < ROCKET_START_METERS) {
+      rockets.length = 0;
+      rocketTimer = 0;
+      return false;
+    }
+    if (!rocketWarnShown) {
+      rocketWarnShown = true;
+      screenText("ROQUETTES !", { color: "#ff6b5a", size: 46, y: H * 0.26, life: 2 });
+      flashScreen("rgba(255,80,60,0.35)");
+      addTrauma(0.22);
+    }
 
     rocketTimer += dt;
     const interval = hasJetpack() && player.y < GROUND_Y - 140 ? 1.35 : 2.4;
@@ -7947,7 +8636,22 @@ on</button>
   function updateCompanion(dt) {
     companion.breath += dt;
 
-    // En attente à 200 m — « Le L » au-dessus
+    // Voix d’approche (une fois par run) — YS à 15 m, L1→L2 à 5 m
+    {
+      const px = player.x + player.w * 0.5;
+      const cx = companion.x + companion.w * 0.5;
+      const dx = Math.abs(px - cx);
+      if (!companion.ysPlayed && dx <= COMPANION_YS_PX) {
+        companion.ysPlayed = true;
+        AudioFX.companionYs(cx, px);
+      }
+      if (!companion.voicePlayed && dx <= COMPANION_VOICE_PX) {
+        companion.voicePlayed = true;
+        AudioFX.companionLine(cx, px);
+      }
+    }
+
+    // En attente à ~500 m — « L au carré » au-dessus
     if (!companion.active) {
       companion.facing = player.x < companion.x ? -1 : 1;
       companion.moving = false;
@@ -8021,10 +8725,10 @@ on</button>
       companion.featX = companion.featFromX + (headX - companion.featFromX) * t;
       companion.featY = companion.featFromY + (headY - companion.featFromY) * t;
       // Morph du texte pendant le vol
-      if (t > 0.35) companion.featText = "Le L";
+      if (t > 0.35) companion.featText = COMPANION_NAME;
       if (t >= 1) {
         companion.featPhase = "name";
-        companion.featText = "Le L";
+        companion.featText = COMPANION_NAME;
         companion.featT = 0;
       }
     } else if (companion.featPhase === "name") {
@@ -8065,6 +8769,12 @@ on</button>
       el.endGo.classList.remove("hidden");
       el.endGo.textContent = "Capture";
       el.endSub.textContent = "À 920 m, personne ne passe…";
+    } else if (reason === "angry") {
+      bumpCatchCount();
+      el.endTitle.textContent = "SDPJ 92";
+      el.endGo.classList.remove("hidden");
+      el.endGo.textContent = "Capture";
+      el.endSub.textContent = "le gros condé énervé";
     } else {
       const catchN = bumpCatchCount();
       // Un flic sur deux → « direction le dépôt »
@@ -8293,6 +9003,14 @@ on</button>
 
   function die(reason) {
     if (state !== "play") return;
+    // Mode admin : invincible (sauf victoire)
+    if (isAdmin() && reason !== "win") {
+      player.invuln = Math.max(player.invuln || 0, 0.6);
+      player.vy = Math.min(player.vy, -220);
+      player.chemsFall = false;
+      if (player.y > GROUND_Y - player.h) player.y = GROUND_Y - player.h - 2;
+      return;
+    }
     if (paused) setPaused(false);
     AudioFX.stopAllFlicVoices();
     rockets = [];
@@ -8315,6 +9033,8 @@ on</button>
     if (win) {
       flashScreen("rgba(255,229,102,0.95)");
       screenText("ARRIVÉ !", { color: C.accent, size: 54, y: H * 0.3, life: 2.2 });
+      spawnConfetti(player.x + player.w * 0.5, player.y - 20, 110);
+      spawnConfetti(finishX + 20, GROUND_Y - 80, 70);
       for (let i = 0; i < 4; i++) {
         burst(player.x + player.w / 2 + (i - 1.5) * 26, player.y - 10, {
           n: 14, speed: 200, up: -140, life: 0.9, gravity: 260,
@@ -9535,18 +10255,26 @@ on</button>
       const speedTier = progM >= 500 ? 2 : (progM >= 250 ? 1 : 0);
 
       if (o.kind === "angry") {
-        // Charge agressive vers le joueur (jusqu’au 1er contact)
+        // Une seule course vers la gauche de sa plateforme, puis planté
+        const leftEdge = o.homeX - 340;
+        if (o._angryParked) {
+          o.x = leftEdge;
+          o.y = GROUND_Y - o.h;
+          continue;
+        }
         const aggro = 520 + speedTier * 40;
-        if (Math.abs(px - cx) < aggro) {
+        if (o._angryDash || Math.abs(px - cx) < aggro) {
+          o._angryDash = true;
           o._alertT = Math.max(o._alertT, 1.1);
-          const dir = px < cx ? -1 : 1;
+          o._faceDir = -1;
           const chaseBase = speedTier === 2 ? 320 : (speedTier === 1 ? 260 : 210);
           const chase = chaseBase + Math.min(90, Math.abs(player.vx) * 0.35);
-          o.x += dir * chase * dt;
-          // Peut beaucoup s’éloigner de son poste pour coller le joueur
-          o.x = Math.max(o.homeX - 340, Math.min(o.homeX + 120, o.x));
-        } else {
-          o.x += (o.homeX - o.x) * Math.min(1, 2.2 * dt);
+          o.x -= chase * dt;
+          if (o.x <= leftEdge + 1) {
+            o.x = leftEdge;
+            o._angryParked = true;
+            o._angryDash = false;
+          }
         }
         o.y = GROUND_Y - o.h;
         continue;
@@ -9812,7 +10540,8 @@ on</button>
   }
 
   function drawPlayer() {
-    if (player.invuln > 0 && ((player.invuln * 15) | 0) % 2 === 0) return;
+    // Clignote seulement hors admin (admin = invuln permanente)
+    if (!isAdmin() && player.invuln > 0 && ((player.invuln * 15) | 0) % 2 === 0) return;
 
     const px = Math.floor(sx(player.x));
     const py = Math.floor(sy(player.y));
@@ -9997,7 +10726,7 @@ on</button>
     }
   }
 
-  /** Companion « Le L » — survêt rouge / bande or, fade court */
+  /** Companion « L au carré » — survêt rouge / bande or, fade court */
   function drawCompanion() {
     const px = Math.floor(sx(companion.x));
     const py = Math.floor(sy(companion.y));
@@ -10112,10 +10841,10 @@ on</button>
   }
 
   function drawCompanionLabels() {
-    // En attente : « Le L » au-dessus
+    // En attente : « L au carré » au-dessus
     if (!companion.active) {
       const bob = Math.sin(time * 2.4) * 3;
-      drawNameTag(companion.x + companion.w * 0.5, companion.y - 14 + bob, "Le L", false);
+      drawNameTag(companion.x + companion.w * 0.5, companion.y - 14 + bob, COMPANION_NAME, false);
       return;
     }
     // Feat unlock / morph / name
@@ -10124,7 +10853,7 @@ on</button>
       drawNameTag(companion.featX, companion.featY, companion.featText, big);
     } else if (companion.featPhase === "name" && companion.activeAge < 20) {
       const bob = Math.sin(time * 2.2) * 2;
-      drawNameTag(companion.x + companion.w * 0.5, companion.y - 14 + bob, "Le L", false);
+      drawNameTag(companion.x + companion.w * 0.5, companion.y - 14 + bob, COMPANION_NAME, false);
     }
   }
 
@@ -10273,24 +11002,81 @@ on</button>
     fr(18, by + 6, 2, 2, C.eye);
   }
 
+  /** Ligne d’arrivée au sol (remplace l’ancien panneau « 92 ») */
   function drawFinish() {
     const fx = sx(finishX);
-    if (fx < -50 || fx > W + 50) return;
+    if (fx < -80 || fx > W + 80) return;
     const base = sy(GROUND_Y);
-    const seine = seineBlend();
-    // Panneau d’arrivée — ton quais / pont en fin de course
-    fr(fx, base - 114, 6, 114, seine > 0.5 ? "#e8eef2" : C.white);
-    fr(fx + 6, base - 114, 46, 28, seine > 0.5 ? "#5a7080" : C.mid);
-    glowRect(fx + 10, base - 108, 38, 16, seine > 0.5 ? "#c8e0a0" : C.accent, 0.9);
-    ctx.fillStyle = C.black;
-    ctx.font = "bold 11px Courier New";
-    ctx.fillText("92", fx + 21, base - 96);
-    if (seine > 0.4) {
-      // Petit drapeau / fanion berges
-      fr(fx + 2, base - 130, 2, 16, "#4a5058");
-      fr(fx + 4, base - 130, 14, 8, "#3a7848");
-      fr(fx + 4, base - 124, 10, 2, "#2a5838");
+    const lineW = 56;
+    const stripe = 7;
+    // Bande damier blanche / noire collée au sol
+    for (let i = 0; i < 8; i++) {
+      const col = (i % 2 === 0) ? "#f4f6fa" : "#0c1018";
+      fr(fx - 4, base - lineW + i * stripe, 14, stripe, col);
+      fr(fx + 10, base - lineW + i * stripe, 14, stripe, (i % 2 === 0) ? "#0c1018" : "#f4f6fa");
     }
+    // Liseré néon sur le sol
+    fr(fx - 6, base - 3, 36, 3, "rgba(255,229,102,0.85)");
+    fr(fx - 6, base - 1, 36, 1, "rgba(61,196,255,0.55)");
+    // Petits poteaux latéraux discrets
+    fr(fx - 8, base - 22, 3, 22, "#2a3440");
+    fr(fx + 28, base - 22, 3, 22, "#2a3440");
+    glowRect(fx - 2, base - 18, 4, 4, C.accent, 0.7);
+    glowRect(fx + 26, base - 18, 4, 4, C.blue, 0.65);
+  }
+
+  function spawnConfetti(worldX, worldY, n) {
+    const cols = [C.accent, C.blue, "#ff6b8a", "#ffe566", "#ffffff", "#7CFFB2", "#c898f0"];
+    const count = n || 90;
+    for (let i = 0; i < count; i++) {
+      const ang = -Math.PI * 0.5 + (Math.random() - 0.5) * 1.8;
+      const spd = 180 + Math.random() * 320;
+      confetti.push({
+        x: worldX + (Math.random() - 0.5) * 40,
+        y: worldY - Math.random() * 30,
+        vx: Math.cos(ang) * spd + (Math.random() - 0.5) * 80,
+        vy: Math.sin(ang) * spd - 40,
+        life: 1.4 + Math.random() * 1.6,
+        max: 2.2,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 14,
+        w: 3 + Math.random() * 5,
+        h: 2 + Math.random() * 4,
+        color: cols[(Math.random() * cols.length) | 0],
+      });
+    }
+    if (confetti.length > 280) confetti.splice(0, confetti.length - 280);
+  }
+
+  function updateConfetti(dt) {
+    for (let i = confetti.length - 1; i >= 0; i--) {
+      const c = confetti[i];
+      c.vy += 520 * dt;
+      c.vx *= Math.max(0, 1 - 0.55 * dt);
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      c.rot += c.spin * dt;
+      c.life -= dt;
+      if (c.life <= 0 || c.y > GROUND_Y + 80) confetti.splice(i, 1);
+    }
+  }
+
+  function drawConfetti() {
+    if (!confetti.length) return;
+    for (let i = 0; i < confetti.length; i++) {
+      const c = confetti[i];
+      const px = sx(c.x);
+      const py = sy(c.y);
+      if (px < -20 || px > W + 20 || py < -20 || py > H + 20) continue;
+      const a = Math.min(1, c.life / 0.35);
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(c.rot);
+      ctx.globalAlpha = a;
+      fr(-c.w * 0.5, -c.h * 0.5, c.w, c.h, c.color);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawStatusHints() {
@@ -10513,6 +11299,7 @@ on</button>
       drawPlayer();
       drawCompanionLabels();
     }
+    drawConfetti();
     drawVfx();
     drawLighting();
     drawWinterWeather(); // flocons avant-plan (points blancs)
@@ -10587,6 +11374,12 @@ on</button>
         // Sirène police à 20 s de jeu
         AudioFX.tickPlaySiren(gdt);
         AudioFX.updateCopsAudio(player, obstacles);
+        try {
+          AudioFX.updateCompanionVoices(
+            player.x + player.w * 0.5,
+            companion.x + companion.w * 0.5
+          );
+        } catch (_) {}
         updateCopsAnim(gdt);
         updateThreatZoom(gdt);
       }
@@ -10954,7 +11747,7 @@ on</button>
     }
   }
 
-  /** Musique d’accueil — dès le 1er geste (ou bouton SON) */
+  /** Musique d’accueil — beat+acap dès le 1er geste (mix −7 dB + hi-cut) */
   function ensureMenuMusic() {
     if (state !== "menu") return;
     if (AudioFX.isMusicMuted()) return;
@@ -10968,6 +11761,10 @@ on</button>
       if (state === "menu") AudioFX.updateRunMusic(false, false, true);
     }).catch(() => {});
   }
+
+  // Précharge dès l’arrivée sur la page (lecture au 1er geste)
+  try { AudioFX.preloadMusic(); } catch (_) {}
+  try { AudioFX.preloadCompanionVoice(); } catch (_) {}
 
   // Déblocage agressif jusqu’au succès (Chrome / Safari autoplay)
   function armUnlock() {
@@ -11008,6 +11805,69 @@ on</button>
 
   document.getElementById("btn-start").addEventListener("click", startGame);
   document.getElementById("btn-retry").addEventListener("click", startGame);
+
+  // Admin OFF (accueil)
+  if (el.btnAdminOff) {
+    el.btnAdminOff.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setAdminMode(false);
+      try { screenText("ADMIN OFF", { color: "#9ab0c8", size: 32, y: H * 0.22, life: 1.4 }); } catch (_) {}
+    });
+  }
+  // Pad PIN (mobile / clic)
+  if (el.adminPinPad) {
+    el.adminPinPad.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("button[data-d]") : null;
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const d = btn.getAttribute("data-d");
+      if (d === "x") {
+        adminPinBuf = adminPinBuf.slice(0, -1);
+        refreshAdminPinDots();
+        return;
+      }
+      if (d === "ok") {
+        tryAcceptAdminPin();
+        return;
+      }
+      pushAdminDigit(d);
+    });
+  }
+  // Triple-tap sur le brand-tag → pad PIN
+  const brandTag = document.querySelector("#start-screen .brand-tag");
+  if (brandTag) {
+    brandTag.style.cursor = "pointer";
+    brandTag.addEventListener("click", (e) => {
+      if (state !== "menu" || isAdmin()) return;
+      const now = performance.now();
+      if (now - adminBrandTapT > 1200) adminBrandTaps = 0;
+      adminBrandTapT = now;
+      adminBrandTaps++;
+      if (adminBrandTaps >= 3) {
+        adminBrandTaps = 0;
+        e.preventDefault();
+        e.stopPropagation();
+        openAdminPinPad();
+      }
+    });
+  }
+  // Saisie clavier du code (accueil)
+  window.addEventListener("keydown", (e) => {
+    if (state !== "menu" || isAdmin()) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k >= "0" && k <= "9") {
+      pushAdminDigit(k);
+      return;
+    }
+    if (k === "Backspace") {
+      adminPinBuf = adminPinBuf.slice(0, -1);
+      refreshAdminPinDots();
+    }
+  });
+  syncAdminUI();
   if (el.btnPause) el.btnPause.addEventListener("click", (e) => { e.stopPropagation(); togglePause(); });
   if (el.btnMusic) {
     el.btnMusic.addEventListener("click", (e) => {
