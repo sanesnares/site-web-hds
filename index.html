@@ -69,6 +69,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
       background: var(--bg);
       font-family: var(--font-ui);
@@ -83,13 +84,14 @@
       position: relative;
       width: 100%;
       height: 100%;
+      height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       box-sizing: border-box;
-      /* Letterbox / pillarbox : bandes noires hors zone 16:9 */
-      background: #03060a;
+      /* Même teinte que le canvas — évite le trait letterbox */
+      background: var(--bg);
       padding-top: var(--game-top, 0px);
       padding-bottom: var(--game-bottom, 0px);
       padding-left: var(--game-left, 0px);
@@ -109,6 +111,8 @@
       background: var(--bg);
       flex-shrink: 0;
       margin: 0;
+      border: 0;
+      outline: none;
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 40px rgba(0, 0, 0, 0.55);
     }
 
@@ -116,10 +120,20 @@
       box-shadow: none;
     }
 
+    /* Mobile : même fond que le canvas → pas de trait / seam letterbox (Safari URL bar) */
+    html.platform-phone,
+    html.platform-phone body,
     html.platform-phone #game-wrap {
-      background-image:
-        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(61, 196, 255, 0.06), transparent 55%),
-        radial-gradient(ellipse 70% 35% at 50% 100%, rgba(255, 229, 102, 0.04), transparent 50%);
+      background: var(--bg);
+      background-image: none;
+    }
+    html.platform-phone #game {
+      box-shadow: none;
+      outline: none;
+      border: 0;
+    }
+    html.platform-phone.play-ui #game-wrap {
+      background: var(--bg);
     }
 
     /* Portrait : cadre centré dans la bande (dézoom, plus de champ), crop latéral fluide */
@@ -2206,9 +2220,9 @@
     html.phone-portrait.play-ui .btn-pause {
       top: auto;
       bottom: calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + var(--game-h, 300px) + 8px);
-      width: 40px;
-      height: 40px;
-      font-size: 12px;
+      width: 52px;
+      height: 52px;
+      font-size: 15px;
     }
 
     html.phone-portrait .overlay {
@@ -2757,25 +2771,25 @@
     }
     html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__track { font-size: 9px; }
     html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__live { font-size: 6px; }
-    /* En jeu : bas gauche, au-dessus des sticks */
+    /* En jeu : bandeau sous le canvas, centrée, cliquable (au-dessus du #touch) */
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio {
-      left: max(10px, env(safe-area-inset-left));
+      left: 50%;
       right: auto;
-      top: auto;
-      bottom: max(12px, calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + 10px));
-      width: min(380px, 88vw);
-      padding: 6px 16px 6px 6px;
-      gap: 8px;
-      /* Sous #touch (z 15) : ne pas bloquer joystick / saut malgré la largeur ×2 */
-      z-index: 14;
-      pointer-events: none;
+      top: calc(100% - var(--game-canvas-bottom, var(--game-bottom, 168px)) + 10px);
+      bottom: auto;
+      transform: translateX(-50%);
+      width: min(240px, 62vw);
+      padding: 4px 12px 4px 4px;
+      gap: 6px;
+      z-index: 18;
+      pointer-events: auto;
     }
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio__disc {
-      width: 38px;
-      height: 38px;
+      width: 28px;
+      height: 28px;
     }
-    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__track { font-size: 11px; }
-    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__live { font-size: 7px; letter-spacing: 0.16em; }
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__track { font-size: 9px; }
+    html.phone-portrait.play-ui:not(.pause-ui) .now-radio__live { font-size: 6px; letter-spacing: 0.16em; }
     /* Menu fin : haut-gauche, sous les mutes */
     html.phone-portrait.end-ui .now-radio {
       top: max(64px, calc(env(safe-area-inset-top) + 56px));
@@ -2834,6 +2848,11 @@
     html.platform-desktop.play-ui .now-radio {
       z-index: 14;
       pointer-events: none;
+    }
+    /* Mobile paysage en jeu : radio cliquable */
+    html.phone-landscape.play-ui:not(.pause-ui) .now-radio {
+      z-index: 18;
+      pointer-events: auto;
     }
 
     /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
@@ -8904,12 +8923,10 @@ on</button>
 
   /**
    * Intro cinématique (état `intro_cinematic`) avant PLAY :
-   * approach → smash mur → burst briques/alarme → runout → await input.
+   * zoom drone lointain → perso (cadrage jeu exact) → await input.
    */
   const INTRO_SPAWN_X = 100;
-  const INTRO_WALL_X = 48;
-  const INTRO_WALL_W = 58;
-  const INTRO_WALL_H = 210;
+  const INTRO_DRONE_DUR = 2.4;
   let introCine = null;
   let spawnNoBlinkT = 0;
 
@@ -8918,7 +8935,6 @@ on</button>
   }
 
   function isIntroLocked() {
-    // Toute la cinématique + l’attente d’input : pas de contrôle gameplay
     return isIntroCam();
   }
 
@@ -8944,39 +8960,46 @@ on</button>
     return 1 - x * x * x * x * x;
   }
 
-  function spawnIntroBricks(cx, cy) {
-    const colors = ["#3e4650", "#485058", "#363e48", "#424a54", "#5c6470", "#2e343c", "#6a727c", "#323840"];
-    for (let i = 0; i < 32; i++) {
-      const p = getFreeParticle();
-      const ang = -0.2 + Math.random() * 1.1;
-      const sp = 70 + Math.random() * 200;
-      p.x = cx + (Math.random() - 0.35) * 46;
-      p.y = cy + (Math.random() - 0.5) * 90;
-      p.vx = Math.cos(ang) * sp;
-      p.vy = Math.sin(ang) * sp - 40 - Math.random() * 160;
-      p.life = 0.75 + Math.random() * 0.65;
-      p.max = p.life;
-      p.size = 3 + ((Math.random() * 5) | 0);
-      p.color = colors[(Math.random() * colors.length) | 0];
-      p.gravity = 560;
-      p.glow = false;
-    }
+  function introPlayCamX() {
+    return Math.max(0, INTRO_SPAWN_X - W * CAM_FOCUS_X);
+  }
+
+  function snapIntroToPlayFrame() {
+    if (!introCine) return;
+    introCine.zoom = 1;
+    camX = introCine.endCamX;
+    camY = introCine.endCamY;
+    player.x = INTRO_SPAWN_X;
+    player.y = GROUND_Y - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.facing = 1;
+    player.moving = false;
+    player.onGround = true;
+    player.runPhase = 0;
+    player.runFrame = 0;
   }
 
   function beginIntroCinematic() {
+    const endCamX = introPlayCamX();
+    const endCamY = 0;
+    // Vue drone : plus loin / plus haut, décor La Défense bien ouvert
+    const startCamX = Math.max(0, endCamX - 220);
+    const startCamY = -72;
     introCine = {
       t: 0,
-      phase: "approach",
+      phase: "drone",
       phaseT: 0,
-      wallX: INTRO_WALL_X,
-      wallW: INTRO_WALL_W,
-      wallH: INTRO_WALL_H,
-      holeOpen: 0,
-      smashed: false,
-      alarmPulse: 0,
-      zoom: 1.14,
+      dur: INTRO_DRONE_DUR,
+      zoomStart: 0.46,
+      zoomEnd: 1,
+      startCamX,
+      startCamY,
+      endCamX,
+      endCamY,
+      zoom: 0.46,
     };
-    player.x = INTRO_WALL_X - 34;
+    player.x = INTRO_SPAWN_X;
     player.y = GROUND_Y - player.h;
     player.vx = 0;
     player.vy = 0;
@@ -8988,28 +9011,25 @@ on</button>
     player.runPhase = 0;
     player.invuln = 0;
     spawnNoBlinkT = 3.2;
-    camX = 0;
-    camY = 0;
+    camX = startCamX;
+    camY = startCamY;
     threatZoom = 1;
     try { AudioFX.setIntroFade(0.22); } catch (_) {}
   }
 
-  /** Alias compat — l’ancien flux introCam appelle la cinématique mur */
   function beginIntroCam() {
     beginIntroCinematic();
   }
 
   function finishIntroCinematic() {
     if (!introCine || introCine.phase !== "await") return false;
+    snapIntroToPlayFrame();
     introCine = null;
     state = "play";
-    player.x = INTRO_SPAWN_X;
-    player.y = GROUND_Y - player.h;
-    player.vx = 0;
-    player.vy = 0;
-    player.facing = 1;
-    player.moving = false;
-    player.runPhase = 0;
+    // Caméra déjà au cadrage jeu — pas de snap positionnel
+    camX = introPlayCamX();
+    camY = 0;
+    threatZoom = 1;
     player.invuln = 0;
     spawnNoBlinkT = Math.max(spawnNoBlinkT, 1.0);
     try { AudioFX.setIntroFade(1); } catch (_) {}
@@ -9035,118 +9055,39 @@ on</button>
     ic.t += dt;
     ic.phaseT += dt;
 
-    const followCam = (lerp) => {
-      const targetX = Math.max(0, player.x - W * 0.30);
-      camX += (targetX - camX) * (1 - Math.exp(-(lerp || 6) * dt));
-      camY += (0 - camY) * Math.min(1, 5 * dt);
-    };
+    // Perso figé au spawn pendant toute l’intro
+    player.x = INTRO_SPAWN_X;
+    player.y = GROUND_Y - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.facing = 1;
+    player.onGround = true;
+    player.moving = false;
+    player.jetting = false;
 
-    if (ic.phase === "approach") {
-      // Contre le mur, charge courte
-      player.facing = 1;
-      player.moving = true;
-      player.onGround = true;
-      player.y = GROUND_Y - player.h;
-      player.vx = 0;
-      player.vy = 0;
-      const shake = Math.sin(ic.phaseT * 28) * 2.2;
-      player.x = ic.wallX - 32 + shake;
-      advanceRunPhase(player, dt * 11);
-      player.dreadLift = 0.5;
-      player.dreadSwing = Math.sin(player.runPhase) * 1.2;
-      followCam(4);
-      ic.zoom += (1.12 - ic.zoom) * (1 - Math.exp(-3 * dt));
-      if (ic.phaseT >= 0.4) {
-        ic.phase = "smash";
-        ic.phaseT = 0;
-      }
-    } else if (ic.phase === "smash") {
-      if (!ic.smashed) {
-        ic.smashed = true;
-        spawnIntroBricks(ic.wallX + ic.wallW * 0.55, GROUND_Y - ic.wallH * 0.45);
-        addTrauma(0.5);
-        flashScreen("rgba(255,100,70,0.4)");
-        try { AudioFX.impact(); } catch (_) {}
-      }
-      ic.holeOpen = Math.min(1, ic.phaseT / 0.18);
-      ic.alarmPulse = Math.min(1, ic.phaseT / 0.15);
-      const u = easeOutQuint(Math.min(1, ic.phaseT / 0.48));
-      player.x = ic.wallX - 8 + u * 95;
-      player.y = GROUND_Y - player.h;
-      player.facing = 1;
-      player.moving = true;
-      player.onGround = true;
-      player.vx = 0;
-      player.vy = 0;
-      advanceRunPhase(player, dt * 16);
-      player.dreadLift = 0.6 + Math.abs(Math.sin(player.runPhase * 2)) * 0.4;
-      player.dreadSwing = Math.sin(player.runPhase) * 2;
-      followCam(9);
-      ic.zoom += (1.06 - ic.zoom) * (1 - Math.exp(-5 * dt));
-      if (ic.phaseT >= 0.52) {
-        ic.phase = "burst";
-        ic.phaseT = 0;
-      }
-    } else if (ic.phase === "burst") {
-      ic.holeOpen = 1;
-      ic.alarmPulse = 0.55 + Math.sin(ic.t * 16) * 0.45;
-      player.facing = 1;
-      player.moving = true;
-      player.onGround = true;
-      player.y = GROUND_Y - player.h;
-      player.x = Math.min(INTRO_SPAWN_X, player.x + 210 * dt);
-      player.vx = 0;
-      player.vy = 0;
-      advanceRunPhase(player, dt * 14);
-      followCam(7);
-      // Léger dézoom pour cadrer la scène
-      ic.zoom += (1.0 - ic.zoom) * (1 - Math.exp(-2.8 * dt));
-      if (ic.phaseT >= 0.9) {
-        ic.phase = "runout";
-        ic.phaseT = 0;
-      }
-    } else if (ic.phase === "runout") {
-      ic.holeOpen = 1;
-      ic.alarmPulse = 0.45 + Math.sin(ic.t * 14) * 0.35;
-      player.x = INTRO_SPAWN_X;
-      player.y = GROUND_Y - player.h;
-      player.facing = 1;
-      player.moving = true;
-      player.onGround = true;
-      player.vx = 0;
-      player.vy = 0;
-      advanceRunPhase(player, dt * 12);
-      followCam(5);
-      ic.zoom += (1.0 - ic.zoom) * (1 - Math.exp(-3.5 * dt));
-      if (ic.phaseT >= 0.55) {
+    if (ic.phase === "drone") {
+      const raw = Math.min(1, ic.t / ic.dur);
+      const u = smootherstep(raw);
+      const zU = easeOutQuint(u);
+      ic.zoom = ic.zoomStart + (ic.zoomEnd - ic.zoomStart) * zU;
+      camX = ic.startCamX + (ic.endCamX - ic.startCamX) * u;
+      camY = ic.startCamY + (ic.endCamY - ic.startCamY) * u;
+      if (raw >= 1) {
+        snapIntroToPlayFrame();
         ic.phase = "await";
         ic.phaseT = 0;
-        player.moving = false;
-        player.runPhase = 0;
-        player.runFrame = 0;
         try { AudioFX.setIntroFade(1); } catch (_) {}
       }
     } else if (ic.phase === "await") {
-      ic.holeOpen = 1;
-      ic.alarmPulse = Math.max(0, ic.alarmPulse - dt * 0.65);
-      player.x = INTRO_SPAWN_X;
-      player.y = GROUND_Y - player.h;
-      player.facing = 1;
-      player.moving = false;
-      player.vx = 0;
-      player.vy = 0;
-      player.runPhase = 0;
-      followCam(4);
-      ic.zoom = 1;
+      snapIntroToPlayFrame();
     }
 
     try {
-      const fadeU = Math.min(1, ic.t / 2.4);
+      const fadeU = Math.min(1, ic.t / INTRO_DRONE_DUR);
       AudioFX.setIntroFade(0.22 + fadeU * 0.78);
     } catch (_) {}
   }
 
-  /** Compat ancien nom */
   function updateIntroCam(dt) {
     updateIntroCinematic(dt);
   }
@@ -9157,67 +9098,7 @@ on</button>
   }
 
   function drawIntroBreakBuilding() {
-    if (!introCine) return;
-    const ic = introCine;
-    const px = Math.floor(sx(ic.wallX));
-    const groundSy = Math.floor(sy(GROUND_Y));
-    const top = groundSy - ic.wallH;
-    const ww = ic.wallW;
-    if (px > W + 40 || px + ww < -40) return;
-
-    // Façade bâtiment (pierres style sol)
-    const tones = ["#3a424c", "#485058", "#323840", "#424a54"];
-    fr(px - 4, top - 8, ww + 10, ic.wallH + 10, "#121820");
-    for (let row = 0; row < 14; row++) {
-      const ry = top + row * 15;
-      const stagger = (row % 2) * 7;
-      for (let col = -1; col < 5; col++) {
-        const rx = px + stagger + col * 14;
-        if (rx + 12 < px || rx > px + ww) continue;
-        fr(rx, ry, 12, 13, tones[(row + col + 4) % 4]);
-        fr(rx, ry, 12, 2, "#5a6270");
-        fr(rx + 11, ry, 1, 13, "#222830");
-      }
-    }
-    // Corniche
-    fr(px - 6, top - 10, ww + 14, 8, "#5c6470");
-    fr(px - 6, top - 10, ww + 14, 2, "#7a828c");
-
-    // Ouverture cassée + intérieur sombre
-    const holeH = Math.floor(ic.wallH * 0.72 * Math.max(0.15, ic.holeOpen));
-    const holeW = Math.floor((ww - 10) * Math.max(0.2, ic.holeOpen));
-    const hx = px + ((ww - holeW) / 2) | 0;
-    const hy = groundSy - holeH - 4;
-    if (ic.holeOpen > 0.05) {
-      fr(hx, hy, holeW, holeH, "#080c12");
-      // Contour irrégulier
-      fr(hx - 2, hy + 4, 3, holeH - 8, "#2a3038");
-      fr(hx + holeW - 1, hy + 6, 3, holeH - 10, "#2a3038");
-      fr(hx + 2, hy, holeW - 4, 3, "#1a2028");
-      // Alarme / gyrophare dans l’ouverture
-      if (ic.alarmPulse > 0.02) {
-        const pulse = ic.alarmPulse;
-        ctx.save();
-        ctx.globalAlpha = 0.25 + pulse * 0.55;
-        const glow = ctx.createRadialGradient(
-          hx + holeW * 0.5, hy + holeH * 0.35, 2,
-          hx + holeW * 0.5, hy + holeH * 0.35, holeW * 0.7
-        );
-        glow.addColorStop(0, "rgba(255,70,40,0.95)");
-        glow.addColorStop(0.45, "rgba(255,120,40,0.45)");
-        glow.addColorStop(1, "rgba(255,40,20,0)");
-        ctx.fillStyle = glow;
-        ctx.fillRect(hx - 4, hy - 4, holeW + 8, holeH + 8);
-        // Voyant
-        fr(hx + holeW * 0.5 - 4, hy + 10, 8, 6, pulse > 0.55 ? "#ff5030" : "#a02818");
-        fr(hx + holeW * 0.5 - 3, hy + 11, 6, 2, pulse > 0.55 ? "#ffe0a0" : "#603020");
-        ctx.restore();
-      }
-      // Débris au sol
-      fr(hx - 6, groundSy - 6, 5, 4, "#3e4650");
-      fr(hx + holeW + 2, groundSy - 5, 6, 3, "#485058");
-      fr(hx + 8, groundSy - 4, 4, 3, "#2e343c");
-    }
+    /* plus de mur — intro drone uniquement */
   }
 
   function drawIntroStartPrompt() {
@@ -14533,13 +14414,9 @@ on</button>
     const threatZ = threatZoom > 1.001 ? threatZoom : 1;
     const viewZ = threatZ * introZ;
     if (Math.abs(viewZ - 1) > 0.002) {
-      // Zoom intro : pivot fixe au lock, puis suit le perso une fois libre
-      const ax = isIntroLocked()
-        ? W * 0.42
-        : sx(player.x + player.w * 0.5);
-      const ay = isIntroLocked()
-        ? H * 0.55
-        : sy(player.y + player.h * 0.45);
+      // Pivot sur le perso (intro drone + threat) → handover sans saut
+      const ax = sx(player.x + player.w * 0.5);
+      const ay = sy(player.y + player.h * 0.45);
       ctx.translate(ax, ay);
       ctx.scale(viewZ, viewZ);
       ctx.translate(-ax, -ay);
@@ -14551,7 +14428,6 @@ on</button>
     drawParallaxNear();
     drawWater();
     drawGround();
-    drawIntroBreakBuilding();
     drawFinish();
     drawMetro();
     drawLevelProps();
@@ -14726,9 +14602,25 @@ on</button>
 
   function readViewportSize() {
     const vv = window.visualViewport;
-    const vw = Math.max(1, (vv && vv.width) || window.innerWidth || document.documentElement.clientWidth || W);
-    const vh = Math.max(1, (vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || H);
+    const vw = Math.max(1, Math.round((vv && vv.width) || window.innerWidth || document.documentElement.clientWidth || W));
+    const vh = Math.max(1, Math.round((vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || H));
     return { vw, vh };
+  }
+
+  /** Aligne le layout sur le visualViewport (Safari : barre URL qui se masque) */
+  function syncViewportShell(vw, vh) {
+    try {
+      const root = document.documentElement;
+      root.style.width = vw + "px";
+      root.style.height = vh + "px";
+      document.body.style.width = vw + "px";
+      document.body.style.height = vh + "px";
+      const wrap = document.getElementById("game-wrap");
+      if (wrap) {
+        wrap.style.width = vw + "px";
+        wrap.style.height = vh + "px";
+      }
+    } catch (_) {}
   }
 
   /** Coordonnées écran (clientX/Y) → espace logique canvas 960×540 */
@@ -14771,6 +14663,7 @@ on</button>
     const phonePortrait = root.classList.contains("phone-portrait");
     const phoneLandscape = root.classList.contains("phone-landscape");
     const { vw, vh } = readViewportSize();
+    syncViewportShell(vw, vh);
 
     let padTop = 0;
     let padBottom = 0;
