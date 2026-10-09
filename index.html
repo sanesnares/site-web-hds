@@ -7243,8 +7243,6 @@ on</button>
   tableImg.src = "assets/table.png";
   const flecheImg = new Image();
   flecheImg.src = "assets/flecheskin.png";
-  const metroImg = new Image();
-  metroImg.src = "assets/metro-aerien.png";
   const jetpackImg = new Image();
   jetpackImg.src = "assets/jetpack.png";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
@@ -8697,8 +8695,8 @@ on</button>
     {
       const zone0 = METRO_AT_METERS * PX_PER_METER;
       const zone1 = (METRO_AT_METERS + METRO_SPAN_METERS) * PX_PER_METER;
-      const tw = 300;
-      const th = Math.round(tw * (516 / 1024));
+      const tw = 268;
+      const th = 72; // sprite pixel propre (sans pont / fond photo)
       const deckY = GROUND_Y - 168;
       metro = {
         zone0,
@@ -8708,7 +8706,8 @@ on</button>
         h: th,
         // Départ hors champ à droite de la zone, arrivée hors champ à gauche
         x: zone1 + 80,
-        y: deckY - th + 38,
+        // bogies posés sur le rail supérieur du tablier
+        y: deckY - th + 2,
         vx: -((zone1 - zone0) + tw + 160) / 9.5, // ~9.5 s pour traverser les 100 m
         armed: false,
         active: false,
@@ -9616,6 +9615,118 @@ on</button>
     }
   }
 
+  /**
+   * RER A pixel (MI09 vibe) — silhouette propre, pas de photo détourée.
+   * Assis sur les rails : bas des bogies = bas du sprite.
+   * facingLeft = true (traverse R→L).
+   */
+  /** Rect écran (ignore artScale perso) — décor / RER */
+  function sfr(x, y, w, h, c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(x | 0, y | 0, Math.max(1, w | 0), Math.max(1, h | 0));
+  }
+
+  function drawRerA(tx, ty, tw, th, facingLeft) {
+    const x = Math.floor(tx);
+    const y = Math.floor(ty);
+    const w = Math.max(80, tw | 0);
+    const h = Math.max(40, th | 0);
+    // Palette RER A
+    const body = "#8eb0b4";
+    const bodyD = "#6a8e94";
+    const bodyL = "#c4d6d8";
+    const blue = "#1e3a6e";
+    const blueL = "#2a5088";
+    const red = "#c02830";
+    const win = "#1a2430";
+    const winL = "#3a5068";
+    const steel = "#2a3038";
+    const steelL = "#5a6570";
+    const door = "#7a9aa0";
+
+    ctx.save();
+    if (!facingLeft) {
+      ctx.translate(x + w, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
+
+    const carGap = Math.max(4, (w * 0.03) | 0);
+    const carW = ((w - carGap) / 2) | 0;
+    const roofY = y + 4;
+    const bodyY = y + 10;
+    const bodyH = Math.max(18, h - 28);
+    const stripeY = bodyY + ((bodyH * 0.42) | 0);
+    // Bogies : bas des roues = bas du sprite (posé sur rail)
+    const bogieY = y + h - 12;
+
+    function drawCar(cx, isFront) {
+      // Ombre légère sous caisse
+      sfr(cx + 4, bogieY + 6, carW - 8, 2, "rgba(0,0,0,0.28)");
+      // Toit / bande bleue haute
+      sfr(cx + 2, roofY, carW - 4, 8, blue);
+      sfr(cx + 4, roofY + 1, carW - 8, 3, blueL);
+      // Nez (cabine avant seulement)
+      if (isFront) {
+        sfr(cx - 2, bodyY + 4, 8, bodyH - 6, blue);
+        sfr(cx - 1, bodyY + 8, 6, 14, win);
+        sfr(cx, bodyY + 10, 3, 8, winL);
+      }
+      // Caisse
+      sfr(cx + 2, bodyY, carW - 4, bodyH, body);
+      sfr(cx + 4, bodyY + 2, carW - 8, 4, bodyL);
+      sfr(cx + 3, bodyY + bodyH - 5, carW - 6, 4, bodyD);
+      // Bande blanche + rouge RER
+      sfr(cx + 2, stripeY - 3, carW - 4, 3, "#e8eef2");
+      sfr(cx + 2, stripeY, carW - 4, 5, red);
+      sfr(cx + 2, stripeY + 5, carW - 4, 3, blue);
+      // Fenêtres hautes (rangée)
+      const winN = 5;
+      const winW = Math.max(6, ((carW - 28) / winN) | 0);
+      for (let i = 0; i < winN; i++) {
+        const wx = cx + 10 + i * (winW + 4);
+        sfr(wx, bodyY + 6, winW, 10, win);
+        sfr(wx + 1, bodyY + 7, Math.max(2, winW - 2), 3, winL);
+      }
+      // Portes (2 doubles)
+      const doorW = Math.max(10, (carW * 0.14) | 0);
+      const d0 = cx + ((carW * 0.22) | 0);
+      const d1 = cx + ((carW * 0.62) | 0);
+      for (let di = 0; di < 2; di++) {
+        const dx = di === 0 ? d0 : d1;
+        sfr(dx, bodyY + 4, doorW, bodyH - 10, door);
+        sfr(dx + 1, bodyY + 6, doorW - 2, bodyH - 14, bodyD);
+        sfr(dx + ((doorW / 2) | 0), bodyY + 6, 1, bodyH - 14, "#2a3840");
+        sfr(dx + 2, stripeY, doorW - 4, 5, red);
+      }
+      // Bas de caisse / jupes
+      sfr(cx + 4, bodyY + bodyH - 2, carW - 8, 3, steel);
+      // Bogies + roues (bas = y+h)
+      const bw = Math.max(16, (carW * 0.22) | 0);
+      const b0 = cx + 10;
+      const b1 = cx + carW - 10 - bw;
+      for (let bi = 0; bi < 2; bi++) {
+        const bx = bi === 0 ? b0 : b1;
+        sfr(bx, bogieY, bw, 5, steel);
+        sfr(bx + 2, bogieY + 1, bw - 4, 2, steelL);
+        sfr(bx + 3, bogieY + 4, 5, 6, "#12161c");
+        sfr(bx + bw - 8, bogieY + 4, 5, 6, "#12161c");
+        sfr(bx + 4, bogieY + 5, 3, 3, "#3a4048");
+        sfr(bx + bw - 7, bogieY + 5, 3, 3, "#3a4048");
+      }
+    }
+
+    // 2 voitures (avant à gauche quand facingLeft)
+    drawCar(x + 4, true);
+    drawCar(x + 4 + carW + carGap, false);
+    // Accouplement
+    const mid = x + 4 + carW;
+    sfr(mid + 1, bodyY + 12, carGap + 2, 8, steel);
+    sfr(mid + 2, bodyY + 14, carGap, 4, steelL);
+
+    ctx.restore();
+  }
+
   /** Viaduc fixe 800–900 m + rame qui passe (décor, pas de collision) */
   function drawMetro() {
     if (!metro) return;
@@ -9642,47 +9753,37 @@ on</button>
       if (px < -40 || px > W + 40) continue;
       const ground = sy(GROUND_Y);
       // Pilier
-      fr(px - pillarW * 0.5, railY + 6, pillarW, ground - railY - 6, "#4a5560");
-      fr(px - pillarW * 0.5 + 2, railY + 8, pillarW - 4, ground - railY - 10, "#3a434c");
+      sfr(px - pillarW * 0.5, railY + 8, pillarW, ground - railY - 8, "#4a5560");
+      sfr(px - pillarW * 0.5 + 2, railY + 10, pillarW - 4, ground - railY - 12, "#3a434c");
       // Contreventement léger
       ctx.strokeStyle = "rgba(70, 82, 94, 0.85)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(px - 14, railY + 18);
+      ctx.moveTo(px - 14, railY + 20);
       ctx.lineTo(px + 14, ground - 24);
-      ctx.moveTo(px + 14, railY + 18);
+      ctx.moveTo(px + 14, railY + 20);
       ctx.lineTo(px - 14, ground - 24);
       ctx.stroke();
     }
-    // Tablier / voie
-    fr(x0 - 8, railY, span + 16, 10, "#5a6570");
-    fr(x0 - 6, railY + 2, span + 12, 4, "#7a8794");
-    fr(x0 - 4, railY - 3, span + 8, 4, "#2e3640");
-    // Rails
-    ctx.strokeStyle = "rgba(200, 210, 220, 0.55)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(x0, railY + 1);
-    ctx.lineTo(x1, railY + 1);
-    ctx.moveTo(x0, railY + 5);
-    ctx.lineTo(x1, railY + 5);
-    ctx.stroke();
+    // Tablier
+    sfr(x0 - 10, railY + 6, span + 20, 12, "#4a5560");
+    sfr(x0 - 8, railY + 8, span + 16, 4, "#6a7580");
+    // Rails (2 files) — la rame glisse dessus
+    sfr(x0 - 6, railY, span + 12, 3, "#2a3038");
+    sfr(x0 - 4, railY + 1, span + 8, 1, "#c8d0d8");
+    sfr(x0 - 6, railY + 4, span + 12, 3, "#2a3038");
+    sfr(x0 - 4, railY + 5, span + 8, 1, "#c8d0d8");
+    // Traverses
+    for (let i = 0; i < span; i += 14) {
+      sfr(x0 + i, railY + 2, 8, 3, "#3a444c");
+    }
 
-    // Rame
+    // Rame pixel RER A (sans artefacts photo)
     if (metro.active || (!metro.done && metro.armed)) {
       const tx = sx(metro.x);
       const ty = sy(metro.y);
       if (tx < W + 40 && tx + metro.w > -40) {
-        if (metroImg.complete && metroImg.naturalWidth > 0) {
-          ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(metroImg, tx, ty, metro.w, metro.h);
-        } else {
-          // Fallback pixel RER
-          fr(tx + 8, ty + metro.h * 0.28, metro.w - 16, metro.h * 0.42, "#6a9aa0");
-          fr(tx + 8, ty + metro.h * 0.48, metro.w - 16, 6, "#c04040");
-          fr(tx + 14, ty + metro.h * 0.32, 18, 14, "#1a2430");
-          fr(tx + metro.w - 40, ty + metro.h * 0.32, 18, 14, "#1a2430");
-        }
+        drawRerA(tx, ty, metro.w, metro.h, true);
       }
     }
     ctx.restore();
