@@ -977,23 +977,47 @@
     .btn.btn-admin-off.hidden { display: none !important; }
 
     .admin-pin {
+      position: relative;
+      z-index: 40;
       margin: 10px auto 0;
-      width: min(220px, 86vw);
-      padding: 12px 12px 10px;
+      width: min(260px, 90vw);
+      padding: 14px 14px 12px;
       border-radius: 12px;
-      background: rgba(6, 12, 22, 0.92);
-      border: 1px solid rgba(61, 196, 255, 0.35);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      background: rgba(6, 12, 22, 0.96);
+      border: 1px solid rgba(61, 196, 255, 0.45);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .admin-pin,
+    .admin-pin * {
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
     }
     .admin-pin.hidden { display: none !important; }
     .admin-pin-label {
-      margin: 0 0 8px;
+      margin: 0 0 6px;
       text-align: center;
       font-family: var(--font-arcade);
       font-size: 11px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: rgba(220, 235, 255, 0.75);
+    }
+    .admin-pin-code {
+      margin: 0 0 10px;
+      text-align: center;
+      font-family: var(--font-arcade);
+      font-size: clamp(28px, 8vw, 36px);
+      font-weight: 800;
+      letter-spacing: 0.28em;
+      color: #ffe566;
+      text-shadow:
+        0 0 12px rgba(255, 229, 102, 0.55),
+        0 2px 0 #061018;
+      line-height: 1.1;
     }
     .admin-pin-dots {
       display: flex;
@@ -1002,8 +1026,8 @@
       margin-bottom: 10px;
     }
     .admin-pin-dots i {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       border: 1.5px solid rgba(61, 196, 255, 0.55);
       background: transparent;
@@ -1016,7 +1040,7 @@
     .admin-pin-pad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 8px;
     }
     .admin-pin-pad button {
       appearance: none;
@@ -1024,12 +1048,15 @@
       background: rgba(20, 36, 56, 0.9);
       color: #eef4fa;
       font-family: var(--font-arcade);
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
-      padding: 10px 0;
+      min-height: 48px;
+      padding: 12px 0;
       border-radius: 8px;
       cursor: pointer;
-      pointer-events: auto;
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      -webkit-tap-highlight-color: rgba(61, 196, 255, 0.35);
     }
     .admin-pin-pad button:active { filter: brightness(1.15); }
     .admin-pin-pad .admin-pin-ok {
@@ -1037,6 +1064,63 @@
       border-color: rgba(61, 196, 255, 0.55);
     }
     .admin-pin-pad .admin-pin-x { color: rgba(255, 180, 190, 0.9); }
+
+    /* Code admin affiché en grand sur la pause */
+    .pause-admin-code {
+      margin: 14px auto 6px;
+      padding: 12px 18px 14px;
+      width: min(320px, 92vw);
+      border-radius: 14px;
+      background: rgba(6, 12, 22, 0.88);
+      border: 1px solid rgba(61, 196, 255, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+    .pause-admin-code__label {
+      display: block;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(180, 210, 240, 0.75);
+      margin-bottom: 6px;
+    }
+    .pause-admin-code__digits {
+      display: block;
+      font-family: var(--font-arcade);
+      font-size: clamp(36px, 11vw, 52px);
+      font-weight: 800;
+      letter-spacing: 0.32em;
+      color: #ffe566;
+      text-shadow:
+        0 0 16px rgba(255, 229, 102, 0.55),
+        0 3px 0 #061018;
+      line-height: 1.05;
+      padding-left: 0.32em; /* compense letter-spacing visuel */
+    }
+    .pause-admin-code__hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: rgba(200, 220, 240, 0.65);
+    }
+    html.phone-portrait .pause-admin-code {
+      margin-top: 10px;
+      padding: 10px 14px 12px;
+    }
+    html.phone-portrait .pause-admin-code__digits {
+      font-size: clamp(32px, 12vw, 44px);
+    }
+    html.phone-portrait .admin-pin {
+      width: min(280px, 92vw);
+    }
+    html.phone-portrait .admin-pin-pad button {
+      min-height: 52px;
+      font-size: 20px;
+    }
 
     .btn-row {
       display: flex;
@@ -1813,7 +1897,16 @@
     }
     html.phone-portrait #start-screen.overlay {
       justify-content: stretch;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto; /* pad admin / hub accessibles au scroll */
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    html.phone-portrait #start-screen .wait-ui {
+      touch-action: pan-y;
+    }
+    html.phone-portrait #start-screen .admin-pin {
+      margin-bottom: 18px;
     }
 
     /* Pause / boutique : centrés dans la zone safe */
@@ -3485,7 +3578,7 @@
       </div>
     </div>
 
-    <a id="now-radio" class="now-radio" href="https://ysemo.listenify.app/ysemo/phenomene-raven" target="_blank" rel="noopener noreferrer" aria-label="Radio : Phénomène Raven — Ysemo">
+    <a id="now-radio" class="now-radio" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer" aria-label="Radio : Ysemo - Certifié Hauts-de-seine">
       <span class="now-radio__disc" aria-hidden="true">
         <img src="assets/pochette.png" alt="" width="72" height="72" draggable="false" decoding="async" />
       </span>
@@ -3493,8 +3586,8 @@
         <span class="now-radio__live">En direct</span>
         <span class="now-radio__marquee">
           <span class="now-radio__track">
-            <span>Phénomène Raven — Ysemo · Radio 92</span>
-            <span aria-hidden="true">Phénomène Raven — Ysemo · Radio 92</span>
+            <span>Ysemo - Certifié Hauts-de-seine</span>
+            <span aria-hidden="true">Ysemo - Certifié Hauts-de-seine</span>
           </span>
         </span>
       </span>
@@ -3521,6 +3614,11 @@ on</button>
         <p class="subtitle pause-confirm-msg">Retourner à l’accueil ?</p>
         <button class="btn" id="btn-pause-yes" type="button">Oui</button>
         <button class="btn btn-pause-home" id="btn-pause-no" type="button">Non</button>
+      </div>
+      <div class="pause-admin-code" id="pause-admin-code" aria-label="Code admin à taper">
+        <span class="pause-admin-code__label">Code admin</span>
+        <strong class="pause-admin-code__digits">4 8 8 9</strong>
+        <span class="pause-admin-code__hint">À saisir sur l’accueil → Admin</span>
       </div>
       <aside class="ysemo-hub" aria-label="Ysemo sur Listenify">
         <a class="ysemo-hub__hero" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">
@@ -3648,6 +3746,7 @@ on</button>
           </aside>
           <div id="admin-pin" class="admin-pin hidden" aria-hidden="true">
             <p class="admin-pin-label">Code admin</p>
+            <p class="admin-pin-code" id="admin-pin-code" aria-hidden="true">4 8 8 9</p>
             <div class="admin-pin-dots" id="admin-pin-dots" aria-hidden="true">
               <i></i><i></i><i></i><i></i>
             </div>
@@ -4076,6 +4175,12 @@ on</button>
       el.adminPin.classList.add("hidden");
       el.adminPin.setAttribute("aria-hidden", "true");
     }
+    const pauseCode = document.getElementById("pause-admin-code");
+    if (pauseCode) {
+      pauseCode.classList.toggle("hidden", on);
+      const hint = pauseCode.querySelector(".pause-admin-code__hint");
+      if (hint) hint.textContent = on ? "Mode admin actif" : "À saisir sur l’accueil → Admin";
+    }
     try {
       document.documentElement.classList.toggle("admin-on", on);
     } catch (_) {}
@@ -4126,6 +4231,12 @@ on</button>
     el.adminPin.classList.remove("hidden");
     el.adminPin.setAttribute("aria-hidden", "false");
     resetAdminPinBuf();
+    // Mobile : remonter le pad dans la zone visible (sinon sous le fold / hub)
+    try {
+      requestAnimationFrame(() => {
+        el.adminPin.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      });
+    } catch (_) {}
   }
 
   syncAdminUI();
@@ -4370,7 +4481,9 @@ on</button>
       // Musique (hors bus) — sur mobile, ne pas cancel les ramps du gate
       if (musicMaster) {
         const musicOn = !musicMuted && musicAllowed && musicStarted && musicGateMode !== "off";
-        const musicTarget = musicOn ? musicGateTargetGain(musicGateMode) : 0.0001;
+        const musicTarget = musicOn
+          ? musicGateTargetGain(musicGateMode) * introMusicFade
+          : 0.0001;
         const cur = Math.max(0.0001, musicMaster.gain.value || 0.0001);
         if (!soft || Math.abs(cur - musicTarget) > 0.08) {
           musicMaster.gain.cancelScheduledValues(t);
@@ -5698,6 +5811,22 @@ on</button>
       return RUN_MUSIC_ON;
     }
 
+    /** 0→1 : fade musique synchronisé avec l’intro caméra */
+    let introMusicFade = 1;
+    function setIntroFade(u) {
+      introMusicFade = Math.max(0, Math.min(1, u == null ? 1 : u));
+      if (!musicMaster || !ac || musicMuted || !musicAllowed) return;
+      if (!musicStarted || musicGateMode === "off") return;
+      const base = musicGateTargetGain(musicGateMode);
+      const target = Math.max(0.0001, base * introMusicFade);
+      const now = ac.currentTime;
+      try {
+        musicMaster.gain.cancelScheduledValues(now);
+        musicMaster.gain.setTargetAtTime(target, now, 0.07);
+      } catch (_) {}
+    }
+    function getIntroFade() { return introMusicFade; }
+
     /** Hi-cut global : sombre à l’accueil, ouvert en jeu */
     function applyMusicHiCut(mode, instant) {
       if (!musicHiCut || !ac) return;
@@ -5732,7 +5861,7 @@ on</button>
       // Mute musique : applyMuteLevels gère le gain — ne pas écraser ici
       if (musicMuted) return;
       const now = ac.currentTime;
-      const target = musicGateTargetGain(mode);
+      const target = musicGateTargetGain(mode) * (mode === "off" ? 1 : introMusicFade);
       // Déjà assez proche → skip (évite clicks)
       if (!force && Math.abs(curGain - target) < 0.04) return;
       musicMaster.gain.cancelScheduledValues(now);
@@ -6408,6 +6537,8 @@ on</button>
       setProgress(meters) { applyProgress(meters, false); },
       tickSync() { keepSync(); },
       updateRunMusic,
+      setIntroFade,
+      getIntroFade,
       updateCityAmbience,
       tickPlaySiren,
       resetPlaySirenTimer,
@@ -7630,9 +7761,10 @@ on</button>
    */
   let cine = null;
 
-  /** Intro caméra après Jouer : pan gauche → zoom perso (4 s) */
-  const INTRO_CAM_DUR = 4;
-  let introCam = null; // null | { t, startX, endX, startZ, endZ }
+  /** Intro caméra après Jouer : entrée perso + pan/zoom + fade musique (4 s) */
+  const INTRO_CAM_DUR = 4.2;
+  const INTRO_SPAWN_X = 100;
+  let introCam = null; // null | { t, startX, startZ, endZ, fromX, toX }
 
   function isIntroCam() {
     return !!(introCam && introCam.t < INTRO_CAM_DUR);
@@ -7646,41 +7778,96 @@ on</button>
     return isCinematic() || isIntroCam();
   }
 
-  function beginIntroCam() {
-    const endX = Math.max(0, player.x - W * CAM_FOCUS_X);
-    introCam = {
-      t: 0,
-      startX: 0,
-      endX,
-      startZ: 0.72,
-      endZ: 1,
-    };
-    camX = 0;
-    camY = 0;
-    threatZoom = 1;
+  function smootherstep(t) {
+    const x = Math.max(0, Math.min(1, t));
+    return x * x * x * (x * (x * 6 - 15) + 10);
   }
 
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function easeOutQuint(t) {
+    const x = 1 - Math.max(0, Math.min(1, t));
+    return 1 - x * x * x * x * x;
+  }
+
+  function beginIntroCam() {
+    const fromX = -72;
+    introCam = {
+      t: 0,
+      startX: -20,
+      startZ: 0.68,
+      endZ: 1,
+      fromX,
+      toX: INTRO_SPAWN_X,
+    };
+    player.x = fromX;
+    player.y = GROUND_Y - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.facing = -1; // regarde derrière lui en arrivant
+    player.moving = true;
+    player.onGround = true;
+    player.runFrame = 0;
+    player.runTimer = 0;
+    camX = introCam.startX;
+    camY = 0;
+    threatZoom = 1;
+    try { AudioFX.setIntroFade(0); } catch (_) {}
   }
 
   function updateIntroCam(dt) {
     if (!introCam) return;
     introCam.t += dt;
-    const u = easeInOutCubic(Math.min(1, introCam.t / INTRO_CAM_DUR));
-    introCam.endX = Math.max(0, player.x - W * CAM_FOCUS_X);
-    camX = introCam.startX + (introCam.endX - introCam.startX) * u;
-    camY += (0 - camY) * Math.min(1, 8 * dt);
-    if (introCam.t >= INTRO_CAM_DUR) {
-      camX = introCam.endX;
+    const raw = Math.min(1, introCam.t / INTRO_CAM_DUR);
+    // Zoom / musique : très fluide (smootherstep)
+    const uCam = smootherstep(raw);
+    // Entrée perso : un peu plus tôt, ease-out
+    const uEnter = easeOutQuint(Math.min(1, raw / 0.82));
+
+    player.x = introCam.fromX + (introCam.toX - introCam.fromX) * uEnter;
+    player.y = GROUND_Y - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.onGround = true;
+    player.facing = -1; // toujours regarder derrière pendant l’arrivée
+    player.moving = uEnter < 0.97;
+    if (player.moving) {
+      player.runTimer = (player.runTimer || 0) + dt;
+      while (player.runTimer >= 0.09) {
+        player.runTimer -= 0.09;
+        player.runFrame = (player.runFrame + 1) % 6;
+      }
+      // Légère respiration des dreads en courant
+      player.dreadLift = 0.4 + Math.abs(Math.sin(player.runFrame * 0.9)) * 0.35;
+      player.dreadSwing = Math.sin(player.runFrame * 1.15) * 1.6;
+    } else {
+      player.runFrame = 0;
+      player.dreadLift *= 0.9;
+      player.dreadSwing *= 0.9;
+    }
+
+    const focusX = player.x - W * CAM_FOCUS_X;
+    const endX = Math.max(0, focusX);
+    camX = introCam.startX + (endX - introCam.startX) * uCam;
+    camY += (0 - camY) * Math.min(1, 6 * dt);
+
+    // Musique monte avec le zoom
+    try { AudioFX.setIntroFade(uCam); } catch (_) {}
+
+    if (raw >= 1) {
+      player.x = introCam.toX;
+      player.moving = false;
+      player.facing = -1;
+      camX = Math.max(0, player.x - W * CAM_FOCUS_X);
+      try { AudioFX.setIntroFade(1); } catch (_) {}
       introCam = null;
     }
   }
 
   function introCamZoom() {
     if (!introCam) return 1;
-    const u = easeInOutCubic(Math.min(1, introCam.t / INTRO_CAM_DUR));
-    return introCam.startZ + (introCam.endZ - introCam.startZ) * u;
+    const u = smootherstep(Math.min(1, introCam.t / INTRO_CAM_DUR));
+    // Ease-out supplémentaire sur le zoom pour un finish plus doux
+    const z = introCam.startZ + (introCam.endZ - introCam.startZ) * easeOutQuint(u);
+    return z;
   }
 
   function findBossObstacle() {
@@ -8611,23 +8798,32 @@ on</button>
     }
     if (isPlayerLocked()) {
       if (isCinematic()) updateBossCinematic(dt);
-      // Physique figée / freinage — pas d’input
-      player.moving = false;
       player.jetting = false;
-      player.vx *= Math.exp(-10 * dt);
-      if (Math.abs(player.vx) < 8) player.vx = 0;
-      if (!player.onGround) {
-        player.vy += GRAVITY * dt;
-        if (player.vy > 620) player.vy = 620;
-      } else {
+      if (isIntroCam()) {
+        // Position / anim gérées par updateIntroCam (après updatePlayer)
+        player.vx = 0;
         player.vy = 0;
+        player._px = player.x;
+        player._py = player.y;
+        player.invuln = Math.max(player.invuln || 0, 0.35);
+      } else {
+        // Cinématique boss : freinage
+        player.moving = false;
+        player.vx *= Math.exp(-10 * dt);
+        if (Math.abs(player.vx) < 8) player.vx = 0;
+        if (!player.onGround) {
+          player.vy += GRAVITY * dt;
+          if (player.vy > 620) player.vy = 620;
+        } else {
+          player.vy = 0;
+        }
+        player._px = player.x;
+        player._py = player.y;
+        player.x += player.vx * dt;
+        player.y += player.vy * dt;
+        resolvePlatforms();
+        player.invuln = Math.max(player.invuln || 0, 0.4);
       }
-      player._px = player.x;
-      player._py = player.y;
-      player.x += player.vx * dt;
-      player.y += player.vy * dt;
-      resolvePlatforms();
-      player.invuln = Math.max(player.invuln || 0, isIntroCam() ? 0.2 : 0.4);
       maxReachX = Math.max(maxReachX, player.x + player.w);
       updatePlayerHp(dt);
       if (player.invuln > 0) player.invuln -= dt;
@@ -10107,6 +10303,8 @@ on</button>
     refreshShopButtons();
     refreshLoadoutUI();
     syncMuteBtn();
+    introCam = null;
+    try { AudioFX.setIntroFade(1); } catch (_) {}
     ensureMenuMusic();
     AudioFX.updateRunMusic(false, false, true);
   }
@@ -12484,10 +12682,16 @@ on</button>
       ctx.translate(-W / 2, -H / 2);
     }
     const introZ = introCamZoom();
-    const viewZ = (threatZoom > 1.001 ? threatZoom : 1) * introZ;
-    if (viewZ > 1.001 || viewZ < 0.998) {
-      const ax = sx(player.x + player.w * 0.5);
-      const ay = sy(player.y + player.h * 0.45);
+    const threatZ = threatZoom > 1.001 ? threatZoom : 1;
+    const viewZ = threatZ * introZ;
+    if (Math.abs(viewZ - 1) > 0.002) {
+      // Zoom intro : pivot un peu vers le centre pour un cadrage plus doux
+      const ax = isIntroCam()
+        ? W * 0.42
+        : sx(player.x + player.w * 0.5);
+      const ay = isIntroCam()
+        ? H * 0.55
+        : sy(player.y + player.h * 0.45);
       ctx.translate(ax, ay);
       ctx.scale(viewZ, viewZ);
       ctx.translate(-ax, -ay);
@@ -12900,11 +13104,11 @@ on</button>
     if (stickBase) stickBase.classList.remove("show");
     if (stickKnob) stickKnob.classList.remove("show");
     if (jumpFlash) jumpFlash.classList.remove("show");
-    AudioFX.updateRunMusic(true, false);
     syncPhoneLayoutClass();
     resize();
     syncHpBar();
-    beginIntroCam();
+    beginIntroCam(); // fade musique à 0 avant le gate run
+    AudioFX.updateRunMusic(true, false);
   }
 
   async function startGame() {
@@ -13022,8 +13226,8 @@ on</button>
       el.nowRadio.setAttribute(
         "aria-label",
         off
-          ? "Radio en pause : Phénomène Raven — Ysemo"
-          : "Radio : Phénomène Raven — Ysemo"
+          ? "Radio en pause : Ysemo - Certifié Hauts-de-seine"
+          : "Radio : Ysemo - Certifié Hauts-de-seine"
       );
     }
   }
@@ -13051,24 +13255,44 @@ on</button>
       try { screenText("ADMIN OFF", { color: "#9ab0c8", size: 32, y: H * 0.22, life: 1.4 }); } catch (_) {}
     });
   }
-  // Pad PIN (mobile / clic)
-  if (el.adminPinPad) {
-    el.adminPinPad.addEventListener("click", (e) => {
-      const btn = e.target && e.target.closest ? e.target.closest("button[data-d]") : null;
-      if (!btn) return;
+  // Pad PIN — pointerup (mobile/PC), click en secours sans double-tap
+  let adminPadLockT = 0;
+  function handleAdminPadPress(e) {
+    const btn = e.target && e.target.closest ? e.target.closest("button[data-d]") : null;
+    if (!btn || !el.adminPinPad.contains(btn)) return;
+    const now = performance.now();
+    if (e.type === "click" && now - adminPadLockT < 350) {
       e.preventDefault();
       e.stopPropagation();
-      const d = btn.getAttribute("data-d");
-      if (d === "x") {
-        adminPinBuf = adminPinBuf.slice(0, -1);
-        refreshAdminPinDots();
-        return;
-      }
-      if (d === "ok") {
-        tryAcceptAdminPin();
-        return;
-      }
-      pushAdminDigit(d);
+      return;
+    }
+    if (e.type === "pointerup") adminPadLockT = now;
+    e.preventDefault();
+    e.stopPropagation();
+    const d = btn.getAttribute("data-d");
+    if (d === "x") {
+      adminPinBuf = adminPinBuf.slice(0, -1);
+      refreshAdminPinDots();
+      return;
+    }
+    if (d === "ok") {
+      tryAcceptAdminPin();
+      return;
+    }
+    pushAdminDigit(d);
+  }
+  if (el.adminPinPad) {
+    el.adminPinPad.addEventListener("pointerup", handleAdminPadPress, { passive: false });
+    el.adminPinPad.addEventListener("click", handleAdminPadPress);
+  }
+  // Empêche le scroll/gesture page d’avaler les taps sur le pad
+  if (el.adminPin) {
+    ["touchstart", "touchend", "pointerdown"].forEach((evName) => {
+      el.adminPin.addEventListener(evName, (e) => {
+        if (e.target && e.target.closest && e.target.closest("button[data-d]")) {
+          e.stopPropagation();
+        }
+      }, { passive: true });
     });
   }
   // Triple-tap sur le brand-tag → pad PIN
@@ -13089,20 +13313,25 @@ on</button>
       }
     });
   }
-  // Saisie clavier du code (accueil) — affiche aussi le pad
+  // Saisie clavier du code (accueil ou pause) — affiche aussi le pad
   window.addEventListener("keydown", (e) => {
-    if (state !== "menu" || isAdmin()) return;
+    if (isAdmin()) return;
+    const onMenu = state === "menu";
+    const onPause = state === "play" && paused;
+    if (!onMenu && !onPause) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key;
     if (k >= "0" && k <= "9") {
-      if (el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
+      if (onMenu && el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
       pushAdminDigit(k);
+      e.preventDefault();
       return;
     }
     if (k === "Backspace") {
-      if (el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
+      if (onMenu && el.adminPin && el.adminPin.classList.contains("hidden")) openAdminPinPad();
       adminPinBuf = adminPinBuf.slice(0, -1);
       refreshAdminPinDots();
+      e.preventDefault();
     }
   });
   syncAdminUI();
