@@ -1790,6 +1790,39 @@
       #start-screen.launching .wait-ui { transition-duration: 0.01s; }
     }
 
+    /* —— Faceplate GBA (mobile portrait, bande sous le canvas — cadre inchangé) —— */
+    #gba-shell {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--game-canvas-bottom, var(--game-bottom, 136px));
+      z-index: 14;
+      pointer-events: none;
+      overflow: hidden;
+      background: #c4c7df;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    #gba-shell img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 12%;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+    /* Uniquement téléphone portrait en jeu — jamais desktop / paysage */
+    html.phone-portrait.play-ui #gba-shell {
+      display: block;
+    }
+    html.platform-desktop #gba-shell,
+    html.phone-landscape #gba-shell {
+      display: none !important;
+    }
+
     /* —— Contrôles tactiles (joystick invisible G / saut D) —— */
     #touch {
       position: absolute;
@@ -1976,6 +2009,12 @@
       bottom: max(36px, calc(env(safe-area-inset-bottom) + 18px));
       width: 96px;
       height: 96px;
+    }
+    /* Faceplate GBA visible : feedback stick/saut discret (l’art suffit) */
+    html.phone-portrait.play-ui .stick-base.show,
+    html.phone-portrait.play-ui .stick-knob.show,
+    html.phone-portrait.play-ui .jump-flash.show {
+      opacity: 0.28;
     }
 
     html.phone-portrait.play-ui .btn-pause {
@@ -3877,50 +3916,6 @@
       transition: opacity 0.15s ease-out;
     }
 
-    /* Barre de vie verte — même taille que la jauge jetpack (168×18 canvas) */
-    .hp-bar {
-      position: absolute;
-      left: 50%;
-      translate: -50% 0;
-      width: calc(var(--game-w, 960px) * 168 / 960);
-      height: calc(var(--game-h, 540px) * 18 / 540);
-      z-index: 12;
-      pointer-events: none;
-      border-radius: 999px;
-      background: rgba(4, 10, 18, 0.72);
-      border: 1px solid rgba(120, 220, 140, 0.35);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-      box-sizing: border-box;
-    }
-    .hp-bar:not(.hidden) { opacity: 1; }
-    .hp-bar.hidden { display: none !important; }
-    .hp-bar i {
-      display: block;
-      height: 100%;
-      width: 100%;
-      transform-origin: left center;
-      transform: scaleX(1);
-      border-radius: inherit;
-      background: linear-gradient(90deg, #2ecc71 0%, #7CFFB2 55%, #b8ffd0 100%);
-      box-shadow: 0 0 12px rgba(80, 255, 140, 0.45);
-      transition: transform 0.18s ease-out;
-    }
-    /* Desktop : collée sous la jauge jetpack (gy = H-48) */
-    html.platform-desktop.play-ui .hp-bar {
-      top: auto;
-      bottom: calc(
-        var(--game-canvas-bottom, 0px)
-        + var(--game-h, 540px) * 8 / 540
-      );
-    }
-    html.phone-portrait.play-ui .hp-bar,
-    html.phone-landscape.play-ui .hp-bar {
-      bottom: auto;
-      top: max(10px, env(safe-area-inset-top) + 8px);
-    }
     #fx-flash {
       z-index: 19;
       opacity: 0;
@@ -3964,10 +3959,6 @@
     <canvas id="game" width="960" height="540"></canvas>
     <div id="fx-vignette" aria-hidden="true"></div>
     <div id="fx-flash" aria-hidden="true"></div>
-    <div id="hp-bar" class="hp-bar hidden" aria-label="Vie" aria-hidden="true">
-      <i id="hp-fill"></i>
-    </div>
-
     <div id="hud">
       <div class="hud-box">
         <div>Distance <strong id="hud-dist">0</strong> m</div>
@@ -4392,6 +4383,11 @@ on</button>
       </div>
     </div>
 
+    <!-- Faceplate GBA : bande pouces mobile portrait uniquement (ne change pas le cadre jeu) -->
+    <div id="gba-shell" aria-hidden="true">
+      <img src="assets/gba-controls.jpg" alt="" width="703" height="598" decoding="async" draggable="false" />
+    </div>
+
     <div id="touch" aria-hidden="true">
       <div id="stick-zone" class="touch-zone" aria-label="Joystick déplacement"></div>
       <div id="jump-zone" class="touch-zone" aria-label="Saut / Jetpack"></div>
@@ -4441,11 +4437,6 @@ on</button>
   const METRO_AT_METERS = 800;     // métro aérien : traverse 800 → 900 m
   const METRO_SPAN_METERS = 100;
   const WORLD_LEN = FINISH_METERS * PX_PER_METER + 360;
-  /** Vie joueur vs CRS : 2 PV — 1er coup = blessure + regen, 2e = mort */
-  const PLAYER_HP_MAX = 2;
-  const HP_HURT_FLASH = 2.0;   // écran rouge (s)
-  const HP_REGEN_DELAY = 2.0;  // attendre la fin du rouge avant regen
-  const HP_REGEN_RATE = 3.2;   // PV / s une fois la regen lancée (~0.6 s pour 1→2)
   const CAM_LERP = 6.5;
   /** Ancrage horizontal caméra (0 = bord gauche) — plus bas = plus de terrain à droite (réaction mobile) */
   const CAM_FOCUS_X = 0.24;
@@ -4570,8 +4561,6 @@ on</button>
     adminPin: document.getElementById("admin-pin"),
     adminPinDots: document.getElementById("admin-pin-dots"),
     adminPinPad: document.getElementById("admin-pin-pad"),
-    hpBar: document.getElementById("hp-bar"),
-    hpFill: document.getElementById("hp-fill"),
   };
 
   let launching = false;
@@ -4680,10 +4669,11 @@ on</button>
     const DIST_FULL = 700;
     // dB → gain linéaire (même niveau pour les deux tracks)
     const dbToGain = (db) => Math.pow(10, db / 20);
-    const VOL_DB_MIN = -19.5; // départ (−1 dB vs précédent)
-    const VOL_DB_MAX = -16.5; // plein filtre / volume (~700 m)
-    const MUSIC_VOL_MIN = dbToGain(VOL_DB_MIN); // ~0.376
-    const MUSIC_VOL_MAX = dbToGain(VOL_DB_MAX); // ~0.531
+    // Musique bien baissée partout (−≈8,5 dB vs courbe précédente)
+    const VOL_DB_MIN = -28;
+    const VOL_DB_MAX = -25; // plein filtre / volume (~700 m)
+    const MUSIC_VOL_MIN = dbToGain(VOL_DB_MIN); // ~0.040
+    const MUSIC_VOL_MAX = dbToGain(VOL_DB_MAX); // ~0.056
     const BEAT_VOL_MIN = MUSIC_VOL_MIN;
     const BEAT_VOL_MAX = MUSIC_VOL_MAX;
     const BEAT_VOL = BEAT_VOL_MIN;
@@ -4767,12 +4757,130 @@ on</button>
       }
     }
 
+    /** true = app en arrière-plan / quit : aucun son ne doit continuer (PWA iOS) */
+    let bgAudioLocked = false;
+    let bgWantMusic = false;
+    const MASTER_OUT_DB = 3.5;
+
+    function pageIsHidden() {
+      try {
+        if (document.visibilityState === "hidden") return true;
+        if (document.hidden) return true;
+      } catch (_) {}
+      return false;
+    }
+
     function resumeCtx() {
       if (!ac) return null;
+      // Ne jamais relancer le ctx hors écran (sinon musique fantôme iOS / PWA)
+      if (bgAudioLocked || pageIsHidden()) return ac;
       if (ac.state === "suspended" || ac.state === "interrupted") {
         try { ac.resume(); } catch (_) {}
       }
       return ac;
+    }
+
+    function pauseAllHtmlMedia() {
+      const list = [beat, acap].concat(jumpPool || []);
+      for (let i = 0; i < list.length; i++) {
+        const a = list[i];
+        if (!a) continue;
+        try { a.pause(); } catch (_) {}
+        try { a.currentTime = 0; } catch (_) {}
+      }
+    }
+
+    function clearMediaSession() {
+      try {
+        const ms = navigator.mediaSession;
+        if (!ms) return;
+        ms.playbackState = "none";
+        ms.metadata = null;
+        ["play", "pause", "stop", "seekbackward", "seekforward", "previoustrack", "nexttrack"].forEach((act) => {
+          try { ms.setActionHandler(act, null); } catch (_) {}
+        });
+      } catch (_) {}
+    }
+
+    /** Force session audio iOS « transient » : coupe en arrière-plan (pas « playback ») */
+    function applyIosAudioSession() {
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = "transient";
+      } catch (_) {}
+    }
+
+    /**
+     * Coupure dure hors premier plan (Home Screen / multitâche iOS).
+     * Arrête les BufferSource en loop + suspend le AudioContext.
+     */
+    function killBackgroundAudio() {
+      bgWantMusic = !!(
+        musicAllowed && musicStarted && !tapeActive
+        && !musicMuted && musicGateMode !== "off"
+      );
+      bgAudioLocked = true;
+      try { stopAllFlicVoices(); } catch (_) {}
+      try { stopAmbience(true); } catch (_) {}
+      try { stopAlertSiren(); } catch (_) {}
+      try { stopMusicSources(); } catch (_) {}
+      try { silenceMusicMaster(); } catch (_) {}
+      if (ac) {
+        const t = ac.currentTime;
+        try {
+          if (busGain) {
+            busGain.gain.cancelScheduledValues(t);
+            busGain.gain.setValueAtTime(0, t);
+          }
+          if (masterOut) {
+            masterOut.gain.cancelScheduledValues(t);
+            masterOut.gain.setValueAtTime(0, t);
+          }
+          if (masterInput) {
+            masterInput.gain.cancelScheduledValues(t);
+            masterInput.gain.setValueAtTime(0, t);
+          }
+        } catch (_) {}
+        try { ac.suspend(); } catch (_) {}
+      }
+      pauseAllHtmlMedia();
+      clearMediaSession();
+    }
+
+    /** Retour au premier plan : restaure le mix si la page est visible */
+    function resumeFromBackground() {
+      if (!bgAudioLocked) return;
+      if (pageIsHidden()) return;
+      bgAudioLocked = false;
+      applyIosAudioSession();
+      if (ac) {
+        const t = ac.currentTime;
+        try {
+          if (masterInput) {
+            masterInput.gain.cancelScheduledValues(t);
+            masterInput.gain.setValueAtTime(1, t);
+          }
+          if (masterOut) {
+            masterOut.gain.cancelScheduledValues(t);
+            masterOut.gain.setValueAtTime(dbToGain(MASTER_OUT_DB), t);
+          }
+        } catch (_) {}
+      }
+      if (!unlocked) {
+        bgWantMusic = false;
+        return;
+      }
+      resumeCtx();
+      applyMuteLevels();
+      if (bgWantMusic && musicAllowed && !tapeActive && !musicMuted) {
+        if (beatBuffer && acapBuffer) {
+          startLockedMusicSources();
+          musicStarted = true;
+          const gate = musicGateMode === "off" ? "menu" : musicGateMode;
+          setMusicGate(gate, true);
+        }
+      }
+      bgWantMusic = false;
+      clearMediaSession();
     }
 
     function kickSilentBuffer(ctx) {
@@ -4798,7 +4906,8 @@ on</button>
           ac.addEventListener("statechange", () => {
             if (!ac) return;
             if (ac.state === "running") return;
-            // iOS interrompt souvent le ctx — on retente au prochain geste / frame
+            // Hors écran : ne jamais forcer le resume (boucle fantôme PWA iOS)
+            if (bgAudioLocked || pageIsHidden()) return;
             if (ac.state === "suspended" || ac.state === "interrupted") {
               if (unlocked && musicAllowed) resumeCtx();
             }
@@ -4810,33 +4919,41 @@ on</button>
     }
 
     function bindMobileAudioLifecycle() {
-      const wake = () => {
-        if (!unlocked) return;
-        const ctx = ensureCtx();
-        if (!ctx) return;
-        resumeCtx();
-        // Restaure le gate sans spam si la page revient au premier plan
-        if (
-          musicAllowed && musicStarted && !tapeActive && !musicMuted
-          && musicGateMode !== "off" && musicMaster
-        ) {
-          const now = performance.now();
-          if (now - lastGateForceT > 400) {
-            lastGateForceT = now;
-            setMusicGate(musicGateMode, true);
-          }
-        }
-      };
+      const onHide = () => { killBackgroundAudio(); };
+      const onShow = () => { resumeFromBackground(); };
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") wake();
+        if (pageIsHidden()) onHide();
+        else onShow();
       });
-      window.addEventListener("pageshow", wake);
-      // Gestes : débloque le ctx iOS même mid-game
+      // iOS PWA / bfcache : pagehide est le signal le plus fiable pour couper
+      window.addEventListener("pagehide", onHide, { capture: true });
+      window.addEventListener("freeze", onHide, { capture: true });
+      window.addEventListener("beforeunload", onHide, { capture: true });
+      window.addEventListener("pageshow", (e) => {
+        if (e && e.persisted) onHide(); // bfcache : d’abord kill, puis…
+        onShow();
+      });
+      window.addEventListener("blur", () => {
+        // Standalone iOS : blur sans hidden parfois — coupe quand même
+        try {
+          if (window.matchMedia("(display-mode: standalone)").matches) onHide();
+          else if (navigator.standalone) onHide();
+        } catch (_) {}
+      });
+      window.addEventListener("focus", onShow);
+      // Gestes : débloque le ctx iOS même mid-game (jamais hors écran)
       ["touchstart", "touchend", "pointerdown", "click"].forEach((ev) => {
         document.addEventListener(ev, () => {
-          if (unlocked) resumeCtx();
+          if (unlocked && !bgAudioLocked && !pageIsHidden()) resumeCtx();
         }, { capture: true, passive: true });
       });
+      // Centre de contrôle iOS : Pause / Stop doivent vraiment couper
+      try {
+        if (navigator.mediaSession) {
+          navigator.mediaSession.setActionHandler("pause", onHide);
+          navigator.mediaSession.setActionHandler("stop", onHide);
+        }
+      } catch (_) {}
     }
     bindMobileAudioLifecycle();
 
@@ -4857,7 +4974,7 @@ on</button>
       masterLimiter.release.value = 0.16;
       masterOut = ctx.createGain();
       // Makeup après compression → tout reste fort sans crêter
-      masterOut.gain.value = dbToGain(3.5);
+      masterOut.gain.value = dbToGain(MASTER_OUT_DB);
       masterInput.connect(masterLimiter);
       masterLimiter.connect(masterOut);
       masterOut.connect(ctx.destination);
@@ -5540,6 +5657,7 @@ on</button>
 
     /** Compte le temps de jeu actif ; à 20 s → sirène (1× par run). */
     function tickPlaySiren(dt) {
+      if (bgAudioLocked || pageIsHidden()) return;
       if (!unlocked || tapeActive || siren20Fired || sfxMuted) return;
       playElapsed += dt;
       if (playElapsed >= SIREN_AT) {
@@ -5553,6 +5671,7 @@ on</button>
      * uniquement en jeu quand le personnage court (sinon silence).
      */
     function updateCityAmbience(isRunning) {
+      if (bgAudioLocked || pageIsHidden()) return;
       if (!unlocked || tapeActive) return;
       const ctx = ensureCtx();
       if (!ctx) return;
@@ -5713,8 +5832,13 @@ on</button>
 
     async function unlock() {
       // Gesture utilisateur = unlocked tout de suite (sinon startMusic no-op)
+      applyIosAudioSession();
       ensureGraph();
       unlocked = true;
+      if (bgAudioLocked || pageIsHidden()) {
+        killBackgroundAudio();
+        return;
+      }
       const ctx = ensureCtx();
       if (ctx) {
         try { await withTimeout(ctx.resume().catch(() => {}), 500); } catch (_) {}
@@ -5996,6 +6120,7 @@ on</button>
     }
 
     function updateCompanionVoices(playerMidX, companionMidX) {
+      if (bgAudioLocked || pageIsHidden()) return;
       const px = playerMidX || 0;
       const cx = companionMidX != null ? companionMidX : null;
 
@@ -6213,9 +6338,9 @@ on</button>
     let tapeGen = 0;
 
     // Musique : ON accueil + course + pause + victoire | OFF game over
-    // Accueil = −7 dB vs niveau jeu + hi-cut
-    const RUN_MUSIC_ON = 1;
-    const RUN_MUSIC_MENU = dbToGain(-7); // ≈ 0.447
+    // Accueil encore plus bas que la course + hi-cut
+    const RUN_MUSIC_ON = dbToGain(-2); // léger plafond master musique
+    const RUN_MUSIC_MENU = dbToGain(-12); // ≈ 0.251
     const RUN_MUSIC_OFF = 0.0001;
     const MENU_HICUT_HZ = 3400; // hi-cut accueil (beat + acap)
     let runMusicOn = false;
@@ -6302,6 +6427,7 @@ on</button>
      * Accueil → ON | En jeu → ON | Pause → ON | GO → OFF | Victoire → ON
      */
     function updateRunMusic(inPlayAlive, isPaused, isMenu) {
+      if (bgAudioLocked || pageIsHidden()) return;
       if (!musicAllowed || !graphReady || tapeActive || startingMusic || !musicMaster) return;
       // Buffers prêts mais musique pas démarrée → relance 1×
       if (!musicStarted) {
@@ -6324,6 +6450,7 @@ on</button>
 
     /** Plus besoin de resync position : même horloge AudioContext. */
     function keepSync() {
+      if (bgAudioLocked || pageIsHidden()) return;
       if (!musicAllowed || !musicStarted || tapeActive || startingMusic) return;
       if (musicGateMode === "off") return;
       const ctx = ensureCtx();
@@ -6350,10 +6477,12 @@ on</button>
 
     async function startMusic(gateMode) {
       if (!musicAllowed || tapeActive || startingMusic) return;
+      if (bgAudioLocked || pageIsHidden()) return;
       const gate = gateMode || "run";
       // Auto-unlock si gesture déjà passé (click Jouer) mais unlock() pas fini
       if (!unlocked) {
         unlocked = true;
+        applyIosAudioSession();
         ensureGraph();
         const c = ensureCtx();
         if (c) {
@@ -6875,6 +7004,7 @@ on</button>
      * Déclenche quand on est assez proche pour entendre ; rejoue de temps en temps.
      */
     function updateCopsAudio(playerObj, obstacleList) {
+      if (bgAudioLocked || pageIsHidden()) return;
       if (!unlocked || tapeActive || audioPaused || sfxMuted) return;
       const px = playerObj.x + playerObj.w * 0.5;
       pruneFlicVoices();
@@ -6926,6 +7056,8 @@ on</button>
       stopMusic,
       resetMusic,
       armMusic,
+      killBackgroundAudio,
+      resumeFromBackground,
       preloadMusic() { return loadMusicBuffers().catch(() => {}); },
       setMusicStart,
       tapeStopGameOver,
@@ -8012,11 +8144,16 @@ on</button>
   function screenText(text, opts) {
     const o = opts || {};
     const life = o.life || 1.5;
+    const kind = o.kind || "event";
+    // Mètres : bande centre-haut (entre les 2 hud-box) ; événements : plus bas
+    const defY = kind === "meter" ? Math.max(44, H * 0.09) : H * 0.30;
     screenTexts.push({
       text, life, max: life, color: o.color || C.accent,
-      size: o.size || 34, y: o.y || H * 0.22,
+      size: o.size || (kind === "meter" ? 28 : 34),
+      y: o.y != null ? o.y : defY,
+      kind,
     });
-    if (screenTexts.length > 3) screenTexts.shift();
+    if (screenTexts.length > 4) screenTexts.shift();
   }
 
   function flashScreen(color) {
@@ -8067,34 +8204,64 @@ on</button>
     ctx.textBaseline = "alphabetic";
   }
 
-  /** Bannières de jalons (espace écran, hors zoom / shake) */
+  /** Bannières écran (mètres haut / événements plus bas — hors zoom / shake) */
   function drawScreenFx() {
     if (!screenTexts.length) return;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
+    let meterI = 0;
+    let eventI = 0;
     for (const t of screenTexts) {
+      const isMeter = t.kind === "meter";
+      const stack = isMeter ? meterI++ : eventI++;
       const age = 1 - t.life / t.max;
       const inP = Math.min(1, age / 0.18);
       const outP = t.life < 0.35 ? t.life / 0.35 : 1;
       const ease = 1 - Math.pow(1 - inP, 3);
-      const sc = 0.6 + ease * 0.4 + (age < 0.18 ? Math.sin(inP * Math.PI) * 0.22 : 0);
+      const sc = isMeter
+        ? 0.72 + ease * 0.28 + (age < 0.15 ? Math.sin(inP * Math.PI) * 0.12 : 0)
+        : 0.6 + ease * 0.4 + (age < 0.18 ? Math.sin(inP * Math.PI) * 0.22 : 0);
+      // Mètres remontent plus haut ; stack vertical pour ne pas se superposer
+      const rise = isMeter ? (1 - outP) * 22 + age * 14 : (1 - outP) * 10;
+      const baseY = t.y + stack * (isMeter ? 36 : 44);
       ctx.save();
       ctx.globalAlpha = Math.min(1, inP * 1.4) * outP;
-      ctx.translate(W / 2, t.y - (1 - outP) * 10);
+      ctx.translate(W / 2, baseY - rise);
       ctx.scale(sc, sc);
-      ctx.font = "400 " + t.size + "px Bebas Neue, Impact, sans-serif";
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = "rgba(4,8,16,0.85)";
-      ctx.shadowColor = t.color;
-      ctx.shadowBlur = 18;
-      ctx.strokeText(t.text, 0, 0);
-      ctx.fillStyle = t.color;
-      ctx.fillText(t.text, 0, 0);
+      if (isMeter) {
+        ctx.font = "700 " + t.size + "px Orbitron, Sora, sans-serif";
+        const tw = ctx.measureText(t.text).width;
+        const pw = tw + 28;
+        const ph = t.size + 14;
+        ctx.fillStyle = "rgba(4, 10, 20, 0.78)";
+        ctx.strokeStyle = t.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-pw / 2, -ph / 2, pw, ph, 4);
+        else ctx.rect(-pw / 2, -ph / 2, pw, ph);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowColor = t.color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, 0, 1);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.font = "400 " + t.size + "px Bebas Neue, Impact, sans-serif";
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = "rgba(4,8,16,0.85)";
+        ctx.shadowColor = t.color;
+        ctx.shadowBlur = 18;
+        ctx.strokeText(t.text, 0, 0);
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, 0, 0);
+      }
       ctx.restore();
     }
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
+    ctx.shadowBlur = 0;
   }
 
   function updateVfx(dt) {
@@ -8295,9 +8462,6 @@ on</button>
     facing: 1,
     jumpsLeft: 2,
     invuln: 0,
-    hp: PLAYER_HP_MAX,
-    hurtFlashT: 0,
-    hpRegenDelay: 0,
     rocketArmor: 0,
     copKillTimer: 0,
     jetting: false,
@@ -8601,7 +8765,7 @@ on</button>
       x: 100, y: GROUND_Y - CHAR_H, vx: 0, vy: 0,
       w: CHAR_W, h: CHAR_H,
       onGround: true, facing: 1, jumpsLeft: 2,
-      invuln: 0, hp: PLAYER_HP_MAX, hurtFlashT: 0, hpRegenDelay: 0,
+      invuln: 0,
       rocketArmor: 0, copKillTimer: 0, jetting: false,
       jetFuel: JET_FUEL_MAX, jetIdle: 0,
       runFrame: 0, runTimer: 0, runPhase: 0, breath: 0, moving: false,
@@ -8911,11 +9075,14 @@ on</button>
             w: SW,
             h: SH,
             taken: false,
-            bob: 0,
+            bob: i * 1.25 + 0.4,
             special: false,
             specialKind: "scooter",
+            // Monde : sens de course (droite). PNG source = face gauche.
+            facing: 1,
             platRef: p,
             platOffX: offX,
+            animPhase: i * 0.85,
           });
         }
       }
@@ -9141,7 +9308,7 @@ on</button>
     boss._cineLock = true;
     keys.left = keys.right = keys.jump = keys.action = false;
     keys.jumpPressed = keys.actionPressed = false;
-    screenText("L AU CARRÉ", { color: C.accent, size: 40, y: H * 0.22, life: 1.5 });
+    screenText("L AU CARRÉ", { color: C.accent, size: 40, y: H * 0.30, life: 1.5 });
     AudioFX.power();
     addTrauma(0.2);
   }
@@ -9259,7 +9426,7 @@ on</button>
           boss.y = GROUND_Y - 28;
           AudioFX.power();
           addTrauma(0.55);
-          screenText("MUR ABATTU", { color: "#ff6b5a", size: 42, y: H * 0.26, life: 1.4 });
+          screenText("MUR ABATTU", { color: "#ff6b5a", size: 42, y: H * 0.32, life: 1.4 });
         }
       }
       return;
@@ -9505,7 +9672,6 @@ on</button>
         player.invuln = Math.max(player.invuln || 0, 0.4);
       }
       maxReachX = Math.max(maxReachX, player.x + player.w);
-      updatePlayerHp(dt);
       if (player.invuln > 0) player.invuln -= dt;
       if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - dt);
       updateCompanion(dt);
@@ -9745,13 +9911,20 @@ on</button>
       const rate = hasShoes() ? 16 : 14;
       const deltaPhase = (Math.abs(player.vx) / Math.max(1, top)) * dt * rate;
       if (advanceRunPhase(player, deltaPhase)) {
-        const spd = Math.min(1, Math.abs(player.vx) / top);
-        AudioFX.footstep(spd);
+        // Scooter : pas de pas / poussière (roues)
+        if (!player.onScooter) {
+          const spd = Math.min(1, Math.abs(player.vx) / top);
+          AudioFX.footstep(spd);
+        }
       }
-      dustTimer += dt;
-      if (dustTimer > 0.06) {
+      if (!player.onScooter) {
+        dustTimer += dt;
+        if (dustTimer > 0.06) {
+          dustTimer = 0;
+          dust(player.x + player.w / 2 - player.facing * 5, player.y + player.h);
+        }
+      } else {
         dustTimer = 0;
-        dust(player.x + player.w / 2 - player.facing * 5, player.y + player.h);
       }
     } else if (!player.jetting) {
       player.runFrame = 0;
@@ -9764,12 +9937,13 @@ on</button>
     for (const c of collectibles) {
       if (c.taken) continue;
       const isScooter = c.specialKind === "scooter";
-      const bobAmp = isScooter ? 0 : (c.routeOrb ? 7 : 6);
-      const bobSpd = c.routeOrb ? 2.1 : 2.6;
+      const bobAmp = isScooter ? 2 : (c.routeOrb ? 7 : 6);
+      const bobSpd = isScooter ? 2.2 : (c.routeOrb ? 2.1 : 2.6);
       const cy = c.y + (bobAmp ? Math.sin(time * bobSpd + c.bob) * bobAmp : 0);
       if (aabb(player, { x: c.x, y: cy, w: c.w, h: c.h })) {
         c.taken = true;
         if (isScooter) {
+          // facing joueur conservé ; drawScooterSprite aligne le PNG (face gauche)
           player.onScooter = true;
           AudioFX.power();
           addTrauma(0.1);
@@ -9865,7 +10039,7 @@ on</button>
         player.copKillTimer = 0;
 
         if (player.onScooter) {
-          // Scooter détruit : CRS renversé, pas de perte de PV
+          // Scooter détruit : CRS renversé (protection consommée)
           player.onScooter = false;
           stompCop(hit);
           player.invuln = Math.max(player.invuln || 0, 0.9);
@@ -9879,7 +10053,7 @@ on</button>
             color: "#ff4040", size: 3, glow: true,
           });
         } else if (player.rocketArmor > 0) {
-          // Bouclier : absorbe + pousse à travers pour passer
+          // Camembert rose : absorbe + pousse à travers
           player.rocketArmor = 0;
           player.invuln = 0.7;
           const past = player.facing >= 0 ? 1 : -1;
@@ -9896,12 +10070,11 @@ on</button>
             color: C.spec, size: 3, glow: true,
           });
         } else if (!hurtFromPolice(hit)) {
-          return; // mort
+          return; // mort instantanée
         }
       }
     }
 
-    updatePlayerHp(dt);
     if (player.invuln > 0) player.invuln -= dt;
     if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - dt);
     if (player.invuln <= 0 && hitStalactite()) {
@@ -9935,7 +10108,7 @@ on</button>
       metro.x = metro.zone1 + 80;
       if (!metro.warnShown) {
         metro.warnShown = true;
-        screenText("MÉTRO AÉRIEN", { color: "#9ad0ff", size: 34, y: H * 0.24, life: 1.6 });
+        screenText("MÉTRO AÉRIEN", { color: "#9ad0ff", size: 34, y: H * 0.32, life: 1.6 });
       }
     }
     if (!metro.active) return;
@@ -10232,7 +10405,7 @@ on</button>
     }
     if (!rocketWarnShown) {
       rocketWarnShown = true;
-      screenText("ROQUETTES !", { color: "#ff6b5a", size: 46, y: H * 0.26, life: 2 });
+      screenText("ROQUETTES !", { color: "#ff6b5a", size: 46, y: H * 0.32, life: 2 });
       flashScreen("rgba(255,80,60,0.35)");
       addTrauma(0.22);
     }
@@ -11147,53 +11320,8 @@ on</button>
     syncPwaTip();
   }
 
-  /** Sync barre verte + vignette rouge blessure */
-  function syncHpBar() {
-    const bar = el.hpBar;
-    const fill = el.hpFill;
-    if (!bar || !fill) return;
-    const show = state === "play";
-    bar.classList.toggle("hidden", !show);
-    bar.setAttribute("aria-hidden", show ? "false" : "true");
-    if (!show) {
-      try { document.documentElement.classList.remove("hurt"); } catch (_) {}
-      return;
-    }
-    const ratio = Math.max(0, Math.min(1, (player.hp || 0) / PLAYER_HP_MAX));
-    fill.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
-    const flash = player.hurtFlashT || 0;
-    const root = document.documentElement;
-    if (flash > 0) {
-      root.classList.add("hurt");
-      // Plein ~0.4 s puis fade sur le reste des 2 s
-      const a = flash > HP_HURT_FLASH - 0.35
-        ? 0.9
-        : Math.max(0, flash / (HP_HURT_FLASH - 0.35)) * 0.85;
-      root.style.setProperty("--hurt-opacity", a.toFixed(3));
-    } else {
-      root.classList.remove("hurt");
-      root.style.removeProperty("--hurt-opacity");
-    }
-  }
-
-  function updatePlayerHp(dt) {
-    if (state !== "play") return;
-    if (player.hurtFlashT > 0) {
-      player.hurtFlashT = Math.max(0, player.hurtFlashT - dt);
-    }
-    if (player.hpRegenDelay > 0) {
-      player.hpRegenDelay = Math.max(0, player.hpRegenDelay - dt);
-    } else if (player.hp < PLAYER_HP_MAX) {
-      // Regen rapide après le flash rouge
-      player.hp = Math.min(PLAYER_HP_MAX, player.hp + HP_REGEN_RATE * dt);
-    }
-    syncHpBar();
-  }
-
   /**
-   * Coup de CRS (sans bouclier) :
-   * — vie pleine → 1 PV, écran rouge 2 s, puis regen rapide
-   * — déjà blessé → mort
+   * Contact CRS sans scooter / camembert rose → mort instantanée.
    * @returns {boolean} false si la partie est finie
    */
   function hurtFromPolice(hit) {
@@ -11202,38 +11330,6 @@ on</button>
       return true;
     }
     const kind = hit && hit.kind;
-    // Vie pleine : encaisse le 1er coup — pousse À TRAVERS pour laisser passer
-    if (player.hp >= PLAYER_HP_MAX - 0.01) {
-      player.hp = Math.max(0, PLAYER_HP_MAX - 1);
-      player.hurtFlashT = HP_HURT_FLASH;
-      player.hpRegenDelay = HP_REGEN_DELAY;
-      player.invuln = Math.max(player.invuln || 0, 1.15);
-      // Direction de passage : sens de course / face, pas un rebond arrière
-      let past = player.facing >= 0 ? 1 : -1;
-      if (Math.abs(player.vx) > 40) past = player.vx > 0 ? 1 : -1;
-      else if (hit) {
-        const pc = player.x + player.w * 0.5;
-        const hc = hit.x + hit.w * 0.5;
-        past = pc <= hc ? 1 : -1; // traverse le CRS
-      }
-      player.vx = past * Math.max(240, Math.abs(player.vx) * 0.95 + 80);
-      player.x += past * 18;
-      player.vy = Math.min(player.vy, -140);
-      player.onGround = false;
-      addTrauma(0.32);
-      flashScreen("rgba(255,50,60,0.45)");
-      floatText(player.x + player.w * 0.5, player.y - 10, "AÏE", {
-        color: "#ff6b7a", size: 15, life: 0.9,
-      });
-      burst(player.x + player.w * 0.5, player.y + player.h * 0.4, {
-        n: 12, speed: 110, life: 0.35, gravity: 40,
-        color: "#ff5060", size: 2, glow: true,
-      });
-      syncHpBar();
-      hitStopTime = 0.12; // 120ms de pause (plus punitif)
-      return true;
-    }
-    // Déjà touché : mort
     die(kind === "boss" ? "boss" : kind === "angry" ? "angry" : "police");
     return false;
   }
@@ -11252,10 +11348,6 @@ on</button>
       document.documentElement.classList.remove("hurt");
       document.documentElement.style.removeProperty("--hurt-opacity");
     } catch (_) {}
-    if (el.hpBar) {
-      el.hpBar.classList.add("hidden");
-      el.hpBar.setAttribute("aria-hidden", "true");
-    }
     if (paused) setPaused(false);
     AudioFX.stopAllFlicVoices();
     rockets = [];
@@ -11278,7 +11370,7 @@ on</button>
 
     if (win) {
       flashScreen("rgba(255,229,102,0.95)");
-      screenText("ARRIVÉ !", { color: C.accent, size: 54, y: H * 0.3, life: 2.2 });
+      screenText("ARRIVÉ !", { color: C.accent, size: 54, y: H * 0.34, life: 2.2 });
       spawnConfetti(player.x + player.w * 0.5, player.y - 20, 110);
       spawnConfetti(finishX + 20, GROUND_Y - 80, 70);
       for (let i = 0; i < 4; i++) {
@@ -12386,8 +12478,17 @@ on</button>
       if (c.specialKind === "scooter") {
         const cx = sx(c.x);
         if (cx < -80 || cx > W + 80) continue;
+        const phase = time * 2.2 + (c.bob || 0);
+        const bobY = Math.sin(phase) * 2;
         const cy = sy(c.y);
-        drawScooterSprite(cx + c.w * 0.5, cy + c.h, c.w, c.h, 1);
+        drawScooterSprite(
+          cx + c.w * 0.5,
+          cy + c.h,
+          c.w,
+          c.h,
+          c.facing != null ? c.facing : 1,
+          { bob: bobY, lean: Math.sin(phase * 0.5) * 0.03, mode: "idle" }
+        );
         continue;
       }
       if (c.egg) {
@@ -12414,20 +12515,28 @@ on</button>
   }
 
   /**
-   * Scooter PNG (face à droite). facing < 0 → miroir horizontal.
-   * Ancré au centre bas (roues au sol).
+   * Scooter PNG (face à gauche, comme flecheskin). facing > 0 → miroir vers la droite.
+   * Ancré au centre bas (roues au sol). Pas de flip vertical.
+   * opts: { bob, lean, mode: "idle"|"move" }
    */
-  function drawScooterSprite(anchorX, feetY, sw, sh, facing) {
+  function drawScooterSprite(anchorX, feetY, sw, sh, facing, opts) {
+    const o = opts || {};
     const w = sw || 72;
     const h = sh || 56;
+    const face = facing < 0 ? -1 : 1;
+    const bob = o.bob || 0;
+    const lean = o.lean || 0;
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.translate(anchorX, feetY);
-    if (facing < 0) ctx.scale(-1, 1);
+    ctx.translate(anchorX, feetY + bob);
+    // Inclinaison avant en espace monde (avant le flip art)
+    if (lean) ctx.rotate(face * lean);
+    // Art source = gauche ; miroir seulement pour course à droite
+    if (face > 0) ctx.scale(-1, 1);
     if (scooterImg.complete && scooterImg.naturalWidth > 0) {
       ctx.drawImage(scooterImg, -w * 0.5, -h + 2, w, h);
     } else {
-      // Fallback pixel si image pas prête
+      // Fallback pixel si image pas prête (aussi face gauche)
       fr(-w * 0.4, -h * 0.55, w * 0.75, h * 0.35, "#e02020");
       fr(-w * 0.15, -h * 0.7, w * 0.35, h * 0.18, "#101018");
       fr(-w * 0.38, -10, 10, 10, "#181818");
@@ -12889,14 +12998,22 @@ on</button>
     const legSwing = (!onScooter && moving) ? Math.sin(player.runPhase) : 0;
     const torsoOffsetY = Math.round(runBounce * 2);
 
-    // Scooter derrière / sous le perso (roues aux pieds)
+    // Scooter : même facing que le joueur + idle bob / lean course
     if (onScooter) {
+      const scootMoving = moving || Math.abs(player.vx) > 20;
+      const scootBob = scootMoving
+        ? Math.sin(player.runPhase * 2) * 1.6
+        : Math.sin(player.breath * 2.5) * 1.1;
+      const scootLean = scootMoving
+        ? Math.min(0.14, Math.abs(player.vx) / 780)
+        : Math.sin(player.breath * 1.8) * 0.02;
       drawScooterSprite(
         px + player.w * 0.5,
         py + player.h + 2,
         78,
         60,
-        f
+        f,
+        { bob: scootBob, lean: scootLean, mode: scootMoving ? "move" : "idle" }
       );
     }
 
@@ -12926,8 +13043,18 @@ on</button>
       // Boule style Sonic pendant le salto
       legL = -6; legR = -6; bodyBob = 1; arm = -5;
     } else if (onScooter) {
-      // Assis sur la selle
-      legL = -4; legR = -3; bodyBob = 3; arm = -2;
+      // Assis : idle (breath) / move (runPhase) — même logique que le reste
+      const scootMoving = moving || Math.abs(player.vx) > 20;
+      if (scootMoving) {
+        const ph = Math.sin(player.runPhase * 2);
+        legL = -4; legR = -3;
+        bodyBob = 2 + Math.round(ph * 1.5);
+        arm = -2 + ph * 0.6;
+      } else {
+        legL = -4; legR = -3;
+        bodyBob = 3 + breath;
+        arm = -2 + breath * 0.25;
+      }
     } else if (lean > 0.15) {
       legL = -2; legR = 3; bodyBob = -1; arm = -4 - lean * 2;
     } else if (inAir) {
@@ -13441,7 +13568,7 @@ on</button>
       ctx.font = "700 13px Rajdhani, sans-serif";
       const tw = ctx.measureText(msg).width;
       const bx = (W - tw) / 2 - 10;
-      const by = 72;
+      const by = 96; // sous la bande jalons mètres
       fr(bx, by, tw + 20, 22, "rgba(3,6,12,0.82)");
       ctx.fillStyle = C.white;
       ctx.textAlign = "center";
@@ -13457,7 +13584,7 @@ on</button>
       ctx.font = "700 13px Rajdhani, sans-serif";
       const tw = ctx.measureText(msg).width;
       const bx = (W - tw) / 2 - 10;
-      const by = player.heavyChain && player.chainMsgT > 0 ? 98 : 72;
+      const by = player.heavyChain && player.chainMsgT > 0 ? 122 : 96;
       fr(bx, by, tw + 20, 22, "rgba(3,6,12,0.82)");
       ctx.fillStyle = "#f4f8fc";
       ctx.textAlign = "center";
@@ -13528,35 +13655,11 @@ on</button>
     if (threatZoom < 1.0005 && targetZ <= 1) threatZoom = 1;
   }
 
-  /** Petit cœur pixel vert (logo vie, sous l’icône jetpack) */
-  function drawHpHeartIcon(x, y, s) {
-    const c0 = "#1a3a24";
-    const c1 = "#2ecc71";
-    const c2 = "#7CFFB2";
-    // Forme cœur 7×6 en cases
-    const cells = [
-      [1, 0], [2, 0], [4, 0], [5, 0],
-      [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1],
-      [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2],
-      [1, 3], [2, 3], [3, 3], [4, 3], [5, 3],
-      [2, 4], [3, 4], [4, 4],
-      [3, 5],
-    ];
-    for (let i = 0; i < cells.length; i++) {
-      const cx = cells[i][0];
-      const cy = cells[i][1];
-      const col = (cx === 1 && cy === 1) || (cx === 2 && cy === 1) ? c2
-        : (cy >= 4 ? c0 : c1);
-      fr(x + cx * s, y + cy * s, s, s, col);
-    }
-  }
-
   function drawJetFuelGauge() {
     if (!runJetActive || state !== "play") return;
     const gw = 168;
-    const gh = 18; // un peu plus haute
+    const gh = 18;
     const gx = (W - gw) / 2;
-    // Un peu plus bas pour rapprocher la barre verte (HP) juste en dessous
     const gy = H - 48;
     const fuel = Math.max(0, Math.min(1, player.jetFuel / JET_FUEL_MAX));
     // Mini icône jetpack à gauche de la jauge
@@ -13567,8 +13670,6 @@ on</button>
       ctx.restore();
       ctx.imageSmoothingEnabled = false;
     }
-    // Cœur vert (vie) sous le logo jetpack
-    drawHpHeartIcon(gx - 24, gy + 20, 2);
     fr(gx - 2, gy - 2, gw + 4, gh + 4, "rgba(0,0,0,0.6)");
     fr(gx, gy, gw, gh, "#0e141c");
     fr(gx + 1, gy + 1, gw - 2, 2, "rgba(255,255,255,0.08)");
@@ -13709,7 +13810,7 @@ on</button>
       el.dist.textContent = String(m);
       if (el.prog) el.prog.style.transform = "scaleX(" + (m / FINISH_METERS).toFixed(4) + ")";
       if (state === "play" && m >= nextMilestone && m < FINISH_METERS) {
-        screenText(m + " M", { color: C.accent, size: 38 });
+        screenText(m + " M", { kind: "meter", color: C.accent, size: 26, life: 1.35 });
         AudioFX.milestone();
         bumpEl(el.dist);
         nextMilestone = (Math.floor(m / 100) + 1) * 100;
@@ -14086,7 +14187,6 @@ on</button>
     if (jumpFlash) jumpFlash.classList.remove("show");
     syncPhoneLayoutClass();
     resize();
-    syncHpBar();
     beginIntroCam(); // fade musique à 0 avant le gate run
     AudioFX.updateRunMusic(true, false);
   }
