@@ -8996,13 +8996,17 @@ on</button>
     };
   }
 
-  /** Vrai contact (pas un graze) : overlap horizontal + vertical suffisant */
+  /** Vrai contact (pas un graze) : overlap relatif à la hitbox CRS (étroite). */
   function overlapsCopHurt(box) {
     const ox = Math.min(player.x + player.w, box.x + box.w) - Math.max(player.x, box.x);
     const oy = Math.min(player.y + player.h, box.y + box.h) - Math.max(player.y, box.y);
     if (ox <= 0 || oy <= 0) return false;
-    // ~38 % largeur joueur + un peu de hauteur torse — laisse passer les rasades
-    return ox >= player.w * 0.38 && oy >= player.h * 0.20;
+    // Bug fix : exiger 38 % de la largeur JOUEUR (~24 px) était impossible
+    // face à un corps CRS de ~5–12 px → plus aucun coup enregistré.
+    // On mesure par rapport à la hitbox ennemi : frôler ≠ hit, traverser le corps = hit.
+    const needX = Math.max(3, (box.w || 1) * 0.45);
+    const needY = Math.max(6, (box.h || 1) * 0.22);
+    return ox >= needX && oy >= needY;
   }
 
   /**
@@ -13548,16 +13552,20 @@ on</button>
     // Audio / sync restent en temps réel ; physique & anim = × GAME_SPEED
     const realDt = dt;
     // --- GESTION DU HIT-STOP ---
-    // Compte à rebours en temps réel (realDt) ; physique figée (dt=0) sans bloquer l’audio.
+    // Freeze physique (pas de updatePlayer) ; invuln continue de décroître en temps réel.
+    let hitStopFreeze = false;
     if (hitStopTime > 0) {
       hitStopTime = Math.max(0, hitStopTime - realDt);
+      if (player.invuln > 0) player.invuln = Math.max(0, player.invuln - realDt);
+      if (spawnNoBlinkT > 0) spawnNoBlinkT = Math.max(0, spawnNoBlinkT - realDt);
       dt = 0;
+      hitStopFreeze = true;
     }
     const gdt = dt * GAME_SPEED;
     time += gdt;
 
     if (state === "play" && !paused) {
-      updatePlayer(gdt);
+      if (!hitStopFreeze) updatePlayer(gdt);
       // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
       if (state === "play") {
         if (isIntroCam()) {
