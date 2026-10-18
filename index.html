@@ -7984,7 +7984,8 @@ on</button>
     if (!e || typeof e !== "object") return null;
     const name = String(e.name || "").trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!name) return null;
-    return {
+    const hid = String(e.hid || "").replace(/[^a-f0-9]/gi, "").slice(0, 32).toLowerCase();
+    const out = {
       id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
       name,
       timeMs: Math.max(0, e.timeMs | 0),
@@ -7993,6 +7994,20 @@ on</button>
       win: !!e.win,
       at: Math.max(0, e.at | 0) || Date.now(),
     };
+    if (hid) out.hid = hid;
+    return out;
+  }
+
+  /** Restaure le pseudo depuis l’identité IP renvoyée par l’API */
+  function applyBoardMe(me, { force } = {}) {
+    if (!me || !me.name) return false;
+    const remote = String(me.name).trim().slice(0, 20).replace(/[<>&"']/g, "");
+    if (!remote) return false;
+    const local = playerPseudo || loadPseudo();
+    if (local && !force) return false;
+    savePseudo(remote);
+    refreshBoardUI();
+    return true;
   }
 
   function mergeBoardLists(a, b) {
@@ -8050,17 +8065,19 @@ on</button>
   }
 
   async function syncBoardRemote() {
+    const name = playerPseudo || loadPseudo();
     try {
       const res = await fetch(BOARD_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scores: boardCache }),
+        body: JSON.stringify({ scores: boardCache, name: name || undefined }),
       });
       if (!res.ok) throw new Error("board");
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
         saveBoardLocal(mergeBoardLists(boardCache, data.scores));
       }
+      applyBoardMe(data && data.me, { force: false });
     } catch (_) {
       try {
         const res = await fetch(BOARD_API);
@@ -8069,9 +8086,25 @@ on</button>
         if (data && Array.isArray(data.scores)) {
           saveBoardLocal(mergeBoardLists(boardCache, data.scores));
         }
+        applyBoardMe(data && data.me, { force: false });
       } catch (_) {}
     }
     refreshBoardUI();
+  }
+
+  /** Au chargement : récupère le compte lié à l’IP (pseudo + scores) */
+  async function restoreIdentityFromIp() {
+    try {
+      const res = await fetch(BOARD_API, { method: "GET", cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.scores)) {
+        saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+      }
+      // Pas de pseudo local → on reprend celui déjà lié à cette IP
+      applyBoardMe(data && data.me, { force: !loadPseudo() });
+      refreshBoardUI();
+    } catch (_) {}
   }
 
   function submitRunScore(dist, win) {
@@ -8161,12 +8194,15 @@ on</button>
     }
     loadBoardLocal();
     refreshBoardUI();
-    syncBoardRemote();
+    // 1) restaure le compte IP si le navigateur a perdu le pseudo
+    // 2) puis sync gossip + reclame le pseudo courant pour cette IP
+    restoreIdentityFromIp().finally(() => { syncBoardRemote(); });
     if (el.btnPseudoSave) {
       el.btnPseudoSave.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         commitPseudoFromUI();
+        syncBoardRemote();
       });
     }
     if (el.pseudoInput) {
@@ -8175,6 +8211,7 @@ on</button>
         if (e.key === "Enter") {
           e.preventDefault();
           commitPseudoFromUI();
+          syncBoardRemote();
           el.pseudoInput.blur();
         }
       });
@@ -8186,7 +8223,10 @@ on</button>
         if (el.pseudoInput.value !== v) el.pseudoInput.value = v;
         playerPseudo = String(v || "").trim().slice(0, 20);
       });
-      el.pseudoInput.addEventListener("change", () => { commitPseudoFromUI(); });
+      el.pseudoInput.addEventListener("change", () => {
+        commitPseudoFromUI();
+        syncBoardRemote();
+      });
     }
   }
 
