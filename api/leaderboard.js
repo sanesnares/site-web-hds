@@ -18,7 +18,7 @@ function cleanEntry(e) {
   if (!e || typeof e !== "object") return null;
   const name = String(e.name || "")
     .trim()
-    .slice(0, 16)
+    .slice(0, 20)
     .replace(/[<>&"']/g, "");
   if (!name) return null;
   const timeMs = Math.max(0, Math.min(9 * 3600 * 1000, e.timeMs | 0));

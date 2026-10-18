@@ -233,18 +233,25 @@
       flex: 1;
       min-width: 0;
       appearance: none;
+      -webkit-appearance: none;
       border: 1px solid rgba(61, 196, 255, 0.35);
       border-radius: 4px;
       background: rgba(4, 12, 22, 0.75);
       color: #eef4fa;
       font-family: var(--font-ui);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
-      padding: 10px 12px;
+      padding: 12px 12px;
       outline: none;
-      touch-action: manipulation;
-      user-select: text;
-      -webkit-user-select: text;
+      touch-action: manipulation !important;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      pointer-events: auto !important;
+    }
+    .player-id,
+    .player-id * {
+      touch-action: manipulation !important;
+      pointer-events: auto !important;
     }
     .pseudo-input:focus {
       border-color: rgba(61, 196, 255, 0.75);
@@ -262,9 +269,15 @@
     }
     .btn.btn-pseudo {
       width: auto;
-      min-width: 52px;
+      min-width: 56px;
       padding: 0 14px;
       flex: 0 0 auto;
+      z-index: 2;
+      pointer-events: auto !important;
+    }
+    .btn.btn-pseudo.is-saved {
+      background: linear-gradient(180deg, #2a8f5a 0%, #145032 100%);
+      border-color: rgba(120, 255, 180, 0.45);
     }
 
     .board-box {
@@ -4489,7 +4502,7 @@ on</button>
           <div class="player-id" id="player-id">
             <label class="player-id-label" for="pseudo-input">Pseudo</label>
             <div class="player-id-row">
-              <input id="pseudo-input" class="pseudo-input" type="text" maxlength="16" autocomplete="nickname" placeholder="Ton pseudo" spellcheck="false" />
+              <input id="pseudo-input" class="pseudo-input" type="text" maxlength="20" autocomplete="nickname" enterkeyhint="done" placeholder="Ton pseudo (max 20)" spellcheck="false" inputmode="text" />
               <button class="btn btn-pseudo" id="btn-pseudo-save" type="button">OK</button>
             </div>
           </div>
@@ -7625,7 +7638,21 @@ on</button>
     action: false, actionPressed: false,
   };
 
+  function isTypingInField(target) {
+    const t = target || document.activeElement;
+    if (!t) return false;
+    const tag = (t.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return true;
+    if (t.isContentEditable) return true;
+    try {
+      if (t.closest && t.closest("input, textarea, select, [contenteditable='true']")) return true;
+    } catch (_) {}
+    return false;
+  }
+
   window.addEventListener("keydown", e => {
+    // Laisse passer la saisie pseudo / champs texte
+    if (isTypingInField(e.target)) return;
     const k = e.key;
     if (el.shop && !el.shop.classList.contains("hidden")) {
       if (k === "Escape") { e.preventDefault(); closeShop(); }
@@ -7982,14 +8009,14 @@ on</button>
 
   function loadPseudo() {
     try {
-      return String(localStorage.getItem(PSEUDO_KEY) || "").trim().slice(0, 16);
+      return String(localStorage.getItem(PSEUDO_KEY) || "").trim().slice(0, 20);
     } catch (_) { return ""; }
   }
 
   function savePseudo(name) {
     const n = String(name || "")
       .trim()
-      .slice(0, 16)
+      .slice(0, 20)
       .replace(/[<>&"']/g, "");
     playerPseudo = n;
     try {
@@ -8010,7 +8037,7 @@ on</button>
 
   function cleanBoardEntry(e) {
     if (!e || typeof e !== "object") return null;
-    const name = String(e.name || "").trim().slice(0, 16).replace(/[<>&"']/g, "");
+    const name = String(e.name || "").trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!name) return null;
     return {
       id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
@@ -8156,26 +8183,65 @@ on</button>
     return true;
   }
 
+  function flashPseudoSaved(ok) {
+    if (!el.btnPseudoSave) return;
+    const prev = el.btnPseudoSave.textContent;
+    el.btnPseudoSave.textContent = ok ? "✓" : "!";
+    el.btnPseudoSave.classList.toggle("is-saved", !!ok);
+    clearTimeout(flashPseudoSaved._t);
+    flashPseudoSaved._t = setTimeout(() => {
+      if (!el.btnPseudoSave) return;
+      el.btnPseudoSave.textContent = prev || "OK";
+      el.btnPseudoSave.classList.remove("is-saved");
+    }, 900);
+  }
+
+  function commitPseudoFromUI() {
+    const raw = el.pseudoInput ? el.pseudoInput.value : "";
+    const n = savePseudo(raw);
+    refreshBoardUI();
+    flashPseudoSaved(!!n);
+    if (!n && el.pseudoInput) {
+      el.pseudoInput.classList.add("pseudo-missing");
+      setTimeout(() => el.pseudoInput && el.pseudoInput.classList.remove("pseudo-missing"), 900);
+    }
+    return n;
+  }
+
   function initPlayerIdentity() {
     playerPseudo = loadPseudo();
-    if (el.pseudoInput) el.pseudoInput.value = playerPseudo;
+    if (el.pseudoInput) {
+      el.pseudoInput.value = playerPseudo;
+      el.pseudoInput.setAttribute("maxlength", "20");
+    }
     loadBoardLocal();
     refreshBoardUI();
     syncBoardRemote();
     if (el.btnPseudoSave) {
-      el.btnPseudoSave.addEventListener("click", () => {
-        savePseudo(el.pseudoInput ? el.pseudoInput.value : "");
-        refreshBoardUI();
+      el.btnPseudoSave.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        commitPseudoFromUI();
       });
     }
     if (el.pseudoInput) {
       el.pseudoInput.addEventListener("keydown", (e) => {
+        e.stopPropagation();
         if (e.key === "Enter") {
           e.preventDefault();
-          savePseudo(el.pseudoInput.value);
-          refreshBoardUI();
+          commitPseudoFromUI();
+          el.pseudoInput.blur();
         }
       });
+      el.pseudoInput.addEventListener("keyup", (e) => e.stopPropagation());
+      el.pseudoInput.addEventListener("keypress", (e) => e.stopPropagation());
+      // Sauvegarde en direct (évite de perdre le pseudo si OK est raté)
+      el.pseudoInput.addEventListener("input", () => {
+        const v = el.pseudoInput.value.slice(0, 20);
+        if (el.pseudoInput.value !== v) el.pseudoInput.value = v;
+        playerPseudo = String(v || "").trim().slice(0, 20);
+      });
+      el.pseudoInput.addEventListener("change", () => { commitPseudoFromUI(); });
     }
   }
 
@@ -15622,6 +15688,8 @@ on</button>
   // Saisie clavier du code (accueil ou pause) — affiche aussi le pad
   window.addEventListener("keydown", (e) => {
     if (isAdmin()) return;
+    // Ne pas voler les chiffres / backspace du champ pseudo
+    if (isTypingInField(e.target)) return;
     const onMenu = state === "menu";
     const onPause = state === "play" && paused;
     if (!onMenu && !onPause) return;
@@ -15815,6 +15883,7 @@ on</button>
 
   window.addEventListener("keydown", (e) => {
     if (paused) return;
+    if (isTypingInField(e.target)) return;
     if (el.shop && !el.shop.classList.contains("hidden")) {
       if (e.key === "Escape") { e.preventDefault(); closeShop(); }
       return;
