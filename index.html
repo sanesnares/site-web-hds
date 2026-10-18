@@ -347,6 +347,91 @@
       color: rgba(160, 180, 200, 0.65);
       padding: 4px 0;
     }
+    .board-list li.rank-flash {
+      animation: rank-row-flash 0.85s ease-out;
+    }
+    @keyframes rank-row-flash {
+      0% { background: rgba(255, 229, 102, 0.28); }
+      100% { background: transparent; }
+    }
+
+    /* —— Nouveau record + anim rang —— */
+    .end-record {
+      display: none;
+      margin: 6px auto 4px;
+      padding: 8px 14px 7px;
+      width: fit-content;
+      max-width: 92%;
+      border: 1px solid rgba(255, 229, 102, 0.55);
+      border-radius: 4px;
+      background:
+        linear-gradient(180deg, rgba(255, 229, 102, 0.16), rgba(8, 16, 28, 0.75));
+      box-shadow: 0 0 24px rgba(255, 229, 102, 0.22);
+      text-align: center;
+    }
+    .end-record.show {
+      display: block;
+      animation: end-record-pop 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .end-record-label {
+      display: block;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #ffe566;
+      margin-bottom: 2px;
+    }
+    .end-record-val {
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(22px, 6vw, 32px);
+      letter-spacing: 0.04em;
+      color: #fff8e0;
+      text-shadow: 0 0 12px rgba(255, 229, 102, 0.55);
+      font-variant-numeric: tabular-nums;
+    }
+    @keyframes end-record-pop {
+      0% { opacity: 0; transform: scale(0.72) translateY(12px); filter: brightness(1.6); }
+      55% { opacity: 1; transform: scale(1.06) translateY(0); }
+      100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+    }
+    .end-rank {
+      display: none;
+      margin: 8px 0 2px;
+      text-align: center;
+      font-family: var(--font-arcade);
+      font-size: clamp(13px, 3.2vw, 16px);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(200, 220, 240, 0.88);
+    }
+    .end-rank.show { display: block; }
+    .end-rank-num {
+      display: inline-block;
+      min-width: 3.2ch;
+      font-variant-numeric: tabular-nums;
+      color: #7CFFB2;
+      text-shadow: 0 0 10px rgba(124, 255, 178, 0.35);
+      transition: color 0.2s ease, transform 0.15s ease;
+    }
+    .end-rank.climbing .end-rank-num {
+      color: #ffe566;
+      transform: scale(1.12);
+    }
+    .end-rank.landed .end-rank-num {
+      color: #7CFFB2;
+      animation: end-rank-land 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes end-rank-land {
+      0% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .end-record.show { animation: none; }
+      .end-rank.landed .end-rank-num { animation: none; }
+      .board-list li.rank-flash { animation: none; }
+    }
 
     .hud-cam::before {
       content: "●";
@@ -4682,6 +4767,13 @@ on</button>
         <h1 class="neon-title" id="end-title">Game Over</h1>
         <p class="end-go" id="end-go">Game Over</p>
         <p class="subtitle" id="end-sub">Course terminée</p>
+        <p class="end-record hidden" id="end-record" aria-live="polite">
+          <span class="end-record-label">Nouveau record</span>
+          <span class="end-record-val" id="end-record-val">0 m</span>
+        </p>
+        <p class="end-rank hidden" id="end-rank" aria-live="polite">
+          Rang <span class="end-rank-num" id="end-rank-num">#—</span>
+        </p>
         <p class="stats" id="end-stats"></p>
         <div class="board-box board-box--end" id="end-board" aria-label="Classement">
           <p class="board-title">Classement</p>
@@ -4808,6 +4900,9 @@ on</button>
   const AIR_FRICTION = 2.4;
   const MAX_RUN = 250;
   const MAX_RUN_SHOES = 340;
+  const STOMP_BOOST_DUR = 2;      // secondes après stomp flic
+  const STOMP_BOOST_SPEED = 1.42; // plafond vitesse
+  const STOMP_BOOST_ACCEL = 1.32;
   const AIR_CTRL = 0.8;
   const PX_PER_METER = 18; // compteur m (était 12 → ~1,5× plus lent)
   const FINISH_METERS = 920; // arrivée = table + win (ligne au sol au même jalon)
@@ -4932,6 +5027,10 @@ on</button>
     endTitle: document.getElementById("end-title"),
     endGo: document.getElementById("end-go"),
     endSub: document.getElementById("end-sub"),
+    endRecord: document.getElementById("end-record"),
+    endRecordVal: document.getElementById("end-record-val"),
+    endRank: document.getElementById("end-rank"),
+    endRankNum: document.getElementById("end-rank-num"),
     endStats: document.getElementById("end-stats"),
     endRemain: document.getElementById("end-remain"),
     endOffers: document.getElementById("end-offers"),
@@ -8113,8 +8212,12 @@ on</button>
   function submitRunScore(dist, win) {
     const name = playerPseudo || loadPseudo();
     if (!name) return null;
+    const key = name.toLowerCase();
+    const prevIdx = boardCache.findIndex((e) => e.name.toLowerCase() === key);
+    const prevRank = prevIdx >= 0 ? prevIdx + 1 : 0;
+    const prevEntry = prevIdx >= 0 ? boardCache[prevIdx] : null;
     const entry = {
-      id: name.toLowerCase() + "_" + Date.now(),
+      id: key + "_" + Date.now(),
       name,
       timeMs: runTimeMs | 0,
       meters: dist | 0,
@@ -8123,11 +8226,117 @@ on</button>
       at: Date.now(),
       season: BOARD_SEASON,
     };
+    const improvedBoard = !prevEntry || boardRank(entry, prevEntry) < 0;
     saveBoardLocal(mergeBoardLists(boardCache, [entry]));
     refreshBoardUI();
     syncBoardRemote();
-    const rank = boardCache.findIndex((e) => e.name.toLowerCase() === name.toLowerCase()) + 1;
-    return { entry, rank };
+    const rank = boardCache.findIndex((e) => e.name.toLowerCase() === key) + 1;
+    return { entry, rank, prevRank, improvedBoard };
+  }
+
+  let endCelebrateGen = 0;
+
+  function reduceMotionOk() {
+    try {
+      return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (_) { return false; }
+  }
+
+  /** Compte à rebours de rang (#200 → #10) */
+  function animateRankClimb(fromRank, toRank, onDone) {
+    const node = el.endRankNum;
+    const wrap = el.endRank;
+    if (!node || !wrap || !(toRank > 0)) {
+      if (onDone) onDone();
+      return;
+    }
+    const gen = endCelebrateGen;
+    wrap.classList.remove("hidden", "landed", "climbing");
+    wrap.classList.add("show");
+    const from = fromRank > 0 ? fromRank : Math.max(toRank + 12, toRank);
+    const to = toRank;
+    if (reduceMotionOk() || from <= to) {
+      node.textContent = "#" + to;
+      wrap.classList.add("landed");
+      if (onDone) onDone();
+      return;
+    }
+    node.textContent = "#" + from;
+    wrap.classList.add("climbing");
+    const dur = Math.min(1.55, 0.55 + Math.abs(from - to) * 0.012);
+    const t0 = performance.now();
+    const step = (now) => {
+      if (gen !== endCelebrateGen) return;
+      const u = Math.min(1, (now - t0) / (dur * 1000));
+      const e = 1 - Math.pow(1 - u, 3);
+      const v = Math.round(from + (to - from) * e);
+      node.textContent = "#" + v;
+      if (u < 1) {
+        requestAnimationFrame(step);
+      } else {
+        node.textContent = "#" + to;
+        wrap.classList.remove("climbing");
+        wrap.classList.add("landed");
+        if (onDone) onDone();
+      }
+    };
+    requestAnimationFrame(step);
+  }
+
+  function flashOwnBoardRow() {
+    const name = (playerPseudo || loadPseudo()).toLowerCase();
+    if (!name || !el.endBoardList) return;
+    const rows = el.endBoardList.querySelectorAll("li");
+    for (let i = 0; i < rows.length; i++) {
+      const nm = rows[i].querySelector(".nm");
+      if (!nm) continue;
+      if ((nm.textContent || "").toLowerCase().indexOf(name) === 0 || nm.classList.contains("is-you")) {
+        rows[i].classList.remove("rank-flash");
+        void rows[i].offsetWidth;
+        rows[i].classList.add("rank-flash");
+        break;
+      }
+    }
+  }
+
+  function playEndCelebrate({ isNewRecord, dist, prevRank, newRank, improvedBoard }) {
+    const gen = ++endCelebrateGen;
+    if (el.endRecord) {
+      el.endRecord.classList.add("hidden");
+      el.endRecord.classList.remove("show");
+    }
+    if (el.endRank) {
+      el.endRank.classList.add("hidden");
+      el.endRank.classList.remove("show", "climbing", "landed");
+    }
+
+    if (isNewRecord && el.endRecord && el.endRecordVal) {
+      el.endRecordVal.textContent = (dist | 0) + " m";
+      el.endRecord.classList.remove("hidden");
+      // Relance l’anim CSS
+      void el.endRecord.offsetWidth;
+      el.endRecord.classList.add("show");
+      try { spawnConfetti(player.x + player.w * 0.5, player.y - 10, 36); } catch (_) {}
+    }
+
+    const climb = (improvedBoard || isNewRecord)
+      && newRank > 0
+      && (prevRank <= 0 || newRank < prevRank);
+    if (climb) {
+      // Laisse le record popper un court instant avant le climb
+      const delay = isNewRecord ? 380 : 120;
+      setTimeout(() => {
+        if (gen !== endCelebrateGen) return;
+        animateRankClimb(prevRank, newRank, () => {
+          if (gen !== endCelebrateGen) return;
+          flashOwnBoardRow();
+        });
+      }, delay);
+    } else if (newRank > 0 && el.endRank && el.endRankNum) {
+      el.endRankNum.textContent = "#" + newRank;
+      el.endRank.classList.remove("hidden");
+      el.endRank.classList.add("show", "landed");
+    }
   }
 
   function resetRunTimer() {
@@ -9122,6 +9331,77 @@ on</button>
     drawFloaters();
   }
 
+  /** Intensité 0→1 du boost stomp (fade out sur la fin) */
+  function stompBoostAmt() {
+    const t = player.stompBoostT || 0;
+    if (t <= 0) return 0;
+    if (t >= STOMP_BOOST_DUR - 0.15) {
+      return Math.min(1, (STOMP_BOOST_DUR - t) / 0.15);
+    }
+    return t > 0.35 ? 1 : t / 0.35;
+  }
+
+  /** Lignes de vitesse plein écran — « ça va vite » après stomp */
+  function drawStompBoostFx() {
+    const amt = stompBoostAmt();
+    if (amt <= 0.01 || state !== "play") return;
+    const face = player.facing || (player.vx >= 0 ? 1 : -1);
+    const px = sx(player.x + player.w * 0.5);
+    const py = sy(player.y + player.h * 0.45);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    // Traînées derrière le perso (monde → écran)
+    for (let i = 0; i < 10; i++) {
+      const k = i / 10;
+      const len = (55 + k * 90) * amt;
+      const yOff = (i - 4.5) * 7 + Math.sin(time * 28 + i) * 3;
+      const x0 = px - face * (18 + k * 10);
+      const x1 = x0 - face * len;
+      ctx.strokeStyle = i % 3 === 0
+        ? "rgba(255,229,102," + (0.22 * amt).toFixed(3) + ")"
+        : "rgba(180,220,255," + (0.16 * amt).toFixed(3) + ")";
+      ctx.lineWidth = 1.2 + (1 - k) * 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x0, py + yOff);
+      ctx.lineTo(x1, py + yOff + face * 2);
+      ctx.stroke();
+    }
+
+    // Stries latérales plein cadre (sens opposé à la course)
+    for (let i = 0; i < 16; i++) {
+      const y = ((i * 47 + time * 420 * amt) % (H + 40)) - 20;
+      const len = 50 + (Math.sin(time * 18 + i * 1.7) * 0.5 + 0.5) * 140 * amt;
+      const xBase = face > 0
+        ? W * 0.08 + (i % 4) * 28
+        : W * 0.92 - (i % 4) * 28;
+      ctx.strokeStyle = "rgba(255,255,255," + (0.07 + 0.1 * amt).toFixed(3) + ")";
+      ctx.lineWidth = 1 + (i % 3 === 0 ? 1.5 : 0);
+      ctx.beginPath();
+      ctx.moveTo(xBase, y);
+      ctx.lineTo(xBase + face * len, y);
+      ctx.stroke();
+    }
+
+    // Vignette latérale (tunnel vitesse)
+    const g = ctx.createLinearGradient(0, 0, W, 0);
+    if (face > 0) {
+      g.addColorStop(0, "rgba(4,10,22," + (0.35 * amt).toFixed(3) + ")");
+      g.addColorStop(0.35, "rgba(4,10,22,0)");
+      g.addColorStop(0.75, "rgba(4,10,22,0)");
+      g.addColorStop(1, "rgba(4,10,22," + (0.18 * amt).toFixed(3) + ")");
+    } else {
+      g.addColorStop(0, "rgba(4,10,22," + (0.18 * amt).toFixed(3) + ")");
+      g.addColorStop(0.25, "rgba(4,10,22,0)");
+      g.addColorStop(0.65, "rgba(4,10,22,0)");
+      g.addColorStop(1, "rgba(4,10,22," + (0.35 * amt).toFixed(3) + ")");
+    }
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
   /**
    * FillRect stable : Math.round (pas `| 0`) pour floats / sub-pixel,
    * dims min 1 px pour ne pas faire disparaître les vieux dessins pixel-art.
@@ -9338,7 +9618,8 @@ on</button>
     spinT: 0,         // durée restante salto
     spinAng: 0,
     dodgeLean: 0,     // 0→1 lean d’esquive
-    dodgeBoostT: 0,   // boost vitesse très court
+    dodgeBoostT: 0,   // legacy (non utilisé)
+    stompBoostT: 0,   // boost vitesse après stomp flic (~2 s)
     _px: 0, _py: 0,
     coyoteTimer: 0,
     jumpBufferTimer: 0,
@@ -9729,6 +10010,7 @@ on</button>
       spinAng: 0,
       dodgeLean: 0,
       dodgeBoostT: 0,
+      stompBoostT: 0,
       jetReady: false,
       jetHoldTimer: 0,
       jetAwaitRelease: false,
@@ -10628,6 +10910,16 @@ on</button>
     player.jumpsLeft = Math.max(player.jumpsLeft, 1);
     player.jumpsUsedThisAir = Math.min(player.jumpsUsedThisAir || 0, 1);
     player.copKillTimer = 0;
+    // Boost vitesse court (~2 s) + kick dans le sens de course
+    player.stompBoostT = STOMP_BOOST_DUR;
+    {
+      const face = player.facing || (player.vx >= 0 ? 1 : -1);
+      const kickTop = maxRunSpeed() * STOMP_BOOST_SPEED;
+      player.vx = face > 0
+        ? Math.min(kickTop, Math.max(player.vx, player.vx * 0.35 + 160))
+        : Math.max(-kickTop, Math.min(player.vx, player.vx * 0.35 - 160));
+      player.facing = face;
+    }
     // Mini-invuln : évite mort frame suivante (grow / charge / overlap)
     player.invuln = Math.max(player.invuln || 0, 0.22);
     updateJumpHud();
@@ -10641,6 +10933,11 @@ on</button>
     burst(mx, my, {
       n: 10, speed: 90, up: -50, life: 0.32, gravity: 200,
       color: C.blue, size: 2, glow: true,
+    });
+    // Traînée « ça va vite »
+    burst(mx, my - 10, {
+      n: 8, speed: 160, up: -10, life: 0.28, gravity: 40,
+      color: "rgba(255,229,102,0.9)", size: 2, glow: true,
     });
     hitStopTime = 0.05; // 50ms de pause dramatique
   }
@@ -10834,9 +11131,11 @@ on</button>
 
     const wantL = keys.left, wantR = keys.right;
     const ctrl = player.onGround ? 1 : AIR_CTRL;
+    const stomping = player.stompBoostT > 0;
     let accel = hasShoes() ? ACCEL * 1.28 : ACCEL;
+    if (stomping) accel *= STOMP_BOOST_ACCEL;
     if (isAdmin()) accel *= ADMIN_SPEED_MUL;
-    const top = maxRunSpeed() * (player.dodgeBoostT > 0 ? 1.14 : 1);
+    const top = maxRunSpeed() * (stomping ? STOMP_BOOST_SPEED : (player.dodgeBoostT > 0 ? 1.14 : 1));
     player.moving = false;
     player.jetting = false;
 
@@ -10853,14 +11152,20 @@ on</button>
       player.dodgeBoostT = Math.max(0, player.dodgeBoostT - dt);
       player.vx += player.facing * 95 * dt;
     }
+    if (stomping) {
+      player.stompBoostT = Math.max(0, player.stompBoostT - dt);
+      // Maintient le rush dans le sens du facing
+      player.vx += (player.facing || 1) * 140 * dt;
+    }
 
     if (wantL) { player.vx -= accel * ctrl * dt; player.facing = -1; player.moving = true; }
     if (wantR) { player.vx += accel * ctrl * dt; player.facing = 1; player.moving = true; }
 
     if (!wantL && !wantR) {
-      const damp = player.onGround
+      let damp = player.onGround
         ? (isWinter() ? FRICTION_ICE : FRICTION)
         : AIR_FRICTION;
+      if (stomping) damp *= 0.45; // glisse un peu pendant le boost
       player.vx *= Math.exp(-damp * dt);
       // Sur glace : continue longtemps avant de s’arrêter
       const stopEps = isWinter() && player.onGround ? 0.55 : 10;
@@ -12225,7 +12530,7 @@ on</button>
     }
   }
 
-  function prepareEndScreen(reason, dist, saved, deathN) {
+  function prepareEndScreen(reason, dist, saved, deathN, celebrate) {
     const win = reason === "win";
     el.end.classList.toggle("win-mode", win);
     if (win) {
@@ -12283,15 +12588,25 @@ on</button>
     runTimerOn = false;
     const placed = submitRunScore(dist, win);
     const timeStr = formatRunTime(runTimeMs);
-    const rankStr = placed && placed.rank > 0
-      ? (" · Rang <strong>#" + placed.rank + "</strong>")
-      : "";
+    const prevBestDist = celebrate && celebrate.prevBest ? (celebrate.prevBest.dist | 0) : 0;
+    const isNewRecord = !!(celebrate && celebrate.isNewRecord);
     el.endStats.innerHTML =
-      "Temps : <strong>" + timeStr + "</strong>" + rankStr + "<br />" +
-      "Distance : <strong>" + dist + "</strong> m<br />" +
+      "Temps : <strong>" + timeStr + "</strong><br />" +
+      "Distance : <strong>" + dist + "</strong> m" +
+      (isNewRecord && prevBestDist > 0
+        ? (" <span style=\"color:#ffe566\">(+" + (dist - prevBestDist) + " m)</span>")
+        : "") + "<br />" +
       "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
       "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
     refreshBoardUI();
+
+    playEndCelebrate({
+      isNewRecord,
+      dist: dist | 0,
+      prevRank: placed ? (placed.prevRank | 0) : (celebrate && celebrate.prevRank) || 0,
+      newRank: placed ? (placed.rank | 0) : 0,
+      improvedBoard: !!(placed && placed.improvedBoard),
+    });
 
     syncTips();
 
@@ -12552,9 +12867,20 @@ on</button>
     bankCamemberts(camCount);
     markGamePlayed();
     const deathN = win ? loadDeathCount() : bumpDeathCount();
+    const prevBest = loadBest();
+    const nameKey = (playerPseudo || loadPseudo()).toLowerCase();
+    const prevIdx = nameKey
+      ? boardCache.findIndex((e) => e.name.toLowerCase() === nameKey)
+      : -1;
+    const prevRank = prevIdx >= 0 ? prevIdx + 1 : 0;
+    const isNewRecord = dist > (prevBest.dist | 0);
     const saved = saveBest(dist, camCount);
     updateHudBest();
-    prepareEndScreen(reason, dist, saved, deathN);
+    prepareEndScreen(reason, dist, saved, deathN, {
+      prevBest,
+      prevRank,
+      isNewRecord,
+    });
 
     if (win) {
       flashScreen("rgba(255,229,102,0.95)");
@@ -15024,6 +15350,15 @@ on</button>
       ctx.scale(1 + 0.014 * k, 1 + 0.014 * k);
       ctx.translate(-W / 2, -H / 2);
     }
+    // Stretch horizontal léger pendant le boost stomp
+    {
+      const sb = stompBoostAmt();
+      if (sb > 0.01) {
+        ctx.translate(W / 2, H / 2);
+        ctx.scale(1 + 0.045 * sb, 1 - 0.02 * sb);
+        ctx.translate(-W / 2, -H / 2);
+      }
+    }
     // Threat only (zoom > 1). Intro drone = renderZoom dans sx/sy (plein cadre).
     const threatZ = threatZoom > 1.001 ? threatZoom : 1;
     if (threatZ > 1.002) {
@@ -15062,6 +15397,7 @@ on</button>
       drawJetFuelGauge();
     }
     drawIntroStartPrompt();
+    drawStompBoostFx();
     drawScreenFx();
   }
 
@@ -15142,7 +15478,8 @@ on</button>
         // Caméra Look-Ahead lissée (évite les à-coups quand vx change)
         const maxSpd = Math.max(1, maxRunSpeed());
         const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
-        camLookAhead += (speedRatio * 0.14 - camLookAhead) * (1 - Math.exp(-7 * gdt));
+        const lookMul = 0.14 + stompBoostAmt() * 0.1;
+        camLookAhead += (speedRatio * lookMul - camLookAhead) * (1 - Math.exp(-7 * gdt));
         const dynamicFocusX = CAM_FOCUS_X + camLookAhead;
         const targetX = Math.max(0, player.x - W * dynamicFocusX);
         camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
