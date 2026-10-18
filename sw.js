@@ -1,5 +1,5 @@
 /* 92 Rush — service worker PWA */
-const CACHE = "hds-rush-92-v10";
+const CACHE = "hds-rush-92-v11";
 const PRECACHE = [
   "./",
   "./index.html",

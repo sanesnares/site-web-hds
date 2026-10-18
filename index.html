@@ -9695,6 +9695,7 @@ on</button>
     maxReachX = 0;
     camX = 0;
     camY = 0;
+    camLookAhead = 0;
     renderZoom = 1;
     threatZoom = 1;
     time = 0;
@@ -14959,14 +14960,14 @@ on</button>
   function render() {
     ctx.save();
     if (trauma > 0.002) {
-      // Screen shake : bruit pseudo-aléatoire², léger zoom pour masquer les bords
+      // Shake cohérent (sin) — moins de « frises » qu’un Math.random() / frame
       const k = trauma * trauma;
-      const ox = (Math.random() * 2 - 1) * 11 * k;
-      const oy = (Math.random() * 2 - 1) * 8 * k;
-      const rot = (Math.random() * 2 - 1) * 0.012 * k;
+      const ox = Math.sin(time * 48.2) * 7.5 * k;
+      const oy = Math.cos(time * 41.7) * 5.5 * k;
+      const rot = Math.sin(time * 33.0) * 0.008 * k;
       ctx.translate(W / 2 + ox, H / 2 + oy);
       ctx.rotate(rot);
-      ctx.scale(1.025, 1.025);
+      ctx.scale(1 + 0.014 * k, 1 + 0.014 * k);
       ctx.translate(-W / 2, -H / 2);
     }
     // Threat only (zoom > 1). Intro drone = renderZoom dans sx/sy (plein cadre).
@@ -15084,10 +15085,11 @@ on</button>
       if (!hitStopFreeze) updatePlayer(gdt);
       // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
       if (state === "play") {
-        // Caméra Look-Ahead : décalage selon la vitesse (clamp anti-spike)
+        // Caméra Look-Ahead lissée (évite les à-coups quand vx change)
         const maxSpd = Math.max(1, maxRunSpeed());
         const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
-        const dynamicFocusX = CAM_FOCUS_X + (speedRatio * 0.14);
+        camLookAhead += (speedRatio * 0.14 - camLookAhead) * (1 - Math.exp(-7 * gdt));
+        const dynamicFocusX = CAM_FOCUS_X + camLookAhead;
         const targetX = Math.max(0, player.x - W * dynamicFocusX);
         camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
         if (camX < 0) camX = 0;
@@ -15157,6 +15159,12 @@ on</button>
   let portraitCropT = null;
   /** Focus écran portrait : perso à gauche → plus de champ devant pour anticiper */
   const PORTRAIT_FOCUS_X = 0.26;
+  /** Anti-jank : ignore micro-variations visualViewport / resize inutiles */
+  let lastResizeVw = 0;
+  let lastResizeVh = 0;
+  let lastResizePortrait = false;
+  let camLookAhead = 0;
+  let resizeRaf = 0;
 
   function readViewportSize() {
     const vv = window.visualViewport;
@@ -15208,8 +15216,9 @@ on</button>
    * — desktop / paysage : letterbox 16:9 (min)
    * — portrait mobile : vue “proche” (remplit la hauteur utile, léger crop latéral)
    * Ratio X/Y toujours identique — jamais d’étirement.
+   * @param {boolean} [force]
    */
-  function resize() {
+  function resize(force) {
     try { syncPhoneLayoutClass(); } catch (_) {}
 
     // Buffer interne fixe → entités toujours à la même taille relative
@@ -15221,6 +15230,23 @@ on</button>
     const phonePortrait = root.classList.contains("phone-portrait");
     const phoneLandscape = root.classList.contains("phone-landscape");
     const { vw, vh } = readViewportSize();
+
+    // Safari URL bar : scroll/visualViewport spam → ne pas tout recalculer
+    if (
+      !force
+      && Math.abs(vw - lastResizeVw) < 2
+      && Math.abs(vh - lastResizeVh) < 2
+      && phonePortrait === lastResizePortrait
+      && viewCssW > 0
+    ) {
+      return;
+    }
+
+    const prevCssW = viewCssW;
+    const prevCssH = viewCssH;
+    lastResizeVw = vw;
+    lastResizeVh = vh;
+    lastResizePortrait = phonePortrait;
     syncViewportShell(vw, vh);
 
     let padTop = 0;
@@ -15257,12 +15283,16 @@ on</button>
 
     const cssW = Math.max(1, Math.floor(W * scale));
     const cssH = Math.max(1, Math.floor(H * scale));
+    const sizeChanged = cssW !== prevCssW || cssH !== prevCssH || force;
 
     viewScale = scale;
     viewCssW = cssW;
     viewCssH = cssH;
-    // Nouveau scale → snap du crop (évite glissement après rotate)
-    portraitCropT = null;
+    // Snap crop seulement si la taille canvas change (sinon → saut d’image)
+    if (sizeChanged) {
+      portraitCropT = null;
+      canvas.style.transform = "";
+    }
 
     // Centré dans la bande utile (portrait dézoomé = bandes haut/bas)
     const gapX = (availW - Math.min(cssW, availW)) * 0.5;
@@ -15271,9 +15301,10 @@ on</button>
     viewOffsetY = padTop + gapY;
     const canvasBottom = padBottom + gapY;
 
-    canvas.style.width = cssW + "px";
-    canvas.style.height = cssH + "px";
-    canvas.style.transform = "";
+    if (sizeChanged) {
+      canvas.style.width = cssW + "px";
+      canvas.style.height = cssH + "px";
+    }
 
     root.style.setProperty("--game-scale", String(scale));
     root.style.setProperty("--game-w", cssW + "px");
@@ -15285,7 +15316,24 @@ on</button>
     root.style.setProperty("--game-canvas-bottom", Math.round(canvasBottom) + "px");
     root.style.setProperty("--game-canvas-left", Math.round(viewOffsetX) + "px");
 
-    if (phonePortrait) syncPortraitCrop(true);
+    if (phonePortrait) syncPortraitCrop(!!sizeChanged);
+  }
+
+  /** Resize coalescé (1× / frame) — coupe les rafales Safari visualViewport */
+  function scheduleResize(force) {
+    if (force) {
+      if (resizeRaf) {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = 0;
+      }
+      resize(true);
+      return;
+    }
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      resizeRaf = 0;
+      resize(false);
+    });
   }
 
   /**
@@ -15321,24 +15369,26 @@ on</button>
     if (snap || portraitCropT == null) {
       portraitCropT = t;
     } else {
-      // Lerp doux (~18 %) — fluide sans flou de retard
-      portraitCropT += (t - portraitCropT) * 0.18;
+      // Lerp doux — évite micro-saccades (surtout avec Math.round avant)
+      const k = Math.abs(t - portraitCropT) > 40 ? 0.28 : 0.12;
+      portraitCropT += (t - portraitCropT) * k;
     }
-    canvas.style.transform = "translate3d(" + Math.round(portraitCropT) + "px,0,0)";
+    // Sub-pixel : pas de Math.round (sinon l’image « saute » de 1 px)
+    canvas.style.transform = "translate3d(" + portraitCropT.toFixed(2) + "px,0,0)";
   }
 
   try { window.__hdsResize = resize; } catch (_) {}
   try { window.__hdsClientToGame = clientToGame; } catch (_) {}
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", () => scheduleResize(false));
   window.addEventListener("orientationchange", () => {
-    setTimeout(resize, 60);
-    setTimeout(resize, 200);
+    setTimeout(() => scheduleResize(true), 60);
+    setTimeout(() => scheduleResize(true), 220);
   });
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", resize);
-    window.visualViewport.addEventListener("scroll", resize);
+    // resize seulement (pas scroll) — le scroll URL bar ne doit pas reset le crop
+    window.visualViewport.addEventListener("resize", () => scheduleResize(false));
   }
-  resize();
+  resize(true);
 
   function playLaunchTransition() {
     return new Promise((resolve) => {
@@ -15441,7 +15491,7 @@ on</button>
     if (stickKnob) stickKnob.classList.remove("show");
     if (jumpFlash) jumpFlash.classList.remove("show");
     syncPhoneLayoutClass();
-    resize();
+    resize(true);
     beginIntroCinematic();
     AudioFX.updateRunMusic(true, false);
   }
