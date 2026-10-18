@@ -1,5 +1,5 @@
 /* 92 Rush — service worker PWA */
-const CACHE = "hds-rush-92-v6";
+const CACHE = "hds-rush-92-v8";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -31,6 +31,8 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // API classement : toujours réseau (pas de cache)
+  if (url.pathname.startsWith("/api/")) return;
 
   // Navigations : réseau d'abord, fallback cache (maj du jeu)
   if (req.mode === "navigate") {

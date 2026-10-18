@@ -199,6 +199,142 @@
       letter-spacing: 0.04em;
     }
 
+    .hud-time {
+      font-size: 0.92em;
+      letter-spacing: 0.04em;
+      color: rgba(200, 220, 240, 0.88);
+    }
+    .hud-time strong {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+      color: #ffe566;
+    }
+
+    .player-id {
+      width: min(100%, 280px);
+      margin: 8px 0 10px;
+      text-align: left;
+    }
+    .player-id-label {
+      display: block;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(180, 200, 220, 0.75);
+      margin-bottom: 5px;
+    }
+    .player-id-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .pseudo-input {
+      flex: 1;
+      min-width: 0;
+      appearance: none;
+      border: 1px solid rgba(61, 196, 255, 0.35);
+      border-radius: 4px;
+      background: rgba(4, 12, 22, 0.75);
+      color: #eef4fa;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 12px;
+      outline: none;
+      touch-action: manipulation;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .pseudo-input:focus {
+      border-color: rgba(61, 196, 255, 0.75);
+      box-shadow: 0 0 0 2px rgba(61, 196, 255, 0.2);
+    }
+    .pseudo-input.pseudo-missing {
+      border-color: rgba(255, 90, 90, 0.85);
+      box-shadow: 0 0 0 2px rgba(255, 80, 80, 0.25);
+      animation: pseudo-shake 0.35s ease;
+    }
+    @keyframes pseudo-shake {
+      0%, 100% { transform: translateX(0); }
+      30% { transform: translateX(-4px); }
+      60% { transform: translateX(4px); }
+    }
+    .btn.btn-pseudo {
+      width: auto;
+      min-width: 52px;
+      padding: 0 14px;
+      flex: 0 0 auto;
+    }
+
+    .board-box {
+      width: min(100%, 300px);
+      margin: 0 0 12px;
+      padding: 8px 10px 6px;
+      border: 1px solid rgba(61, 196, 255, 0.22);
+      border-radius: 6px;
+      background: rgba(4, 10, 18, 0.55);
+      text-align: left;
+    }
+    .board-box--end {
+      margin: 10px auto 0;
+      max-width: 320px;
+    }
+    .board-title {
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 229, 102, 0.85);
+      margin-bottom: 6px;
+    }
+    .board-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 132px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    .board-list li {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 6px;
+      align-items: baseline;
+      font-size: 12px;
+      line-height: 1.35;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: rgba(220, 230, 240, 0.9);
+    }
+    .board-list li:last-child { border-bottom: 0; }
+    .board-list .rk {
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      color: rgba(61, 196, 255, 0.85);
+    }
+    .board-list .nm {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .board-list .nm.is-you { color: #ffe566; }
+    .board-list .meta {
+      font-variant-numeric: tabular-nums;
+      font-size: 11px;
+      color: rgba(180, 200, 220, 0.8);
+      white-space: nowrap;
+    }
+    .board-list .empty {
+      display: block;
+      grid-column: 1 / -1;
+      font-size: 12px;
+      color: rgba(160, 180, 200, 0.65);
+      padding: 4px 0;
+    }
+
     .hud-cam::before {
       content: "●";
       color: var(--camembert);
@@ -4208,6 +4344,7 @@
     <div id="hud">
       <div class="hud-box">
         <div>Distance <strong id="hud-dist">0</strong> m</div>
+        <div class="hud-time">Temps <strong id="hud-time">0:00.0</strong></div>
         <div class="hud-cam">Camemberts <strong id="hud-cam">0</strong></div>
         <div class="jumps">
           <label>Sauts</label>
@@ -4348,6 +4485,17 @@ on</button>
               <span class="loadout-name" id="loadout-jetpack-name">Jetpack ×0</span>
               <input type="checkbox" id="tog-jetpack" checked />
             </label>
+          </div>
+          <div class="player-id" id="player-id">
+            <label class="player-id-label" for="pseudo-input">Pseudo</label>
+            <div class="player-id-row">
+              <input id="pseudo-input" class="pseudo-input" type="text" maxlength="16" autocomplete="nickname" placeholder="Ton pseudo" spellcheck="false" />
+              <button class="btn btn-pseudo" id="btn-pseudo-save" type="button">OK</button>
+            </div>
+          </div>
+          <div class="board-box" id="start-board" aria-label="Classement">
+            <p class="board-title">Classement</p>
+            <ol class="board-list" id="start-board-list"></ol>
           </div>
           <div class="btn-row">
             <button class="btn" id="btn-start" type="button">Jouer</button>
@@ -4577,6 +4725,10 @@ on</button>
         <p class="end-go" id="end-go">Game Over</p>
         <p class="subtitle" id="end-sub">Course terminée</p>
         <p class="stats" id="end-stats"></p>
+        <div class="board-box board-box--end" id="end-board" aria-label="Classement">
+          <p class="board-title">Classement</p>
+          <ol class="board-list" id="end-board-list"></ol>
+        </div>
       </div>
       <div class="end-actions">
         <div class="btn-row">
@@ -4719,6 +4871,10 @@ on</button>
   const SOUND_TIP_KEY = "hds92_sound_tip_v1";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
+  const PSEUDO_KEY = "hds92_pseudo_v1";
+  const BOARD_KEY = "hds92_board_v1";
+  const BOARD_API = "/api/leaderboard";
+  const BOARD_MAX = 40;
   const ADMIN_PIN = "4889";
   let adminMode = false;
   try { adminMode = localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) {}
@@ -4793,9 +4949,14 @@ on</button>
 
   const el = {
     dist: document.getElementById("hud-dist"),
+    time: document.getElementById("hud-time"),
     cam: document.getElementById("hud-cam"),
     bestD: document.getElementById("hud-best-dist"),
     bestC: document.getElementById("hud-best-cam"),
+    pseudoInput: document.getElementById("pseudo-input"),
+    btnPseudoSave: document.getElementById("btn-pseudo-save"),
+    startBoardList: document.getElementById("start-board-list"),
+    endBoardList: document.getElementById("end-board-list"),
     j1: document.getElementById("j1"),
     j2: document.getElementById("j2"),
     start: document.getElementById("start-screen"),
@@ -5597,7 +5758,7 @@ on</button>
     /* —— Ambiance ville + sirène camouflée + pas —— */
     let amb = null; // { master, stoppers[] }
     let ambRunning = false;
-    const AMB_VOL = 0.14;
+    const AMB_VOL = 0.08;
 
     function makeBrownBuffer(ctx, seconds) {
       const n = Math.max(1, (ctx.sampleRate * seconds) | 0);
@@ -7805,6 +7966,219 @@ on</button>
     return b;
   }
 
+  /* —— Chrono / pseudo / classement —— */
+  let runTimeMs = 0;
+  let runTimerOn = false;
+  let playerPseudo = "";
+  let boardCache = [];
+
+  function formatRunTime(ms) {
+    const t = Math.max(0, ms | 0);
+    const m = (t / 60000) | 0;
+    const s = ((t % 60000) / 1000) | 0;
+    const d = ((t % 1000) / 100) | 0;
+    return m + ":" + String(s).padStart(2, "0") + "." + d;
+  }
+
+  function loadPseudo() {
+    try {
+      return String(localStorage.getItem(PSEUDO_KEY) || "").trim().slice(0, 16);
+    } catch (_) { return ""; }
+  }
+
+  function savePseudo(name) {
+    const n = String(name || "")
+      .trim()
+      .slice(0, 16)
+      .replace(/[<>&"']/g, "");
+    playerPseudo = n;
+    try {
+      if (n) localStorage.setItem(PSEUDO_KEY, n);
+      else localStorage.removeItem(PSEUDO_KEY);
+    } catch (_) {}
+    if (el.pseudoInput && el.pseudoInput.value !== n) el.pseudoInput.value = n;
+    return n;
+  }
+
+  function boardRank(a, b) {
+    if (!!a.win !== !!b.win) return a.win ? -1 : 1;
+    if (a.win && b.win) return (a.timeMs | 0) - (b.timeMs | 0);
+    if ((a.meters | 0) !== (b.meters | 0)) return (b.meters | 0) - (a.meters | 0);
+    if ((a.cams | 0) !== (b.cams | 0)) return (b.cams | 0) - (a.cams | 0);
+    return (a.timeMs | 0) - (b.timeMs | 0);
+  }
+
+  function cleanBoardEntry(e) {
+    if (!e || typeof e !== "object") return null;
+    const name = String(e.name || "").trim().slice(0, 16).replace(/[<>&"']/g, "");
+    if (!name) return null;
+    return {
+      id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
+      name,
+      timeMs: Math.max(0, e.timeMs | 0),
+      meters: Math.max(0, e.meters | 0),
+      cams: Math.max(0, e.cams | 0),
+      win: !!e.win,
+      at: Math.max(0, e.at | 0) || Date.now(),
+    };
+  }
+
+  function mergeBoardLists(a, b) {
+    const byName = new Map();
+    for (const raw of [].concat(a || [], b || [])) {
+      const e = cleanBoardEntry(raw);
+      if (!e) continue;
+      const key = e.name.toLowerCase();
+      const prev = byName.get(key);
+      if (!prev || boardRank(e, prev) < 0) byName.set(key, e);
+    }
+    return Array.from(byName.values()).sort(boardRank).slice(0, BOARD_MAX);
+  }
+
+  function loadBoardLocal() {
+    try {
+      const o = JSON.parse(localStorage.getItem(BOARD_KEY) || "[]");
+      boardCache = mergeBoardLists(Array.isArray(o) ? o : [], []);
+    } catch (_) {
+      boardCache = [];
+    }
+    return boardCache;
+  }
+
+  function saveBoardLocal(list) {
+    boardCache = mergeBoardLists(list || [], []);
+    try { localStorage.setItem(BOARD_KEY, JSON.stringify(boardCache)); } catch (_) {}
+    return boardCache;
+  }
+
+  function renderBoardList(node, highlightName) {
+    if (!node) return;
+    const you = (highlightName || playerPseudo || "").toLowerCase();
+    const list = boardCache.slice(0, 10);
+    if (!list.length) {
+      node.innerHTML = "<li><span class=\"empty\">Aucun score pour l’instant</span></li>";
+      return;
+    }
+    node.innerHTML = list.map((e, i) => {
+      const me = e.name.toLowerCase() === you;
+      const flag = e.win ? "★" : (e.meters | 0) + "m";
+      return (
+        "<li>" +
+          "<span class=\"rk\">" + (i + 1) + "</span>" +
+          "<span class=\"nm" + (me ? " is-you" : "") + "\">" + e.name + (me ? " · toi" : "") + "</span>" +
+          "<span class=\"meta\">" + formatRunTime(e.timeMs) + " · " + flag + "</span>" +
+        "</li>"
+      );
+    }).join("");
+  }
+
+  function refreshBoardUI() {
+    renderBoardList(el.startBoardList, playerPseudo);
+    renderBoardList(el.endBoardList, playerPseudo);
+  }
+
+  async function syncBoardRemote() {
+    try {
+      const res = await fetch(BOARD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scores: boardCache }),
+      });
+      if (!res.ok) throw new Error("board");
+      const data = await res.json();
+      if (data && Array.isArray(data.scores)) {
+        saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+      }
+    } catch (_) {
+      try {
+        const res = await fetch(BOARD_API);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && Array.isArray(data.scores)) {
+          saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+        }
+      } catch (_) {}
+    }
+    refreshBoardUI();
+  }
+
+  function submitRunScore(dist, win) {
+    const name = playerPseudo || loadPseudo();
+    if (!name) return null;
+    const entry = {
+      id: name.toLowerCase() + "_" + Date.now(),
+      name,
+      timeMs: runTimeMs | 0,
+      meters: dist | 0,
+      cams: camCount | 0,
+      win: !!win,
+      at: Date.now(),
+    };
+    saveBoardLocal(mergeBoardLists(boardCache, [entry]));
+    refreshBoardUI();
+    syncBoardRemote();
+    const rank = boardCache.findIndex((e) => e.name.toLowerCase() === name.toLowerCase()) + 1;
+    return { entry, rank };
+  }
+
+  function resetRunTimer() {
+    runTimeMs = 0;
+    runTimerOn = false;
+    if (el.time) el.time.textContent = formatRunTime(0);
+  }
+
+  function startRunTimer() {
+    runTimeMs = 0;
+    runTimerOn = true;
+    if (el.time) el.time.textContent = formatRunTime(0);
+  }
+
+  function tickRunTimer(realDt) {
+    if (!runTimerOn || paused) return;
+    if (state !== "play" && state !== "intro_cinematic") return;
+    // Chrono utile dès le handover play (pas pendant le zoom drone)
+    if (state === "intro_cinematic") return;
+    runTimeMs += Math.max(0, realDt) * 1000;
+    if (el.time) el.time.textContent = formatRunTime(runTimeMs);
+  }
+
+  function ensurePseudoForPlay() {
+    const fromInput = el.pseudoInput ? el.pseudoInput.value : "";
+    const n = savePseudo(fromInput || playerPseudo || loadPseudo());
+    if (!n) {
+      if (el.pseudoInput) {
+        el.pseudoInput.focus();
+        el.pseudoInput.classList.add("pseudo-missing");
+        setTimeout(() => el.pseudoInput && el.pseudoInput.classList.remove("pseudo-missing"), 900);
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function initPlayerIdentity() {
+    playerPseudo = loadPseudo();
+    if (el.pseudoInput) el.pseudoInput.value = playerPseudo;
+    loadBoardLocal();
+    refreshBoardUI();
+    syncBoardRemote();
+    if (el.btnPseudoSave) {
+      el.btnPseudoSave.addEventListener("click", () => {
+        savePseudo(el.pseudoInput ? el.pseudoInput.value : "");
+        refreshBoardUI();
+      });
+    }
+    if (el.pseudoInput) {
+      el.pseudoInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          savePseudo(el.pseudoInput.value);
+          refreshBoardUI();
+        }
+      });
+    }
+  }
+
   function defaultMeta() {
     return {
       gamesPlayed: 0,
@@ -8747,9 +9121,13 @@ on</button>
   let fallingSpikes = [];
   let spikeTimer = 0;
 
-  /** World → écran (caméra suit le perso en X et Y) */
-  function sx(x) { return x - camX; }
-  function sy(y) { return y - camY; }
+  /**
+   * World → écran. `renderZoom` < 1 = vue drone (plus de monde, canvas plein —
+   * pas de ctx.scale qui créait un cadre dans le cadre).
+   */
+  let renderZoom = 1;
+  function sx(x) { return (x - camX) * renderZoom; }
+  function sy(y) { return (y - camY) * renderZoom; }
 
   function loadCatchCount() {
     try { return parseInt(localStorage.getItem(CATCH_KEY) || "0", 10) || 0; }
@@ -8923,10 +9301,12 @@ on</button>
 
   /**
    * Intro cinématique (état `intro_cinematic`) avant PLAY :
-   * zoom drone lointain → perso (cadrage jeu exact) → await input.
+   * zoom drone (renderZoom) → cadrage jeu exact → await input.
+   * Pas de ctx.scale < 1 (sinon cadre vide autour du jeu).
    */
   const INTRO_SPAWN_X = 100;
-  const INTRO_DRONE_DUR = 2.4;
+  const INTRO_DRONE_DUR = 2.45;
+  const INTRO_ZOOM_START = 0.52;
   let introCine = null;
   let spawnNoBlinkT = 0;
 
@@ -8964,11 +9344,12 @@ on</button>
     return Math.max(0, INTRO_SPAWN_X - W * CAM_FOCUS_X);
   }
 
+  /** Cadrage jeu exact — même caméra / zoom que le 1er frame PLAY */
   function snapIntroToPlayFrame() {
-    if (!introCine) return;
-    introCine.zoom = 1;
-    camX = introCine.endCamX;
-    camY = introCine.endCamY;
+    renderZoom = 1;
+    if (introCine) introCine.zoom = 1;
+    camX = introPlayCamX();
+    camY = 0;
     player.x = INTRO_SPAWN_X;
     player.y = GROUND_Y - player.h;
     player.vx = 0;
@@ -8980,24 +9361,33 @@ on</button>
     player.runFrame = 0;
   }
 
-  function beginIntroCinematic() {
+  /**
+   * Vue drone plein écran : renderZoom zoome le monde (pas le canvas).
+   * u=0 loin / haut — u=1 = cadrage PLAY.
+   */
+  function applyIntroDroneCamera(z, u) {
     const endCamX = introPlayCamX();
     const endCamY = 0;
-    // Vue drone : plus loin / plus haut, décor La Défense bien ouvert
-    const startCamX = Math.max(0, endCamX - 220);
-    const startCamY = -72;
+    const focusX = INTRO_SPAWN_X + player.w * 0.5;
+    const focusY = GROUND_Y - player.h * 0.55;
+    const z0 = INTRO_ZOOM_START;
+    // Départ : large fenêtre monde centrée un peu devant le perso + ciel
+    const startCamX = focusX - (W * 0.42) / z0;
+    const startCamY = focusY - (H * 0.40) / z0;
+    renderZoom = z;
+    camX = startCamX + (endCamX - startCamX) * u;
+    camY = startCamY + (endCamY - startCamY) * u;
+    if (introCine) introCine.zoom = z;
+    if (u >= 0.999 || z >= 0.999) snapIntroToPlayFrame();
+  }
+
+  function beginIntroCinematic() {
     introCine = {
       t: 0,
       phase: "drone",
       phaseT: 0,
       dur: INTRO_DRONE_DUR,
-      zoomStart: 0.46,
-      zoomEnd: 1,
-      startCamX,
-      startCamY,
-      endCamX,
-      endCamY,
-      zoom: 0.46,
+      zoom: INTRO_ZOOM_START,
     };
     player.x = INTRO_SPAWN_X;
     player.y = GROUND_Y - player.h;
@@ -9011,9 +9401,8 @@ on</button>
     player.runPhase = 0;
     player.invuln = 0;
     spawnNoBlinkT = 3.2;
-    camX = startCamX;
-    camY = startCamY;
     threatZoom = 1;
+    applyIntroDroneCamera(INTRO_ZOOM_START, 0);
     try { AudioFX.setIntroFade(0.22); } catch (_) {}
   }
 
@@ -9026,7 +9415,7 @@ on</button>
     snapIntroToPlayFrame();
     introCine = null;
     state = "play";
-    // Caméra déjà au cadrage jeu — pas de snap positionnel
+    renderZoom = 1;
     camX = introPlayCamX();
     camY = 0;
     threatZoom = 1;
@@ -9045,6 +9434,7 @@ on</button>
     }
     keys.left = keys.right = keys.jump = keys.action = false;
     keys.jumpPressed = keys.actionPressed = false;
+    startRunTimer();
     syncPhoneLayoutClass();
     return true;
   }
@@ -9055,7 +9445,6 @@ on</button>
     ic.t += dt;
     ic.phaseT += dt;
 
-    // Perso figé au spawn pendant toute l’intro
     player.x = INTRO_SPAWN_X;
     player.y = GROUND_Y - player.h;
     player.vx = 0;
@@ -9068,10 +9457,8 @@ on</button>
     if (ic.phase === "drone") {
       const raw = Math.min(1, ic.t / ic.dur);
       const u = smootherstep(raw);
-      const zU = easeOutQuint(u);
-      ic.zoom = ic.zoomStart + (ic.zoomEnd - ic.zoomStart) * zU;
-      camX = ic.startCamX + (ic.endCamX - ic.startCamX) * u;
-      camY = ic.startCamY + (ic.endCamY - ic.startCamY) * u;
+      const z = INTRO_ZOOM_START + (1 - INTRO_ZOOM_START) * easeOutQuint(u);
+      applyIntroDroneCamera(z, u);
       if (raw >= 1) {
         snapIntroToPlayFrame();
         ic.phase = "await";
@@ -9092,13 +9479,9 @@ on</button>
     updateIntroCinematic(dt);
   }
 
+  /** Plus utilisé pour ctx.scale (évite le double cadre) */
   function introCamZoom() {
-    if (!introCine) return 1;
-    return introCine.zoom || 1;
-  }
-
-  function drawIntroBreakBuilding() {
-    /* plus de mur — intro drone uniquement */
+    return 1;
   }
 
   function drawIntroStartPrompt() {
@@ -9242,6 +9625,7 @@ on</button>
     maxReachX = 0;
     camX = 0;
     camY = 0;
+    renderZoom = 1;
     threatZoom = 1;
     time = 0;
     dustTimer = 0;
@@ -9662,6 +10046,80 @@ on</button>
       }
     }
 
+    /**
+     * Scooters hauts (début + 1 autre) : plateforme à portée stomp→double saut,
+     * flic sous la plateforme qui avance lentement vers le joueur.
+     * Pas besoin de jetpack pour ces 1–2 spots.
+     */
+    {
+      const ASSIST_PLAT_Y = 218; // pieds ~ stomp+djump
+      const scooters = collectibles
+        .filter((c) => c && c.specialKind === "scooter" && c.platRef)
+        .slice()
+        .sort((a, b) => a.x - b.x);
+      let assistDone = 0;
+      for (let si = 0; si < scooters.length && assistDone < 2; si++) {
+        const c = scooters[si];
+        const p = c.platRef;
+        if (!p) continue;
+        // Ciel jetpack pur : on ne touche pas
+        if (p.y < 70) continue;
+
+        p.y = ASSIST_PLAT_Y;
+        p._scooterAssist = true;
+        // Légère oscillation pour aider le timing du double saut
+        p.moveAmp = Math.max(p.moveAmp || 0, 22);
+        p.moveSpeed = Math.min(p.moveSpeed || 1, 0.9);
+        if (p.baseX == null) p.baseX = p.x;
+        c.y = p.y - c.h;
+        c.x = p.x + (c.platOffX != null ? c.platOffX : Math.max(4, (p.w - c.w) * 0.5));
+
+        const mid = p.x + p.w * 0.5;
+        let best = null;
+        let bestD = 1e9;
+        for (let oi = 0; oi < obstacles.length; oi++) {
+          const o = obstacles[oi];
+          if (!o || o.kind === "boss" || o.kind === "angry") continue;
+          const d = Math.abs(o.x + o.w * 0.5 - mid);
+          if (d < bestD) { bestD = d; best = o; }
+        }
+
+        const placeAssistCop = (o) => {
+          const nx = mid - o.w * 0.55;
+          o.x = nx;
+          o.homeX = nx;
+          o.y = GROUND_Y - o.h;
+          o._scooterAssist = true;
+          o._alertT = Math.max(o._alertT || 0, 0.4);
+        };
+
+        if (best && bestD < 420) {
+          placeAssistCop(best);
+        } else {
+          const h = 56;
+          const w = 34;
+          const nx = mid - w * 0.55;
+          const o = {
+            x: nx, y: GROUND_Y - h, w, h, kind: "cop",
+            baseW: w, baseH: h,
+            homeX: nx,
+            _flicHeard: false, _alertT: 0.5, _faceDir: -1, _faceTurnT: 0,
+            _scale: 1,
+            _spent: false,
+            _downed: false,
+            _nearMissDone: false,
+            _grazeArmed: false,
+            _angryDash: false,
+            _angryParked: false,
+            _scooterAssist: true,
+          };
+          obstacles.push(o);
+        }
+        assistDone++;
+      }
+      syncScooterCollectibles();
+    }
+
     // Easter egg — 320 m, très haut (jetpack only) ; placeholder rond blanc
     collectibles.push({
       x: 320 * PX_PER_METER - 8,
@@ -10046,8 +10504,9 @@ on</button>
     o.x += dir * 6;
     o.y = GROUND_Y - 28;
 
-    // Rebond net (comme un trampoline)
-    player.vy = Math.min(player.vy, -340);
+    // Rebond net (trampoline) — plus haut sous les scooters assist (stomp → double saut)
+    const bounce = o._scooterAssist ? -455 : -340;
+    player.vy = Math.min(player.vy, bounce);
     player.onGround = false;
     player.jumpsLeft = Math.max(player.jumpsLeft, 1);
     player.jumpsUsedThisAir = Math.min(player.jumpsUsedThisAir || 0, 1);
@@ -11704,10 +12163,18 @@ on</button>
         el.endGo.textContent = "Game Over";
       }
     }
+    runTimerOn = false;
+    const placed = submitRunScore(dist, win);
+    const timeStr = formatRunTime(runTimeMs);
+    const rankStr = placed && placed.rank > 0
+      ? (" · Rang <strong>#" + placed.rank + "</strong>")
+      : "";
     el.endStats.innerHTML =
+      "Temps : <strong>" + timeStr + "</strong>" + rankStr + "<br />" +
       "Distance : <strong>" + dist + "</strong> m<br />" +
       "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
       "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
+    refreshBoardUI();
 
     syncTips();
 
@@ -11916,6 +12383,7 @@ on</button>
     refreshLoadoutUI();
     syncMuteBtn();
     introCine = null;
+    renderZoom = 1;
     try { AudioFX.setIntroFade(1); } catch (_) {}
     ensureMenuMusic();
     AudioFX.updateRunMusic(false, false, true);
@@ -13256,6 +13724,27 @@ on</button>
 
       applyCopGrow(o, dt);
 
+      // Flic « marchepied » sous scooter haut : avance / suit très lentement
+      if (o._scooterAssist) {
+        const px = player.x + player.w * 0.5;
+        const cx = o.x + o.w * 0.5;
+        const passed = player.x > o.x + o.w * 0.35;
+        o._faceDir = px < cx ? -1 : 1;
+        if (!passed && px < cx && cx - px < 480) {
+          // Approche : avance légèrement vers le joueur (reste sous la plateforme)
+          o._alertT = Math.max(o._alertT || 0, 0.7);
+          const minX = (o.homeX != null ? o.homeX : o.x) - 110;
+          o.x = Math.max(minX, o.x - 32 * dt);
+        } else if (passed && px - cx < 220) {
+          // Dépassé : suit un tout petit peu puis se recolle
+          o.x = Math.min((o.homeX != null ? o.homeX : o.x) + 36, o.x + 18 * dt);
+        } else {
+          o.x += ((o.homeX != null ? o.homeX : o.x) - o.x) * Math.min(1, 1.1 * dt);
+        }
+        o.y = GROUND_Y - o.h;
+        continue;
+      }
+
       // Regard toujours fixé sur le joueur → se retournent après le passage
       const px = player.x + player.w * 0.5;
       const cx = o.x + o.w * 0.5;
@@ -14410,15 +14899,13 @@ on</button>
       ctx.scale(1.025, 1.025);
       ctx.translate(-W / 2, -H / 2);
     }
-    const introZ = introCamZoom();
+    // Threat only (zoom > 1). Intro drone = renderZoom dans sx/sy (plein cadre).
     const threatZ = threatZoom > 1.001 ? threatZoom : 1;
-    const viewZ = threatZ * introZ;
-    if (Math.abs(viewZ - 1) > 0.002) {
-      // Pivot sur le perso (intro drone + threat) → handover sans saut
+    if (threatZ > 1.002) {
       const ax = sx(player.x + player.w * 0.5);
       const ay = sy(player.y + player.h * 0.45);
       ctx.translate(ax, ay);
-      ctx.scale(viewZ, viewZ);
+      ctx.scale(threatZ, threatZ);
       ctx.translate(-ax, -ay);
     }
     drawSky();
@@ -14502,6 +14989,7 @@ on</button>
     }
     const gdt = dt * GAME_SPEED;
     time += gdt;
+    tickRunTimer(realDt);
 
     if (state === "intro_cinematic" && !paused) {
       if (!hitStopFreeze) updatePlayer(gdt);
@@ -14835,6 +15323,7 @@ on</button>
 
   function enterPlayState() {
     resetLevel();
+    resetRunTimer();
     AudioFX.stopAllFlicVoices();
     state = "intro_cinematic";
     lastTs = 0;
@@ -14889,6 +15378,7 @@ on</button>
 
   async function startGame() {
     if (state === "play" || state === "intro_cinematic" || launching) return;
+    if (!ensurePseudoForPlay()) return;
     const fromMenu = state === "menu" && el.start && !el.start.classList.contains("hidden");
     launching = true;
     const launchId = (startGame._id = (startGame._id || 0) + 1);
@@ -15347,6 +15837,7 @@ on</button>
   refreshShopButtons();
   refreshLoadoutUI();
   syncMuteBtn();
+  initPlayerIdentity();
   resetLevel();
   syncTips();
   requestAnimationFrame(frame);
