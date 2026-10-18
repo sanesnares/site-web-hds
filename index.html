@@ -2489,20 +2489,21 @@
 
     /*
       Écran de fin mobile :
-      — texte centré en haut / milieu
-      — Rejouer / Boutique ancrés bas (zone pouces)
-      — mutes compactes en bas-gauche (pas de radio / pas de haut-droite)
+      — contenu scrollable en haut (stats + classement)
+      — Rejouer / Listenify / Boutique collés en bas, jamais sous le board
+      — mutes compactes en bas-gauche
     */
     html.phone-portrait #end-screen {
+      display: flex;
+      flex-direction: column;
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(28px, calc(env(safe-area-inset-top, 0px) + 22px))
-        16px
-        max(56px, calc(env(safe-area-inset-bottom, 0px) + 48px));
+        max(20px, calc(env(safe-area-inset-top, 0px) + 14px))
+        14px
+        max(52px, calc(env(safe-area-inset-bottom, 0px) + 44px));
       box-sizing: border-box;
-      overflow-x: hidden;
-      overflow-y: auto;
+      overflow: hidden; /* scroll = end-main uniquement */
       -webkit-overflow-scrolling: touch;
     }
     html.phone-portrait #end-screen .end-main {
@@ -2510,42 +2511,87 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       width: min(360px, 94vw);
       min-height: 0;
-      padding: 4px 0 12px;
+      max-height: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 2px 0 10px;
+      gap: 0;
+    }
+    html.phone-portrait #end-screen .board-box--end {
+      flex: 0 1 auto;
+      width: 100%;
+      max-width: 320px;
+      margin: 8px 0 0;
+      max-height: min(26vh, 148px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    html.phone-portrait #end-screen .board-list {
+      max-height: min(20vh, 112px);
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    html.phone-portrait #end-screen .end-record {
+      margin: 4px auto 2px;
+      padding: 5px 10px 4px;
+    }
+    html.phone-portrait #end-screen .end-record-val {
+      font-size: clamp(18px, 5vw, 26px);
+    }
+    html.phone-portrait #end-screen .end-rank {
+      margin: 4px 0 0;
+      font-size: 12px;
     }
     html.phone-portrait #end-screen .end-actions {
       flex: 0 0 auto;
+      position: relative;
+      z-index: 3;
       width: min(340px, 92vw);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      margin-top: 0;
       padding:
-        8px 0
-        max(10px, env(safe-area-inset-bottom, 0px));
-      margin-top: auto;
+        12px 0 6px
+        max(8px, env(safe-area-inset-bottom, 0px));
+      background:
+        linear-gradient(
+          180deg,
+          rgba(3, 6, 12, 0) 0%,
+          rgba(3, 6, 12, 0.92) 22%,
+          rgba(3, 6, 12, 0.98) 100%
+        );
+      pointer-events: auto;
     }
     html.phone-portrait #end-screen .brand-tag {
       margin-top: 0;
-      margin-bottom: 10px !important;
+      margin-bottom: 6px !important;
     }
     html.phone-portrait #end-screen .neon-title,
     html.phone-portrait #end-screen h1 {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      font-size: clamp(28px, 7.5vw, 44px);
     }
     html.phone-portrait #end-screen .end-go {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     html.phone-portrait #end-screen .subtitle {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     html.phone-portrait #end-screen .stats {
       margin-bottom: 0;
+      font-size: clamp(11px, 2.8vw, 13px);
+      line-height: 1.4;
     }
     html.phone-portrait #end-screen .btn-row {
-      gap: 10px;
+      gap: 8px;
       width: 100%;
     }
     html.phone-portrait #end-screen .btn {
@@ -2691,16 +2737,18 @@
       height: 56px !important;
     }
 
-    /* Paysage iPhone : fin = texte centre, actions bas ; mutes bas-gauche */
+    /* Paysage iPhone : fin = scroll haut + actions bas (pas de chevauchement) */
     html.phone-landscape #end-screen {
+      display: flex;
+      flex-direction: column;
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(16px, calc(env(safe-area-inset-top, 0px) + 12px))
+        max(12px, calc(env(safe-area-inset-top, 0px) + 8px))
         max(16px, calc(env(safe-area-inset-right, 0px) + 12px))
-        max(48px, calc(env(safe-area-inset-bottom, 0px) + 40px))
+        max(44px, calc(env(safe-area-inset-bottom, 0px) + 36px))
         max(16px, calc(env(safe-area-inset-left, 0px) + 12px));
-      overflow-y: auto;
+      overflow: hidden;
       -webkit-overflow-scrolling: touch;
     }
     html.phone-landscape #end-screen .end-main {
@@ -2708,14 +2756,29 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      width: min(340px, 70vw);
+    }
+    html.phone-landscape #end-screen .board-box--end {
+      max-height: min(28vh, 120px);
+      overflow: hidden;
+      width: 100%;
+    }
+    html.phone-landscape #end-screen .board-list {
+      max-height: min(22vh, 96px);
     }
     html.phone-landscape #end-screen .end-actions {
       flex: 0 0 auto;
+      position: relative;
+      z-index: 3;
       width: min(300px, 70vw);
-      margin-top: auto;
-      padding-bottom: 4px;
+      margin-top: 0;
+      padding: 10px 0 4px;
+      background:
+        linear-gradient(180deg, rgba(3, 6, 12, 0), rgba(3, 6, 12, 0.95) 30%);
     }
     html.phone-landscape #end-screen .btn { width: 100%; }
     html.phone-landscape #pause-screen {
@@ -3838,6 +3901,18 @@
     /* Pause : pas de gros hub — le bouton Listenify du menu suffit */
     html.phone-portrait #pause-screen .ysemo-hub {
       display: none !important;
+    }
+    /* Pause mobile : boutons toujours au-dessus, pas de chevauchement */
+    html.phone-portrait #pause-screen .btn-row {
+      position: relative;
+      z-index: 2;
+      width: min(300px, 88vw);
+      margin-top: 6px;
+    }
+    html.phone-portrait #pause-screen .pause-admin {
+      position: relative;
+      z-index: 2;
+      margin-top: 10px;
     }
 
     /* ============================================================
@@ -5405,7 +5480,10 @@ on</button>
           });
         } catch (_) {}
       }
-      resumeCtx();
+      // Ne pas resume() à chaque appel (micro-coupe du mix sur iOS)
+      if (ac.state === "suspended" || ac.state === "interrupted") {
+        if (!bgAudioLocked && !pageIsHidden()) resumeCtx();
+      }
       return ac;
     }
 
@@ -5432,10 +5510,16 @@ on</button>
         } catch (_) {}
       });
       window.addEventListener("focus", onShow);
-      // Gestes : débloque le ctx iOS même mid-game (jamais hors écran)
-      ["touchstart", "touchend", "pointerdown", "click"].forEach((ev) => {
+      // Gestes : ne resume que si le ctx est vraiment coupé (pas à chaque stick/saut)
+      let lastCtxNudgeT = 0;
+      ["touchstart", "pointerdown"].forEach((ev) => {
         document.addEventListener(ev, () => {
-          if (unlocked && !bgAudioLocked && !pageIsHidden()) resumeCtx();
+          if (!unlocked || bgAudioLocked || pageIsHidden() || !ac) return;
+          if (ac.state === "running") return;
+          const now = performance.now();
+          if (now - lastCtxNudgeT < 900) return;
+          lastCtxNudgeT = now;
+          resumeCtx();
         }, { capture: true, passive: true });
       });
       // Centre de contrôle iOS : Pause / Stop doivent vraiment couper
@@ -6321,7 +6405,23 @@ on</button>
       } catch (_) {}
     }
 
+    let unlockKickDone = false;
+
+    /** Mid-game : réveille le ctx si besoin, sans rejouer les kicks HTML */
+    function softResume() {
+      if (!unlocked || bgAudioLocked || pageIsHidden()) return;
+      if (!ac) {
+        ensureCtx();
+        return;
+      }
+      if (ac.state === "suspended" || ac.state === "interrupted") resumeCtx();
+    }
+
     async function unlock() {
+      // Déjà débloqué + ctx OK → no-op (évite play/pause HTML à chaque tap mobile)
+      if (unlocked && unlockKickDone && ac && ac.state === "running") {
+        return;
+      }
       // Gesture utilisateur = unlocked tout de suite (sinon startMusic no-op)
       applyIosAudioSession();
       ensureGraph();
@@ -6331,28 +6431,28 @@ on</button>
         return;
       }
       const ctx = ensureCtx();
-      if (ctx) {
+      if (ctx && ctx.state !== "running") {
         try { await withTimeout(ctx.resume().catch(() => {}), 500); } catch (_) {}
-        kickSilentBuffer(ctx);
       }
+      // Kick HTML / buffers : une seule fois (sinon micro-coupe musique à chaque stick)
+      if (unlockKickDone) {
+        if (musicMuted || sfxMuted) applyMuteLevels();
+        return;
+      }
+      unlockKickDone = true;
+      if (ctx) kickSilentBuffer(ctx);
       // Précharge musique / flics / jump / voix companion immédiatement en fond
       loadMusicBuffers().catch(() => {});
       loadFlicBuffers().catch(() => {});
       loadJumpBuffer().catch(() => {});
       loadCompanionVoice().catch(() => {});
-      // Sur mobile : kick silencieux WebAudio suffit ; HTMLAudio play/pause peut glitcher iOS
+      // Sur mobile : éviter HTMLAudio play/pause (glitch iOS) — WebAudio suffit
       if (!mobileAudio()) {
         await Promise.all([
           unlockTrack(beat),
           unlockTrack(acap),
           jumpPool[0] ? unlockTrack(jumpPool[0]) : Promise.resolve(),
         ]);
-      } else {
-        // Kick HTML très court (playsInline) sans await long
-        Promise.all([
-          unlockTrack(beat),
-          unlockTrack(acap),
-        ]).catch(() => {});
       }
       if (musicMuted || sfxMuted) applyMuteLevels();
     }
@@ -7572,6 +7672,7 @@ on</button>
       updateCityAmbience,
       tickPlaySiren,
       resetPlaySirenTimer,
+      softResume,
       jump() { playGroundJumpBip(); },
       doubleJump() { playJumpSfx(); },
       footstep(speed01) { playFootstep(speed01); },
@@ -7902,7 +8003,8 @@ on</button>
     }
     if (state !== "play") return;
     if (el.shop && !el.shop.classList.contains("hidden")) return;
-    AudioFX.unlock();
+    // Pas de unlock() ici : le kick HTML à chaque tap coupe la musique sur iOS
+    try { AudioFX.softResume(); } catch (_) {}
     for (let i = 0; i < e.changedTouches.length; i++) {
       const t = e.changedTouches[i];
       if (stickTouchId == null && touchInZone(t, stickZone)) {
