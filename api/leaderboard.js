@@ -1,18 +1,16 @@
 /**
- * Classement partagé 92 Rush — merge gossip + identité IP.
- * GET  → { scores, me: { name, entry } | null }
- * POST → body { scores, name? } → merge + lie le pseudo à l’IP → { scores, me }
+ * Classement partagé 92 Rush — merge gossip + identité APPAREIL.
+ * GET  → ?deviceId=… → { scores, me }
+ * POST → { scores, name?, deviceId? } → merge + lie le pseudo à l’appareil
  *
- * L’IP est stockée en hash (jamais en clair). Les entrées portent `hid`
- * pour reconstruire le lien IP ↔ pseudo même après un cold start (gossip).
+ * Un téléphone = un deviceId (localStorage). Jamais d’IP → pseudo
+ * (sinon toute une classe derrière le même Wi‑Fi partage le même compte).
  */
 
-const crypto = require("crypto");
-
 const MAX = 40;
-/** Incrémenter pour wipe classement + liaisons IP (reset global). */
+/** Saison scores (inchangée) ; map appareils séparée pour oublier les vieux liens IP. */
 const SEASON = 2;
-const BLOB_PATHNAME = "hds92-leaderboard-s" + SEASON + ".json";
+const BLOB_PATHNAME = "hds92-leaderboard-s" + SEASON + "-dev.json";
 
 function rank(a, b) {
   if (!!a.win !== !!b.win) return a.win ? -1 : 1;
@@ -22,24 +20,13 @@ function rank(a, b) {
   return (a.timeMs | 0) - (b.timeMs | 0);
 }
 
-function clientIp(req) {
-  const xf = req.headers["x-forwarded-for"];
-  if (typeof xf === "string" && xf.trim()) return xf.split(",")[0].trim();
-  if (Array.isArray(xf) && xf[0]) return String(xf[0]).split(",")[0].trim();
-  const real = req.headers["x-real-ip"];
-  if (real) return String(real).trim();
-  return String((req.socket && req.socket.remoteAddress) || "").trim();
-}
-
-function ipHash(ip) {
-  if (!ip) return "";
-  const salt = process.env.HDS92_IP_SALT || "hds92-rush-92";
-  return crypto.createHash("sha256").update(salt + "|" + ip).digest("hex").slice(0, 32);
+function cleanDeviceId(raw) {
+  const id = String(raw || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+  return id.length >= 8 ? id : "";
 }
 
 function cleanEntry(e) {
   if (!e || typeof e !== "object") return null;
-  // Ignore tout l’ancien classement (avant reset saison)
   if ((e.season | 0) !== SEASON) return null;
   const name = String(e.name || "")
     .trim()
@@ -52,9 +39,10 @@ function cleanEntry(e) {
   const win = !!e.win;
   const at = Math.max(0, e.at | 0) || Date.now();
   const id = String(e.id || name.toLowerCase() + "_" + at).slice(0, 64);
-  const hid = String(e.hid || "").replace(/[^a-f0-9]/gi, "").slice(0, 32);
+  const did = cleanDeviceId(e.did);
   const out = { id, name, timeMs, meters, cams, win, at, season: SEASON };
-  if (hid) out.hid = hid.toLowerCase();
+  if (did) out.did = did;
+  // Ancien champ hid (= hash IP) volontairement ignoré
   return out;
 }
 
@@ -67,8 +55,8 @@ function mergeBoards(a, b) {
     const prev = byName.get(key);
     if (!prev || rank(e, prev) < 0) {
       byName.set(key, e);
-    } else if (prev && e.hid && !prev.hid) {
-      prev.hid = e.hid;
+    } else if (prev && e.did && !prev.did) {
+      prev.did = e.did;
       byName.set(key, prev);
     }
   }
@@ -76,20 +64,24 @@ function mergeBoards(a, b) {
 }
 
 function getMem() {
-  const key = "__HDS92_STORE_S" + SEASON;
+  const key = "__HDS92_STORE_S" + SEASON + "_DEV";
   if (!globalThis[key]) {
-    globalThis[key] = { scores: [], players: Object.create(null), season: SEASON };
+    globalThis[key] = {
+      scores: [],
+      devices: Object.create(null), // deviceId → { name, at }
+      season: SEASON,
+    };
   }
   return globalThis[key];
 }
 
-function rebuildPlayersFromScores(scores, players) {
-  const map = players && typeof players === "object" ? { ...players } : Object.create(null);
+function rebuildDevicesFromScores(scores, devices) {
+  const map = devices && typeof devices === "object" ? { ...devices } : Object.create(null);
   for (const e of scores || []) {
-    if (!e || !e.hid || !e.name) continue;
-    const prev = map[e.hid];
+    if (!e || !e.did || !e.name) continue;
+    const prev = map[e.did];
     if (!prev || (e.at | 0) >= (prev.at | 0)) {
-      map[e.hid] = { name: e.name, at: e.at | 0 || Date.now() };
+      map[e.did] = { name: e.name, at: e.at | 0 || Date.now() };
     }
   }
   return map;
@@ -114,9 +106,12 @@ async function loadPersist() {
     if (res.ok) {
       const data = await res.json();
       const scores = mergeBoards(data.scores || [], mem.scores || []);
-      const players = rebuildPlayersFromScores(scores, data.players || mem.players);
+      const devices = rebuildDevicesFromScores(
+        scores,
+        data.devices || mem.devices
+      );
       mem.scores = scores;
-      mem.players = players;
+      mem.devices = devices;
     }
   } catch (_) {}
   mem._loaded = true;
@@ -132,7 +127,7 @@ function schedulePersist(mem) {
     persistTimer = null;
     const body = JSON.stringify({
       scores: mem.scores || [],
-      players: mem.players || {},
+      devices: mem.devices || {},
       at: Date.now(),
     });
     fetch("https://blob.vercel-storage.com/" + BLOB_PATHNAME, {
@@ -150,29 +145,37 @@ function schedulePersist(mem) {
   }, 250);
 }
 
-function resolveMe(mem, hid) {
-  if (!hid) return null;
-  const bind = mem.players && mem.players[hid];
+function resolveMe(mem, deviceId) {
+  if (!deviceId) return null;
+  const bind = mem.devices && mem.devices[deviceId];
   let name = bind && bind.name ? String(bind.name) : "";
   if (!name) {
-    const hit = (mem.scores || []).find((e) => e && e.hid === hid);
+    const hit = (mem.scores || []).find((e) => e && e.did === deviceId);
     if (hit) name = hit.name;
   }
   if (!name) return null;
   const entry =
     (mem.scores || []).find((e) => e.name.toLowerCase() === name.toLowerCase()) || null;
-  return { name, entry };
+  return { name, entry, deviceId };
 }
 
-function bindPlayer(mem, hid, name) {
-  if (!hid || !name) return;
-  mem.players[hid] = { name, at: Date.now() };
-  // Tamponne le hash IP sur l’entrée du pseudo (pour gossip / cold start)
+function bindDevice(mem, deviceId, name) {
+  if (!deviceId || !name) return;
+  mem.devices[deviceId] = { name, at: Date.now() };
   const key = name.toLowerCase();
   mem.scores = (mem.scores || []).map((e) => {
     if (e.name.toLowerCase() !== key) return e;
-    return { ...e, hid };
+    return { ...e, did: deviceId };
   });
+}
+
+function readDeviceId(req, body) {
+  if (body && body.deviceId) return cleanDeviceId(body.deviceId);
+  try {
+    const q = req.query && req.query.deviceId;
+    if (q) return cleanDeviceId(q);
+  } catch (_) {}
+  return "";
 }
 
 module.exports = async function handler(req, res) {
@@ -186,13 +189,13 @@ module.exports = async function handler(req, res) {
 
   try {
     const mem = await loadPersist();
-    const hid = ipHash(clientIp(req));
 
     if (req.method === "GET") {
-      mem.players = rebuildPlayersFromScores(mem.scores, mem.players);
+      const deviceId = readDeviceId(req, null);
+      mem.devices = rebuildDevicesFromScores(mem.scores, mem.devices);
       res.status(200).json({
         scores: mem.scores || [],
-        me: resolveMe(mem, hid),
+        me: resolveMe(mem, deviceId),
         season: SEASON,
       });
       return;
@@ -203,30 +206,34 @@ module.exports = async function handler(req, res) {
       if (typeof body === "string") {
         try { body = JSON.parse(body); } catch (_) { body = {}; }
       }
+      const deviceId = readDeviceId(req, body);
       const incoming = (body && body.scores) || [];
       const claimName = String((body && body.name) || "")
         .trim()
         .slice(0, 20)
         .replace(/[<>&"']/g, "");
 
-      // Les scores envoyés par ce client héritent du hash IP si c’est son pseudo
       const stamped = (Array.isArray(incoming) ? incoming : []).map((raw) => {
         const e = cleanEntry(raw);
         if (!e) return null;
-        if (hid && claimName && e.name.toLowerCase() === claimName.toLowerCase()) {
-          e.hid = hid;
+        if (
+          deviceId
+          && claimName
+          && e.name.toLowerCase() === claimName.toLowerCase()
+        ) {
+          e.did = deviceId;
         }
         return e;
       }).filter(Boolean);
 
       mem.scores = mergeBoards(mem.scores, stamped);
-      if (hid && claimName) bindPlayer(mem, hid, claimName);
-      mem.players = rebuildPlayersFromScores(mem.scores, mem.players);
+      if (deviceId && claimName) bindDevice(mem, deviceId, claimName);
+      mem.devices = rebuildDevicesFromScores(mem.scores, mem.devices);
       schedulePersist(mem);
 
       res.status(200).json({
         scores: mem.scores,
-        me: resolveMe(mem, hid),
+        me: resolveMe(mem, deviceId),
         season: SEASON,
       });
       return;

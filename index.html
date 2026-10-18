@@ -5001,6 +5001,7 @@ on</button>
   const ADMIN_KEY = "hds92_admin_v1";
   const PSEUDO_KEY = "hds92_pseudo_v2"; // reset global saison 2
   const BOARD_KEY = "hds92_board_v2";
+  const DEVICE_KEY = "hds92_device_v1"; // 1 téléphone = 1 id (jamais l’IP)
   const BOARD_API = "/api/leaderboard";
   const BOARD_MAX = 40;
   const BOARD_SEASON = 2;
@@ -8182,12 +8183,32 @@ on</button>
     return (a.timeMs | 0) - (b.timeMs | 0);
   }
 
+  function getDeviceId() {
+    try {
+      let id = String(localStorage.getItem(DEVICE_KEY) || "").replace(/[^a-zA-Z0-9_-]/g, "");
+      if (id.length >= 16) return id.slice(0, 64);
+      id = "";
+      try {
+        if (crypto && crypto.randomUUID) id = crypto.randomUUID().replace(/-/g, "");
+      } catch (_) {}
+      if (id.length < 16) {
+        id = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12)
+          + Math.random().toString(36).slice(2, 12);
+      }
+      id = id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+      localStorage.setItem(DEVICE_KEY, id);
+      return id;
+    } catch (_) {
+      return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    }
+  }
+
   function cleanBoardEntry(e) {
     if (!e || typeof e !== "object") return null;
     const name = String(e.name || "").trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!name) return null;
     if ((e.season | 0) !== BOARD_SEASON) return null;
-    const hid = String(e.hid || "").replace(/[^a-f0-9]/gi, "").slice(0, 32).toLowerCase();
+    const did = String(e.did || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
     const out = {
       id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
       name,
@@ -8198,17 +8219,22 @@ on</button>
       at: Math.max(0, e.at | 0) || Date.now(),
       season: BOARD_SEASON,
     };
-    if (hid) out.hid = hid;
+    if (did.length >= 8) out.did = did;
     return out;
   }
 
-  /** Restaure le pseudo depuis l’identité IP renvoyée par l’API */
-  function applyBoardMe(me, { force } = {}) {
+  /**
+   * Restaure le pseudo uniquement pour CET appareil (deviceId).
+   * Ne jamais écraser un pseudo local différent (évite le vol entre potes même Wi‑Fi).
+   */
+  function applyBoardMe(me) {
     if (!me || !me.name) return false;
     const remote = String(me.name).trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!remote) return false;
+    const myDid = getDeviceId();
+    if (me.deviceId && me.deviceId !== myDid) return false;
     const local = playerPseudo || loadPseudo();
-    if (local && !force) return false;
+    if (local) return false; // le téléphone a déjà son pseudo
     savePseudo(remote);
     refreshBoardUI();
     return true;
@@ -8270,43 +8296,54 @@ on</button>
 
   async function syncBoardRemote() {
     const name = playerPseudo || loadPseudo();
+    const deviceId = getDeviceId();
     try {
       const res = await fetch(BOARD_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scores: boardCache, name: name || undefined }),
+        body: JSON.stringify({
+          scores: boardCache,
+          name: name || undefined,
+          deviceId,
+        }),
       });
       if (!res.ok) throw new Error("board");
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
         saveBoardLocal(mergeBoardLists(boardCache, data.scores));
       }
-      applyBoardMe(data && data.me, { force: false });
+      applyBoardMe(data && data.me);
     } catch (_) {
       try {
-        const res = await fetch(BOARD_API);
+        const res = await fetch(
+          BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
+          { cache: "no-store" }
+        );
         if (!res.ok) return;
         const data = await res.json();
         if (data && Array.isArray(data.scores)) {
           saveBoardLocal(mergeBoardLists(boardCache, data.scores));
         }
-        applyBoardMe(data && data.me, { force: false });
+        applyBoardMe(data && data.me);
       } catch (_) {}
     }
     refreshBoardUI();
   }
 
-  /** Au chargement : récupère le compte lié à l’IP (pseudo + scores) */
-  async function restoreIdentityFromIp() {
+  /** Au chargement : pseudo de CET appareil seulement (pas l’IP / Wi‑Fi partagé) */
+  async function restoreIdentityFromDevice() {
     try {
-      const res = await fetch(BOARD_API, { method: "GET", cache: "no-store" });
+      const deviceId = getDeviceId();
+      const res = await fetch(
+        BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
+        { method: "GET", cache: "no-store" }
+      );
       if (!res.ok) return;
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
         saveBoardLocal(mergeBoardLists(boardCache, data.scores));
       }
-      // Pas de pseudo local → on reprend celui déjà lié à cette IP
-      applyBoardMe(data && data.me, { force: !loadPseudo() });
+      applyBoardMe(data && data.me);
       refreshBoardUI();
     } catch (_) {}
   }
@@ -8327,6 +8364,7 @@ on</button>
       win: !!win,
       at: Date.now(),
       season: BOARD_SEASON,
+      did: getDeviceId(),
     };
     const improvedBoard = !prevEntry || boardRank(entry, prevEntry) < 0;
     saveBoardLocal(mergeBoardLists(boardCache, [entry]));
@@ -8514,9 +8552,10 @@ on</button>
     }
     loadBoardLocal();
     refreshBoardUI();
-    // 1) restaure le compte IP si le navigateur a perdu le pseudo
-    // 2) puis sync gossip + reclame le pseudo courant pour cette IP
-    restoreIdentityFromIp().finally(() => { syncBoardRemote(); });
+    // 1) restaure le pseudo de CET appareil seulement
+    // 2) sync classement (sans jamais coller le pseudo d’un autre téléphone)
+    getDeviceId();
+    restoreIdentityFromDevice().finally(() => { syncBoardRemote(); });
     if (el.btnPseudoSave) {
       el.btnPseudoSave.addEventListener("click", (e) => {
         e.preventDefault();
