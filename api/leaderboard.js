@@ -10,7 +10,9 @@
 const crypto = require("crypto");
 
 const MAX = 40;
-const BLOB_PATHNAME = "hds92-leaderboard.json";
+/** Incrémenter pour wipe classement + liaisons IP (reset global). */
+const SEASON = 2;
+const BLOB_PATHNAME = "hds92-leaderboard-s" + SEASON + ".json";
 
 function rank(a, b) {
   if (!!a.win !== !!b.win) return a.win ? -1 : 1;
@@ -37,6 +39,8 @@ function ipHash(ip) {
 
 function cleanEntry(e) {
   if (!e || typeof e !== "object") return null;
+  // Ignore tout l’ancien classement (avant reset saison)
+  if ((e.season | 0) !== SEASON) return null;
   const name = String(e.name || "")
     .trim()
     .slice(0, 20)
@@ -49,7 +53,7 @@ function cleanEntry(e) {
   const at = Math.max(0, e.at | 0) || Date.now();
   const id = String(e.id || name.toLowerCase() + "_" + at).slice(0, 64);
   const hid = String(e.hid || "").replace(/[^a-f0-9]/gi, "").slice(0, 32);
-  const out = { id, name, timeMs, meters, cams, win, at };
+  const out = { id, name, timeMs, meters, cams, win, at, season: SEASON };
   if (hid) out.hid = hid.toLowerCase();
   return out;
 }
@@ -72,10 +76,11 @@ function mergeBoards(a, b) {
 }
 
 function getMem() {
-  if (!globalThis.__HDS92_STORE) {
-    globalThis.__HDS92_STORE = { scores: [], players: Object.create(null) };
+  const key = "__HDS92_STORE_S" + SEASON;
+  if (!globalThis[key]) {
+    globalThis[key] = { scores: [], players: Object.create(null), season: SEASON };
   }
-  return globalThis.__HDS92_STORE;
+  return globalThis[key];
 }
 
 function rebuildPlayersFromScores(scores, players) {
@@ -185,7 +190,11 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET") {
       mem.players = rebuildPlayersFromScores(mem.scores, mem.players);
-      res.status(200).json({ scores: mem.scores || [], me: resolveMe(mem, hid) });
+      res.status(200).json({
+        scores: mem.scores || [],
+        me: resolveMe(mem, hid),
+        season: SEASON,
+      });
       return;
     }
 
@@ -215,13 +224,22 @@ module.exports = async function handler(req, res) {
       mem.players = rebuildPlayersFromScores(mem.scores, mem.players);
       schedulePersist(mem);
 
-      res.status(200).json({ scores: mem.scores, me: resolveMe(mem, hid) });
+      res.status(200).json({
+        scores: mem.scores,
+        me: resolveMe(mem, hid),
+        season: SEASON,
+      });
       return;
     }
 
     res.status(405).json({ error: "method" });
   } catch (err) {
     const mem = getMem();
-    res.status(500).json({ error: "server", scores: mem.scores || [], me: null });
+    res.status(500).json({
+      error: "server",
+      scores: mem.scores || [],
+      me: null,
+      season: SEASON,
+    });
   }
 };

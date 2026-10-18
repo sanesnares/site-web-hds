@@ -4829,10 +4829,11 @@ on</button>
   const SOUND_TIP_KEY = "hds92_sound_tip_v1";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
-  const PSEUDO_KEY = "hds92_pseudo_v1";
-  const BOARD_KEY = "hds92_board_v1";
+  const PSEUDO_KEY = "hds92_pseudo_v2"; // reset global saison 2
+  const BOARD_KEY = "hds92_board_v2";
   const BOARD_API = "/api/leaderboard";
   const BOARD_MAX = 40;
+  const BOARD_SEASON = 2;
   const ADMIN_PIN = "4889";
   let adminMode = false;
   try { adminMode = localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) {}
@@ -7984,6 +7985,7 @@ on</button>
     if (!e || typeof e !== "object") return null;
     const name = String(e.name || "").trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!name) return null;
+    if ((e.season | 0) !== BOARD_SEASON) return null;
     const hid = String(e.hid || "").replace(/[^a-f0-9]/gi, "").slice(0, 32).toLowerCase();
     const out = {
       id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
@@ -7993,6 +7995,7 @@ on</button>
       cams: Math.max(0, e.cams | 0),
       win: !!e.win,
       at: Math.max(0, e.at | 0) || Date.now(),
+      season: BOARD_SEASON,
     };
     if (hid) out.hid = hid;
     return out;
@@ -8118,6 +8121,7 @@ on</button>
       cams: camCount | 0,
       win: !!win,
       at: Date.now(),
+      season: BOARD_SEASON,
     };
     saveBoardLocal(mergeBoardLists(boardCache, [entry]));
     refreshBoardUI();
@@ -8187,6 +8191,11 @@ on</button>
   }
 
   function initPlayerIdentity() {
+    // Purge anciennes clés (reset saison) pour ne pas regossip les vieux scores
+    try {
+      localStorage.removeItem("hds92_pseudo_v1");
+      localStorage.removeItem("hds92_board_v1");
+    } catch (_) {}
     playerPseudo = loadPseudo();
     if (el.pseudoInput) {
       el.pseudoInput.value = playerPseudo;
@@ -9634,18 +9643,36 @@ on</button>
     });
   }
 
-  /** Vérifie qu’un x n’est pas trop près d’un trou (bord de sol). */
-  function gapClearance(x, minDist) {
-    const grounds = platforms.filter((p) => p.type === "ground");
-    for (const g of grounds) {
-      const left = g.x;
-      const right = g.x + g.w;
-      // bord droit du segment (début de trou)
-      if (Math.abs(x - right) < minDist) return false;
-      // bord gauche du segment (fin de trou)
-      if (Math.abs(x - left) < minDist) return false;
+  /**
+   * Point sur terre ferme (sol type ground), avec marge aux bords de trou.
+   * Retourne x clampé sur le segment le plus proche, ou null si rien.
+   */
+  function firmGroundX(x, margin, maxSnap) {
+    const m = Math.max(12, margin == null ? 48 : margin);
+    const snap = maxSnap == null ? 280 : maxSnap;
+    const grounds = platforms.filter((p) => p && p.type === "ground" && p.w > m * 2 + 8);
+    let best = null;
+    let bestD = 1e9;
+    for (let i = 0; i < grounds.length; i++) {
+      const g = grounds[i];
+      const left = g.x + m;
+      const right = g.x + g.w - m;
+      if (right <= left) continue;
+      const clamped = Math.max(left, Math.min(right, x));
+      const d = Math.abs(clamped - x);
+      if (d < bestD) {
+        bestD = d;
+        best = clamped;
+      }
     }
-    return true;
+    if (best == null || bestD > snap) return null;
+    return best;
+  }
+
+  /** True si x est déjà sur un sol assez large (pas au-dessus du vide / bord). */
+  function gapClearance(x, minDist) {
+    const fx = firmGroundX(x, minDist, 0.5);
+    return fx != null;
   }
 
   function resetLevel() {
@@ -9816,17 +9843,20 @@ on</button>
     for (const [x, kind] of obs) {
       if (x > FINISH_AT - 40) continue;
       if (Math.abs(x - LE_L_MEET_X) < 320) continue;
-      if (!gapClearance(x, 160)) continue;
+      // Colle le flic sur la terre ferme (jamais au-dessus d’un trou)
+      const fx = firmGroundX(x, 72, 220);
+      if (fx == null) continue;
+      if (Math.abs(fx - LE_L_MEET_X) < 320) continue;
       const minSep = kind === "angry" ? 8 * M
-        : (x < 4000 ? 20 * M : (x < 9000 ? 16 * M : 14 * M));
-      if (placedCops.some((px) => Math.abs(px - x) < minSep)) continue;
+        : (fx < 4000 ? 20 * M : (fx < 9000 ? 16 * M : 14 * M));
+      if (placedCops.some((px) => Math.abs(px - fx) < minSep)) continue;
       // Bases un peu plus lisibles ; la croissance distance reste faible
       const h = kind === "angry" ? 64 : kind === "riot" ? 60 : kind === "crs" ? 58 : 56;
       const w = kind === "angry" ? 40 : kind === "riot" ? 38 : kind === "crs" ? 36 : 34;
       obstacles.push({
-        x, y: GROUND_Y - h, w, h, kind,
+        x: fx, y: GROUND_Y - h, w, h, kind,
         baseW: w, baseH: h,
-        homeX: x,
+        homeX: fx,
         _flicHeard: false, _alertT: 0, _faceDir: -1, _faceTurnT: 0,
         _scale: 1,
         _spent: false,
@@ -9836,7 +9866,7 @@ on</button>
         _angryDash: false,
         _angryParked: false,
       });
-      placedCops.push(x);
+      placedCops.push(fx);
     }
 
     // Boss inévitable à ~920 m (mur vivant juste avant l’arrivée)
@@ -10127,21 +10157,56 @@ on</button>
         c.x = p.x + (c.platOffX != null ? c.platOffX : Math.max(4, (p.w - c.w) * 0.5));
 
         const mid = p.x + p.w * 0.5;
+        // Priorité : sol ferme sous / près de la plateforme scooter (pas le vide)
+        const preferXs = [
+          mid,
+          p.x + p.w * 0.35,
+          p.x + p.w * 0.65,
+          p.x + 24,
+          p.x + p.w - 24,
+          mid - 80,
+          mid + 80,
+        ];
+        let solidX = null;
+        for (let pi = 0; pi < preferXs.length; pi++) {
+          const fx = firmGroundX(preferXs[pi], 56, 160);
+          if (fx != null) { solidX = fx; break; }
+        }
+        if (solidX == null) solidX = firmGroundX(mid, 40, 320);
+        if (solidX == null) continue; // pas de flic volant au-dessus du trou
+
         let best = null;
         let bestD = 1e9;
         for (let oi = 0; oi < obstacles.length; oi++) {
           const o = obstacles[oi];
           if (!o || o.kind === "boss" || o.kind === "angry") continue;
-          const d = Math.abs(o.x + o.w * 0.5 - mid);
+          if (o._scooterAssist) continue;
+          const d = Math.abs(o.x + o.w * 0.5 - solidX);
           if (d < bestD) { bestD = d; best = o; }
         }
 
         const placeAssistCop = (o) => {
-          const nx = mid - o.w * 0.55;
-          o.x = nx;
-          o.homeX = nx;
+          const nx = firmGroundX(solidX - o.w * 0.5, 48, 120);
+          const useX = nx != null ? nx : solidX;
+          o.x = useX;
+          o.homeX = useX;
           o.y = GROUND_Y - o.h;
           o._scooterAssist = true;
+          // Bornes = segment de sol qui porte le flic (pas de marche dans le vide)
+          let lo = useX - 40;
+          let hi = useX + 40;
+          const grounds = platforms.filter((g) => g && g.type === "ground");
+          for (let gi = 0; gi < grounds.length; gi++) {
+            const g = grounds[gi];
+            const pad = 48;
+            if (useX >= g.x + pad && useX <= g.x + g.w - pad) {
+              lo = g.x + pad;
+              hi = g.x + g.w - pad;
+              break;
+            }
+          }
+          o._firmMinX = lo;
+          o._firmMaxX = Math.max(lo, hi);
           o._alertT = Math.max(o._alertT || 0, 0.4);
         };
 
@@ -10150,11 +10215,10 @@ on</button>
         } else {
           const h = 56;
           const w = 34;
-          const nx = mid - w * 0.55;
           const o = {
-            x: nx, y: GROUND_Y - h, w, h, kind: "cop",
+            x: solidX, y: GROUND_Y - h, w, h, kind: "cop",
             baseW: w, baseH: h,
-            homeX: nx,
+            homeX: solidX,
             _flicHeard: false, _alertT: 0.5, _faceDir: -1, _faceTurnT: 0,
             _scale: 1,
             _spent: false,
@@ -10165,6 +10229,7 @@ on</button>
             _angryParked: false,
             _scooterAssist: true,
           };
+          placeAssistCop(o);
           obstacles.push(o);
         }
         assistDone++;
@@ -13782,17 +13847,25 @@ on</button>
         const cx = o.x + o.w * 0.5;
         const passed = player.x > o.x + o.w * 0.35;
         o._faceDir = px < cx ? -1 : 1;
+        const home = o.homeX != null ? o.homeX : o.x;
+        const firmLo = o._firmMinX != null ? o._firmMinX : home - 40;
+        const firmHi = o._firmMaxX != null ? o._firmMaxX : home + 40;
         if (!passed && px < cx && cx - px < 480) {
-          // Approche : avance légèrement vers le joueur (reste sous la plateforme)
+          // Approche : avance légèrement vers le joueur (reste sur terre ferme)
           o._alertT = Math.max(o._alertT || 0, 0.7);
-          const minX = (o.homeX != null ? o.homeX : o.x) - 110;
+          const minX = Math.max(firmLo, home - 110);
           o.x = Math.max(minX, o.x - 32 * dt);
         } else if (passed && px - cx < 220) {
           // Dépassé : suit un tout petit peu puis se recolle
-          o.x = Math.min((o.homeX != null ? o.homeX : o.x) + 36, o.x + 18 * dt);
+          const maxX = Math.min(firmHi, home + 36);
+          o.x = Math.min(maxX, o.x + 18 * dt);
         } else {
-          o.x += ((o.homeX != null ? o.homeX : o.x) - o.x) * Math.min(1, 1.1 * dt);
+          o.x += (home - o.x) * Math.min(1, 1.1 * dt);
         }
+        // Filet : jamais au-dessus du vide
+        const snapped = firmGroundX(o.x, 36, 80);
+        if (snapped != null) o.x = snapped;
+        else o.x = Math.max(firmLo, Math.min(firmHi, o.x));
         o.y = GROUND_Y - o.h;
         continue;
       }
