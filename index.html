@@ -2303,28 +2303,23 @@
     }
     html.phone-portrait .jumps label { font-size: 9px; }
 
-    /*
-      Mute mobile portrait : toujours en haut à droite (safe area),
-      hors stick / saut / HUD — zones tactiles larges.
-    */
-    html.phone-portrait .audio-btns,
-    html.phone-portrait:not(.play-ui) .audio-btns,
-    html.phone-portrait.play-ui .audio-btns {
-      left: auto;
-      right: max(12px, env(safe-area-inset-right));
-      top: max(12px, env(safe-area-inset-top));
-      bottom: auto;
+    /* Mute mobile : bas-gauche, compact — jamais en jeu (seulement menus / pause) */
+    html.phone-portrait .audio-btns {
+      left: max(10px, env(safe-area-inset-left));
+      right: auto;
+      top: auto;
+      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
       flex-direction: row;
-      gap: 8px;
+      gap: 6px;
       transform: none;
-      z-index: 80; /* au-dessus overlays (fin / pause) — jamais sous Rejouer */
+      z-index: 70;
       pointer-events: auto;
     }
     html.phone-portrait .btn-mute {
-      width: 52px;
-      height: 52px;
-      min-width: 52px;
-      font-size: 8px;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      font-size: 6.5px;
       pointer-events: auto;
       touch-action: manipulation;
     }
@@ -2393,14 +2388,14 @@
     html.phone-portrait #start-screen .wait-ui {
       touch-action: pan-y;
     }
-    /* Pause / boutique : centrés dans la zone safe */
+    /* Pause / boutique : centrés ; place basse pour mutes (pas de radio) */
     html.phone-portrait #pause-screen {
       justify-content: safe center;
       align-items: center;
       padding:
         max(28px, calc(env(safe-area-inset-top, 0px) + 22px))
         16px
-        max(88px, calc(env(safe-area-inset-bottom, 0px) + 72px)); /* place radio bas */
+        max(56px, calc(env(safe-area-inset-bottom, 0px) + 48px)); /* place mutes bas */
       box-sizing: border-box;
       overflow-x: hidden;
       overflow-y: auto;
@@ -2411,15 +2406,15 @@
       Écran de fin mobile :
       — texte centré en haut / milieu
       — Rejouer / Boutique ancrés bas (zone pouces)
-      — mute reste en haut à droite (z-index 70) : pas de chevauchement
+      — mutes compactes en bas-gauche (pas de radio / pas de haut-droite)
     */
     html.phone-portrait #end-screen {
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(72px, calc(env(safe-area-inset-top, 0px) + 68px)) /* sous mute + radio */
+        max(28px, calc(env(safe-area-inset-top, 0px) + 22px))
         16px
-        max(18px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+        max(56px, calc(env(safe-area-inset-bottom, 0px) + 48px));
       box-sizing: border-box;
       overflow-x: hidden;
       overflow-y: auto;
@@ -2481,9 +2476,9 @@
       align-content: stretch;
       gap: 2px;
       padding:
-        max(44px, calc(env(safe-area-inset-top) + 36px)) /* sous radio + mute */
+        max(12px, calc(env(safe-area-inset-top) + 8px))
         10px
-        max(12px, env(safe-area-inset-bottom));
+        max(52px, calc(env(safe-area-inset-bottom) + 44px)); /* place mutes bas */
     }
     html.phone-portrait .wait-map {
       max-height: 18vh;
@@ -2611,14 +2606,14 @@
       height: 56px !important;
     }
 
-    /* Paysage iPhone : fin = texte à gauche/centre, actions bas ; mute reste haut-droite */
+    /* Paysage iPhone : fin = texte centre, actions bas ; mutes bas-gauche */
     html.phone-landscape #end-screen {
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(44px, calc(env(safe-area-inset-top, 0px) + 36px))
+        max(16px, calc(env(safe-area-inset-top, 0px) + 12px))
         max(16px, calc(env(safe-area-inset-right, 0px) + 12px))
-        max(10px, calc(env(safe-area-inset-bottom, 0px) + 8px))
+        max(48px, calc(env(safe-area-inset-bottom, 0px) + 40px))
         max(16px, calc(env(safe-area-inset-left, 0px) + 12px));
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -2663,8 +2658,6 @@
     html.phone-landscape .ysemo-hub__foot {
       display: none;
     }
-    html.phone-landscape .audio-btns { z-index: 80; }
-
     html.phone-landscape #shop-screen {
       justify-content: flex-start;
       touch-action: pan-y;
@@ -2689,12 +2682,12 @@
       padding: 4px 8px;
       font-size: 11px;
     }
-    /* Paysage : coin haut-droit (pouce droit / hors stick) */
+    /* Paysage : mutes bas-gauche (jamais en jeu) */
     html.phone-landscape .audio-btns {
-      left: auto;
-      right: 20px;
-      top: 20px;
-      bottom: auto;
+      left: max(10px, env(safe-area-inset-left));
+      right: auto;
+      top: auto;
+      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
       flex-direction: row;
       gap: 6px;
       z-index: 70;
@@ -2721,10 +2714,10 @@
       margin: 6px auto 2px;
     }
     html.phone-landscape .btn-mute {
-      width: 46px;
-      height: 46px;
-      min-width: 46px;
-      font-size: 7px;
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      font-size: 6.5px;
       pointer-events: auto;
     }
     html.phone-landscape #minimap {
@@ -2903,24 +2896,17 @@
       .now-radio__track,
       .now-radio__live::before { animation: none !important; }
     }
-    /* Mobile accueil : radio compacte haut-gauche (ne recouvre pas les menus) */
-    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio {
-      left: max(10px, env(safe-area-inset-left));
-      right: auto;
-      top: max(10px, env(safe-area-inset-top));
-      bottom: auto;
-      width: min(280px, 78vw);
-      padding: 4px 12px 4px 4px;
-      gap: 6px;
-      z-index: 45;
+    /*
+      Radio flottante : uniquement en jeu (bandeau bas).
+      Masquée dès qu’un CTA Listenify / hub est déjà à l’écran
+      (accueil, pause, fin, boutique).
+    */
+    html:not(.play-ui) .now-radio,
+    html.pause-ui .now-radio,
+    html.end-ui .now-radio {
+      display: none !important;
     }
-    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__disc {
-      width: 28px;
-      height: 28px;
-    }
-    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__track { font-size: 9px; }
-    html.phone-portrait:not(.play-ui):not(.pause-ui):not(.end-ui) .now-radio__live { font-size: 6px; }
-    /* En jeu : bandeau sous le canvas, centrée, cliquable (au-dessus du #touch) */
+    /* En jeu : bandeau sous le canvas, centrée, cliquable */
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio {
       left: 50%;
       right: auto;
@@ -2939,72 +2925,32 @@
     }
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio__track { font-size: 9px; }
     html.phone-portrait.play-ui:not(.pause-ui) .now-radio__live { font-size: 6px; letter-spacing: 0.16em; }
-    /* Menu fin : haut-gauche, sous les mutes */
-    html.phone-portrait.end-ui .now-radio {
-      top: max(64px, calc(env(safe-area-inset-top) + 56px));
-      bottom: auto;
-      width: min(290px, 78vw);
-      padding: 4px 12px 4px 4px;
-      gap: 6px;
-      z-index: 45;
-    }
-    html.phone-portrait.end-ui .now-radio__disc {
-      width: 28px;
-      height: 28px;
-    }
-    html.phone-portrait.end-ui .now-radio__track { font-size: 9px; }
-    html.phone-portrait.end-ui .now-radio__live { font-size: 6px; }
-    /* Pause : bas, compacte pour ne pas manger Admin / boutons */
-    html.phone-portrait.pause-ui .now-radio {
-      top: auto;
-      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
-      width: min(320px, 84vw);
-      padding: 5px 14px 5px 5px;
-      gap: 7px;
-      z-index: 45;
-    }
-    html.phone-portrait.pause-ui .now-radio__disc {
-      width: 30px;
-      height: 30px;
-    }
-    html.phone-portrait.pause-ui .now-radio__track { font-size: 10px; }
-    html.phone-portrait.pause-ui .now-radio__live { font-size: 7px; }
-    html.phone-landscape .now-radio {
+    html.phone-landscape.play-ui:not(.pause-ui) .now-radio {
       left: max(10px, env(safe-area-inset-left));
       top: auto;
       bottom: max(10px, env(safe-area-inset-bottom));
-      width: min(400px, 62vw);
-      padding: 7px 16px 7px 7px;
-    }
-    html.phone-landscape .now-radio__disc {
-      width: 40px;
-      height: 40px;
-    }
-    html.phone-landscape.end-ui .now-radio {
-      /* fin paysage : reste en bas à gauche (déjà le cas) */
-      bottom: max(10px, env(safe-area-inset-bottom));
-    }
-    html.phone-landscape.pause-ui .now-radio {
-      bottom: max(10px, env(safe-area-inset-bottom));
-    }
-    html.platform-desktop .now-radio {
-      bottom: max(16px, env(safe-area-inset-bottom));
-      width: min(420px, 38vw);
-      padding: 8px 18px 8px 8px;
-      z-index: 56;
-    }
-    /* Desktop en jeu : radio visible mais ne vole pas les clics UI */
-    html.platform-desktop.play-ui .now-radio {
-      z-index: 14;
-      pointer-events: none;
-    }
-    /* Mobile paysage en jeu : radio cliquable */
-    html.phone-landscape.play-ui:not(.pause-ui) .now-radio {
+      width: min(280px, 48vw);
+      padding: 5px 12px 5px 5px;
       z-index: 18;
       pointer-events: auto;
     }
+    html.phone-landscape.play-ui:not(.pause-ui) .now-radio__disc {
+      width: 32px;
+      height: 32px;
+    }
+    html.platform-desktop.play-ui:not(.pause-ui) .now-radio {
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: min(360px, 32vw);
+      padding: 6px 14px 6px 6px;
+      z-index: 14;
+      pointer-events: none;
+    }
+    html.platform-desktop.play-ui:not(.pause-ui) .now-radio__disc {
+      width: 32px;
+      height: 32px;
+    }
 
-    /* —— Mute (toujours au-dessus : menu / jeu / GO / boutique) —— */
+    /* —— Mute : menus + pause uniquement (jamais pendant le run) —— */
     .audio-btns {
       position: absolute;
       z-index: 60;
@@ -3015,43 +2961,38 @@
       gap: 6px;
       pointer-events: none;
     }
-
-    /* Desktop menus : haut-droite (évite le hub / carte) */
-    html.platform-desktop:not(.play-ui) .audio-btns {
-      left: auto;
-      right: 20px;
-      top: 20px;
-      bottom: auto;
-      flex-direction: row;
-      gap: 8px;
-      transform: none;
-      z-index: 70;
-      pointer-events: auto;
+    /* En jeu actif : totalement masqués */
+    html.play-ui:not(.pause-ui) .audio-btns {
+      display: none !important;
     }
-    /* Desktop en jeu : bas-gauche, juste au-dessus de la radio */
-    html.platform-desktop.play-ui .audio-btns {
-      left: max(14px, env(safe-area-inset-left));
+    /* Pause / menus / fin : bas-gauche, compacts */
+    html.pause-ui .audio-btns,
+    html:not(.play-ui) .audio-btns,
+    html.end-ui .audio-btns {
+      display: flex;
+      left: max(10px, env(safe-area-inset-left));
       right: auto;
       top: auto;
-      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px);
+      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
       flex-direction: row;
-      gap: 8px;
+      gap: 6px;
       transform: none;
       z-index: 70;
       pointer-events: auto;
     }
     html.platform-desktop .btn-mute {
-      width: 52px;
-      height: 52px;
-      min-width: 52px;
-      font-size: 8px;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      font-size: 6.5px;
       pointer-events: auto;
     }
-    html.platform-desktop.play-ui .btn-mute {
-      width: 48px;
-      height: 48px;
-      min-width: 48px;
-      font-size: 7.5px;
+    html.pause-ui .btn-mute,
+    html:not(.play-ui) .btn-mute {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      font-size: 6.5px;
     }
 
     /* Desktop accueil : colonne gauche plus compacte + scroll si besoin */
@@ -3217,15 +3158,15 @@
 
     @media (hover: none) and (pointer: coarse) {
       .audio-btns {
-        bottom: max(10px, env(safe-area-inset-bottom));
+        bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
         gap: 5px;
       }
       .btn-mute {
-        width: 48px;
-        height: 48px;
-        min-width: 48px;
-        font-size: 7px;
-        padding: 3px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        font-size: 6.5px;
+        padding: 2px;
       }
     }
 
@@ -4388,9 +4329,9 @@
     </a>
 
     <div class="audio-btns">
-      <button class="btn-mute" id="btn-music" type="button" aria-label="Musique">musique
+      <button class="btn-mute" id="btn-music" type="button" aria-label="Musique">♪
 on</button>
-      <button class="btn-mute" id="btn-sfx" type="button" aria-label="Sons">son
+      <button class="btn-mute" id="btn-sfx" type="button" aria-label="Sons">FX
 on</button>
     </div>
     <button class="btn-pause" id="btn-pause" type="button" aria-label="Pause" title="Pause (P / Échap)">❚❚</button>
@@ -4869,8 +4810,8 @@ on</button>
   const MAX_RUN_SHOES = 340;
   const AIR_CTRL = 0.8;
   const PX_PER_METER = 18; // compteur m (était 12 → ~1,5× plus lent)
-  const FINISH_METERS = 930; // arrivée = table + win (ligne au sol au même jalon)
-  const TABLE_METERS = 930;
+  const FINISH_METERS = 920; // arrivée = table + win (ligne au sol au même jalon)
+  const TABLE_METERS = 920;
   const ROCKET_START_METERS = 500; // roquettes seulement après ce jalon
   const METRO_AT_METERS = 800;     // métro aérien : traverse 800 → 900 m
   const METRO_SPAN_METERS = 100;
@@ -10057,7 +9998,7 @@ on</button>
     // Garde-fou : la ligne d’arrivée reste exactement à FINISH_METERS
     finishX = FINISH_AT;
 
-    // Table de fin (~930 m) + PNJ Fleche juste après (face à la table)
+    // Table de fin (920 m) + PNJ Fleche juste après (face à la table)
     {
       const tw = 112;
       const th = 84;
@@ -15600,13 +15541,13 @@ on</button>
     if (el.btnMusic) {
       const off = AudioFX.isMusicMuted();
       el.btnMusic.classList.toggle("muted", off);
-      el.btnMusic.textContent = off ? "musique\noff" : "musique\non";
+      el.btnMusic.textContent = off ? "♪\noff" : "♪\non";
       el.btnMusic.setAttribute("aria-label", off ? "Activer la musique" : "Couper la musique");
     }
     if (el.btnSfx) {
       const off = AudioFX.isSfxMuted();
       el.btnSfx.classList.toggle("muted", off);
-      el.btnSfx.textContent = off ? "son\noff" : "son\non";
+      el.btnSfx.textContent = off ? "FX\noff" : "FX\non";
       el.btnSfx.setAttribute("aria-label", off ? "Activer les sons" : "Couper les sons");
     }
     if (el.nowRadio) {
