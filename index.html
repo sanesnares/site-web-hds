@@ -312,8 +312,8 @@
     }
     .board-list li {
       display: grid;
-      grid-template-columns: 22px 1fr auto;
-      gap: 6px;
+      grid-template-columns: 22px minmax(0, 1fr) 14px auto;
+      gap: 4px 6px;
       align-items: baseline;
       font-size: 12px;
       line-height: 1.35;
@@ -322,6 +322,13 @@
       color: rgba(220, 230, 240, 0.9);
     }
     .board-list li:last-child { border-bottom: 0; }
+    .board-list li.board-climbed {
+      animation: board-climb-row 0.75s ease-out;
+    }
+    @keyframes board-climb-row {
+      0% { background: rgba(60, 255, 160, 0.22); transform: translateY(6px); }
+      100% { background: transparent; transform: translateY(0); }
+    }
     .board-list .rk {
       font-family: var(--font-arcade);
       font-size: 10px;
@@ -334,11 +341,32 @@
       white-space: nowrap;
     }
     .board-list .nm.is-you { color: #ffe566; }
+    .board-list .rise {
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      color: #3dff9a;
+      text-shadow: 0 0 8px rgba(61, 255, 154, 0.55);
+      opacity: 0;
+      text-align: center;
+    }
+    .board-list .rise.on {
+      opacity: 1;
+      animation: board-rise-pulse 1.05s ease-in-out infinite;
+    }
+    @keyframes board-rise-pulse {
+      0%, 100% { transform: translateY(0); opacity: 0.85; }
+      50% { transform: translateY(-2px); opacity: 1; }
+    }
     .board-list .meta {
       font-variant-numeric: tabular-nums;
       font-size: 11px;
       color: rgba(180, 200, 220, 0.8);
       white-space: nowrap;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .board-list li.board-climbed { animation: none; }
+      .board-list .rise.on { animation: none; }
     }
     .board-list .empty {
       display: block;
@@ -8209,6 +8237,7 @@ on</button>
     if (!name) return null;
     if ((e.season | 0) !== BOARD_SEASON) return null;
     const did = String(e.did || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+    const roseAt = Math.max(0, e.roseAt | 0);
     const out = {
       id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
       name,
@@ -8220,7 +8249,59 @@ on</button>
       season: BOARD_SEASON,
     };
     if (did.length >= 8) out.did = did;
+    if (roseAt && Date.now() - roseAt < 90 * 1000) out.roseAt = roseAt;
     return out;
+  }
+
+  const BOARD_RISE_MS = 45000;
+  let boardRankSnap = new Map(); // name → rang (1-based)
+  let boardRiseUntil = new Map(); // name → timestamp fin flèche
+  let boardClimbFlash = new Set(); // noms à flasher une fois
+  let boardPollTimer = 0;
+  let boardPollBusy = false;
+
+  function pruneBoardRises() {
+    const now = Date.now();
+    for (const [k, t] of boardRiseUntil) {
+      if (t <= now) boardRiseUntil.delete(k);
+    }
+  }
+
+  function isBoardRising(name) {
+    pruneBoardRises();
+    const t = boardRiseUntil.get(String(name || "").toLowerCase());
+    return !!(t && t > Date.now());
+  }
+
+  /** Détecte les montées de rang (live + roseAt serveur) */
+  function noteBoardRankChanges(list) {
+    const next = new Map();
+    const arr = Array.isArray(list) ? list : [];
+    for (let i = 0; i < arr.length; i++) {
+      const e = arr[i];
+      if (!e || !e.name) continue;
+      next.set(e.name.toLowerCase(), i + 1);
+    }
+    const now = Date.now();
+    for (const [name, rank] of next) {
+      const prev = boardRankSnap.get(name);
+      if (prev != null && rank < prev) {
+        boardRiseUntil.set(name, now + BOARD_RISE_MS);
+        boardClimbFlash.add(name);
+      }
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const e = arr[i];
+      if (!e || !e.roseAt) continue;
+      const age = now - (e.roseAt | 0);
+      if (age >= 0 && age < BOARD_RISE_MS) {
+        const key = e.name.toLowerCase();
+        const until = (e.roseAt | 0) + BOARD_RISE_MS;
+        const cur = boardRiseUntil.get(key) || 0;
+        if (until > cur) boardRiseUntil.set(key, until);
+      }
+    }
+    boardRankSnap = next;
   }
 
   /**
@@ -8255,15 +8336,34 @@ on</button>
   function loadBoardLocal() {
     try {
       const o = JSON.parse(localStorage.getItem(BOARD_KEY) || "[]");
-      boardCache = mergeBoardLists(Array.isArray(o) ? o : [], []);
+      saveBoardLocal(Array.isArray(o) ? o : [], { trackRanks: false });
     } catch (_) {
       boardCache = [];
+      boardRankSnap = new Map();
     }
     return boardCache;
   }
 
-  function saveBoardLocal(list) {
+  function saveBoardLocal(list, { trackRanks } = {}) {
     boardCache = mergeBoardLists(list || [], []);
+    if (trackRanks === false) {
+      // 1ʳᵉ charge : snap sans flasher tout le monde
+      boardRankSnap = new Map();
+      for (let i = 0; i < boardCache.length; i++) {
+        const e = boardCache[i];
+        if (e && e.name) boardRankSnap.set(e.name.toLowerCase(), i + 1);
+      }
+      for (let i = 0; i < boardCache.length; i++) {
+        const e = boardCache[i];
+        if (!e || !e.roseAt) continue;
+        const age = Date.now() - (e.roseAt | 0);
+        if (age >= 0 && age < BOARD_RISE_MS) {
+          boardRiseUntil.set(e.name.toLowerCase(), (e.roseAt | 0) + BOARD_RISE_MS);
+        }
+      }
+    } else {
+      noteBoardRankChanges(boardCache);
+    }
     try { localStorage.setItem(BOARD_KEY, JSON.stringify(boardCache)); } catch (_) {}
     return boardCache;
   }
@@ -8277,21 +8377,86 @@ on</button>
       return;
     }
     node.innerHTML = list.map((e, i) => {
-      const me = e.name.toLowerCase() === you;
+      const key = e.name.toLowerCase();
+      const me = key === you;
+      const rising = isBoardRising(e.name);
+      const climbed = boardClimbFlash.has(key);
       const flag = e.win ? "★" : (e.meters | 0) + "m";
       return (
-        "<li>" +
+        "<li class=\"" + (climbed ? "board-climbed" : "") + "\" data-name=\"" + key.replace(/"/g, "") + "\">" +
           "<span class=\"rk\">" + (i + 1) + "</span>" +
           "<span class=\"nm" + (me ? " is-you" : "") + "\">" + e.name + (me ? " · toi" : "") + "</span>" +
+          "<span class=\"rise" + (rising ? " on" : "") + "\" aria-hidden=\"" + (rising ? "false" : "true") + "\">" +
+            (rising ? "↑" : "") +
+          "</span>" +
           "<span class=\"meta\">" + formatRunTime(e.timeMs) + " · " + flag + "</span>" +
         "</li>"
       );
     }).join("");
+    // Flash montée : une seule fois
+    if (boardClimbFlash.size) {
+      setTimeout(() => { boardClimbFlash.clear(); }, 800);
+    }
   }
 
   function refreshBoardUI() {
     renderBoardList(el.startBoardList, playerPseudo);
     renderBoardList(el.endBoardList, playerPseudo);
+  }
+
+  function boardUiVisible() {
+    try {
+      if (state === "menu" || state === "dead" || state === "win") return true;
+      if (el.start && !el.start.classList.contains("hidden")) return true;
+      if (el.end && !el.end.classList.contains("hidden") && el.end.classList.contains("show")) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  /** Pull live (GET) — les spectateurs voient monter les scores sans poster */
+  async function pullBoardLive() {
+    if (boardPollBusy || document.hidden || !boardUiVisible()) return;
+    boardPollBusy = true;
+    try {
+      const deviceId = getDeviceId();
+      const res = await fetch(
+        BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
+        { cache: "no-store" }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !Array.isArray(data.scores)) return;
+      const before = boardCache.slice(0, 12).map((e) =>
+        e.name + "|" + e.meters + "|" + e.timeMs + "|" + (e.win ? 1 : 0) + "|" + (e.roseAt || 0)
+      ).join(";");
+      saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+      const after = boardCache.slice(0, 12).map((e) =>
+        e.name + "|" + e.meters + "|" + e.timeMs + "|" + (e.win ? 1 : 0) + "|" + (e.roseAt || 0)
+      ).join(";");
+      if (before !== after || boardClimbFlash.size) refreshBoardUI();
+      else {
+        // Met à jour seulement les flèches ↑ si le temps a filé
+        pruneBoardRises();
+        refreshBoardUI();
+      }
+    } catch (_) {
+    } finally {
+      boardPollBusy = false;
+    }
+  }
+
+  function startBoardLivePoll() {
+    if (boardPollTimer) return;
+    boardPollTimer = setInterval(() => { pullBoardLive(); }, 2200);
+    // Premier tick rapide dès qu’un écran classement est ouvert
+    setTimeout(() => { pullBoardLive(); }, 400);
+  }
+
+  function stopBoardLivePoll() {
+    if (boardPollTimer) {
+      clearInterval(boardPollTimer);
+      boardPollTimer = 0;
+    }
   }
 
   async function syncBoardRemote() {
@@ -8341,7 +8506,7 @@ on</button>
       if (!res.ok) return;
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
-        saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+        saveBoardLocal(mergeBoardLists(boardCache, data.scores), { trackRanks: false });
       }
       applyBoardMe(data && data.me);
       refreshBoardUI();
@@ -8355,6 +8520,9 @@ on</button>
     const prevIdx = boardCache.findIndex((e) => e.name.toLowerCase() === key);
     const prevRank = prevIdx >= 0 ? prevIdx + 1 : 0;
     const prevEntry = prevIdx >= 0 ? boardCache[prevIdx] : null;
+    const improvedBoard = !prevEntry || boardRank({
+      win: !!win, timeMs: runTimeMs | 0, meters: dist | 0, cams: camCount | 0,
+    }, prevEntry) < 0;
     const entry = {
       id: key + "_" + Date.now(),
       name,
@@ -8366,7 +8534,7 @@ on</button>
       season: BOARD_SEASON,
       did: getDeviceId(),
     };
-    const improvedBoard = !prevEntry || boardRank(entry, prevEntry) < 0;
+    if (improvedBoard && prevEntry) entry.roseAt = Date.now();
     saveBoardLocal(mergeBoardLists(boardCache, [entry]));
     refreshBoardUI();
     syncBoardRemote();
@@ -8554,8 +8722,15 @@ on</button>
     refreshBoardUI();
     // 1) restaure le pseudo de CET appareil seulement
     // 2) sync classement (sans jamais coller le pseudo d’un autre téléphone)
+    // 3) poll live du classement sur accueil / fin
     getDeviceId();
     restoreIdentityFromDevice().finally(() => { syncBoardRemote(); });
+    startBoardLivePoll();
+    try {
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && boardUiVisible()) pullBoardLive();
+      });
+    } catch (_) {}
     if (el.btnPseudoSave) {
       el.btnPseudoSave.addEventListener("click", (e) => {
         e.preventDefault();

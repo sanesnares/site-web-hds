@@ -40,9 +40,11 @@ function cleanEntry(e) {
   const at = Math.max(0, e.at | 0) || Date.now();
   const id = String(e.id || name.toLowerCase() + "_" + at).slice(0, 64);
   const did = cleanDeviceId(e.did);
+  const roseAt = Math.max(0, e.roseAt | 0);
   const out = { id, name, timeMs, meters, cams, win, at, season: SEASON };
   if (did) out.did = did;
-  // Ancien champ hid (= hash IP) volontairement ignoré
+  // Flèche « montée » visible ~90 s chez les autres joueurs
+  if (roseAt && Date.now() - roseAt < 90 * 1000) out.roseAt = roseAt;
   return out;
 }
 
@@ -54,6 +56,11 @@ function mergeBoards(a, b) {
     const key = e.name.toLowerCase();
     const prev = byName.get(key);
     if (!prev || rank(e, prev) < 0) {
+      if (prev && rank(e, prev) < 0) {
+        e.roseAt = Date.now();
+      } else if (e.roseAt && prev && prev.roseAt && prev.roseAt > e.roseAt) {
+        e.roseAt = prev.roseAt;
+      }
       byName.set(key, e);
     } else if (prev && e.did && !prev.did) {
       prev.did = e.did;
