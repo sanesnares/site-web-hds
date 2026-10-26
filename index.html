@@ -54,6 +54,19 @@
       --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
       --panel-edge: rgba(61, 196, 255, 0.28);
       --panel-shine: linear-gradient(165deg, rgba(255,255,255,0.07) 0%, transparent 42%, rgba(0,0,0,0.18) 100%);
+      /* Safe-area : JS (syncSafeAreaVars) surcharge ; fallback CSS ci-dessous */
+      --sat: 0px;
+      --sab: 0px;
+      --sal: 0px;
+      --sar: 0px;
+    }
+    @supports (padding: max(0px, env(safe-area-inset-top))) {
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --sal: env(safe-area-inset-left, 0px);
+        --sar: env(safe-area-inset-right, 0px);
+      }
     }
 
     * {
@@ -69,7 +82,11 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: -webkit-fill-available;
       height: 100dvh;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
+      min-height: 100dvh;
       overflow: hidden;
       background: var(--bg);
       font-family: var(--font-ui);
@@ -84,7 +101,9 @@
       position: relative;
       width: 100%;
       height: 100%;
+      height: -webkit-fill-available;
       height: 100dvh;
+      min-height: -webkit-fill-available;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -154,8 +173,8 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      /* +8px sous la status bar / Dynamic Island (PWA black-translucent) */
-      padding: max(12px, calc(env(safe-area-inset-top, 0px) + 10px)) 14px 0;
+      /* +10px sous la status bar / Dynamic Island (PWA black-translucent) */
+      padding: max(12px, calc(var(--sat, 0px) + 10px)) 14px 0;
       pointer-events: none;
       gap: 8px;
     }
@@ -2479,12 +2498,12 @@
     }
     html.phone-portrait .jumps label { font-size: 9px; }
 
-    /* Mute mobile : bas-gauche, au-dessus du home indicator iOS */
+    /* Mute mobile : bas-gauche, clairement au-dessus du home indicator iOS */
     html.phone-portrait .audio-btns {
-      left: max(12px, env(safe-area-inset-left, 0px));
+      left: max(12px, var(--sal, 0px));
       right: auto;
       top: auto;
-      bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+      bottom: max(52px, calc(var(--sab, 0px) + 22px));
       flex-direction: row;
       gap: 6px;
       transform: none;
@@ -2505,7 +2524,7 @@
       top: 0;
       bottom: auto;
       padding:
-        max(12px, calc(env(safe-area-inset-top, 0px) + 10px))
+        max(54px, calc(var(--sat, 0px) + 10px))
         8px
         0;
       gap: 6px;
@@ -2538,7 +2557,7 @@
     }
 
     html.phone-portrait.play-ui .btn-pause {
-      top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
+      top: max(54px, calc(var(--sat, 0px) + 10px));
       bottom: auto;
       width: 48px;
       height: 48px;
@@ -2561,8 +2580,8 @@
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       box-sizing: border-box;
-      /* PWA black-translucent : content sous status bar → padding obligatoire */
-      padding-top: max(28px, calc(env(safe-area-inset-top, 0px) + 20px));
+      /* PWA black-translucent : floor 54px même si --sat=0 (bug iOS) */
+      padding-top: max(54px, calc(var(--sat, 0px) + 14px));
       padding-bottom: 0;
       padding-left: 0;
       padding-right: 0;
@@ -2575,9 +2594,9 @@
       justify-content: safe center;
       align-items: center;
       padding:
-        max(32px, calc(env(safe-area-inset-top, 0px) + 24px))
+        max(54px, calc(var(--sat, 0px) + 16px))
         16px
-        max(72px, calc(env(safe-area-inset-bottom, 0px) + 60px)); /* place mutes + home bar */
+        max(96px, calc(var(--sab, 0px) + 72px)); /* place mutes + home bar */
       box-sizing: border-box;
       overflow-x: hidden;
       overflow-y: auto;
@@ -2596,9 +2615,9 @@
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(28px, calc(env(safe-area-inset-top, 0px) + 20px))
+        max(54px, calc(var(--sat, 0px) + 14px))
         14px
-        max(72px, calc(env(safe-area-inset-bottom, 0px) + 60px));
+        max(96px, calc(var(--sab, 0px) + 72px));
       box-sizing: border-box;
       overflow: hidden; /* scroll = end-main uniquement */
       -webkit-overflow-scrolling: touch;
@@ -2708,7 +2727,7 @@
       /* top déjà géré par #start-screen ; bas = place mutes + home indicator */
       padding:
         6px 12px
-        max(96px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+        max(110px, calc(var(--sab, 0px) + 88px));
     }
     html.phone-portrait .wait-map {
       display: none !important;
@@ -3419,15 +3438,15 @@
     html.play-ui:not(.pause-ui) .audio-btns {
       display: none !important;
     }
-    /* Pause / menus / fin : bas-gauche, compacts */
+    /* Pause / menus / fin : bas-gauche, au-dessus home indicator */
     html.pause-ui .audio-btns,
     html:not(.play-ui) .audio-btns,
     html.end-ui .audio-btns {
       display: flex;
-      left: max(12px, env(safe-area-inset-left, 0px));
+      left: max(12px, var(--sal, 0px));
       right: auto;
       top: auto;
-      bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+      bottom: max(52px, calc(var(--sab, 0px) + 22px));
       flex-direction: row;
       gap: 6px;
       transform: none;
@@ -8564,6 +8583,48 @@ on</button>
       || document.documentElement.classList.contains("platform-phone");
   }
 
+  function isStandalonePwa() {
+    try {
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    } catch (_) {}
+    return !!(navigator.standalone);
+  }
+
+  /** Lit safe-area via probe + floors iOS standalone (env() parfois à 0). */
+  function syncSafeAreaVars() {
+    try {
+      const root = document.documentElement;
+      let probe = document.getElementById("safe-area-probe");
+      if (!probe) {
+        probe = document.createElement("div");
+        probe.id = "safe-area-probe";
+        probe.setAttribute("aria-hidden", "true");
+        probe.style.cssText =
+          "position:fixed;pointer-events:none;visibility:hidden;opacity:0;"
+          + "top:0;left:0;width:0;height:0;overflow:hidden;"
+          + "padding-top:env(safe-area-inset-top,0px);"
+          + "padding-right:env(safe-area-inset-right,0px);"
+          + "padding-bottom:env(safe-area-inset-bottom,0px);"
+          + "padding-left:env(safe-area-inset-left,0px);";
+        (document.body || root).appendChild(probe);
+      }
+      const cs = getComputedStyle(probe);
+      let sat = parseFloat(cs.paddingTop) || 0;
+      let sab = parseFloat(cs.paddingBottom) || 0;
+      let sal = parseFloat(cs.paddingLeft) || 0;
+      let sar = parseFloat(cs.paddingRight) || 0;
+      /* black-translucent + env()=0 → floors notch / home bar */
+      if (isStandalonePwa() || isMobilePlatform()) {
+        if (sat < 44) sat = Math.max(sat, isStandalonePwa() ? 47 : 20);
+        if (sab < 20) sab = Math.max(sab, isStandalonePwa() ? 34 : 12);
+      }
+      root.style.setProperty("--sat", sat + "px");
+      root.style.setProperty("--sab", sab + "px");
+      root.style.setProperty("--sal", sal + "px");
+      root.style.setProperty("--sar", sar + "px");
+    } catch (_) {}
+  }
+
   /** Classes html : platform-desktop | platform-phone + phone-portrait / phone-landscape */
   function syncPhoneLayoutClass() {
     const mobile = isMobilePlatform();
@@ -8576,6 +8637,7 @@ on</button>
     root.classList.toggle("platform-desktop", !mobile);
     root.classList.toggle("phone-portrait", !!(mobile && portrait));
     root.classList.toggle("phone-landscape", !!(mobile && !portrait));
+    root.classList.toggle("standalone-pwa", isStandalonePwa());
 
     let playing = false;
     let isPaused = false;
@@ -8588,6 +8650,8 @@ on</button>
     root.classList.toggle("play-ui", playing);
     root.classList.toggle("pause-ui", isPaused);
     root.classList.toggle("end-ui", isEnd);
+
+    try { syncSafeAreaVars(); } catch (_) {}
 
     // Pas de stick sur ordinateur
     try {
@@ -16437,12 +16501,23 @@ on</button>
 
   function readViewportSize() {
     const vv = window.visualViewport;
-    const vw = Math.max(1, Math.round((vv && vv.width) || window.innerWidth || document.documentElement.clientWidth || W));
-    const vh = Math.max(1, Math.round((vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || H));
+    const layoutW = Math.max(1, Math.round(window.innerWidth || document.documentElement.clientWidth || W));
+    const layoutH = Math.max(1, Math.round(window.innerHeight || document.documentElement.clientHeight || H));
+    let vw = Math.max(1, Math.round((vv && vv.width) || layoutW));
+    let vh = Math.max(1, Math.round((vv && vv.height) || layoutH));
+    /* PWA standalone : ne jamais shrinker (sinon bande noire sous home indicator) */
+    if (isStandalonePwa()) {
+      vw = Math.max(vw, layoutW);
+      vh = Math.max(vh, layoutH);
+    } else if (vv) {
+      /* Safari onglet : couvrir aussi la zone au-dessus du visualViewport */
+      vh = Math.max(vh, Math.round((vv.height || 0) + (vv.offsetTop || 0)));
+      vw = Math.max(vw, layoutW);
+    }
     return { vw, vh };
   }
 
-  /** Aligne le layout sur le visualViewport (Safari : barre URL qui se masque) */
+  /** Aligne le layout sur le viewport (plein écran en PWA, pas de bande noire) */
   function syncViewportShell(vw, vh) {
     try {
       const root = document.documentElement;
@@ -16525,8 +16600,10 @@ on</button>
 
     if (phonePortrait) {
       // Safe haut + zone pouces (stick/saut) — laisse de la place au jeu
-      padTop = Math.round(Math.max(8, Math.min(vh * 0.022, 26)));
-      padBottom = Math.round(Math.max(100, Math.min(vh * 0.145, 136)));
+      const satPx = parseFloat(getComputedStyle(root).getPropertyValue("--sat")) || 0;
+      const sabPx = parseFloat(getComputedStyle(root).getPropertyValue("--sab")) || 0;
+      padTop = Math.round(Math.max(8, satPx * 0.25, Math.min(vh * 0.022, 26)));
+      padBottom = Math.round(Math.max(100, sabPx + 66, Math.min(vh * 0.145, 136)));
     } else if (phoneLandscape) {
       padTop = Math.round(Math.max(4, Math.min(vh * 0.02, 14)));
       padBottom = Math.round(Math.max(4, Math.min(vh * 0.02, 14)));
@@ -17129,11 +17206,11 @@ on</button>
       }, { passive: true });
     });
   }
-  // Triple-tap sur le brand-tag → pad PIN
-  const brandTag = document.querySelector("#start-screen .brand-tag");
-  if (brandTag) {
-    brandTag.style.cursor = "pointer";
-    brandTag.addEventListener("click", (e) => {
+  // Triple-tap logo / brand-tag → pad PIN (brand-tag masqué en portrait mobile)
+  function bindAdminTripleTap(node) {
+    if (!node) return;
+    node.style.cursor = "pointer";
+    node.addEventListener("click", (e) => {
       if (state !== "menu" || isAdmin()) return;
       const now = performance.now();
       if (now - adminBrandTapT > 1200) adminBrandTaps = 0;
@@ -17147,6 +17224,8 @@ on</button>
       }
     });
   }
+  bindAdminTripleTap(document.querySelector("#start-screen .brand-tag"));
+  bindAdminTripleTap(document.querySelector("#start-screen .chds-badge"));
   // Saisie clavier du code (accueil ou pause) — affiche aussi le pad
   window.addEventListener("keydown", (e) => {
     if (isAdmin()) return;
@@ -17376,7 +17455,10 @@ on</button>
   // PWA — installable iOS (Partager → Sur l’écran d’accueil) + Android
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+      navigator.serviceWorker.register("./sw.js")
+        .then((reg) => { try { reg.update(); } catch (_) {} })
+        .catch(() => {});
+      try { syncSafeAreaVars(); } catch (_) {}
       syncTips();
     });
   }
