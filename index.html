@@ -2510,14 +2510,11 @@
         0;
       gap: 6px;
     }
-    html.phone-portrait.play-ui #minimap {
-      right: max(8px, env(safe-area-inset-right));
-      left: auto;
-      top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
-      bottom: auto;
-      height: clamp(48px, 9vh, 64px);
+    /* Mobile gameplay : pas de minimap (gagne de la place / clarté) */
+    html.phone-portrait.play-ui #minimap,
+    html.phone-landscape.play-ui #minimap {
+      display: none !important;
     }
-    html.phone-portrait.play-ui #minimap.visible { opacity: 0.4; }
 
     html.phone-portrait #stick-zone { width: 52%; }
     html.phone-portrait #jump-zone { width: 48%; }
