@@ -16,9 +16,14 @@ const POST_COOLDOWN_MS = 1200;
 const rateLimit = Object.create(null);
 
 function getSupabase() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+  const url = String(process.env.SUPABASE_URL || "").trim();
+  // Dashboard récent : SUPABASE_SECRET_KEY ; ancien nom : SERVICE_ROLE
+  const key = String(
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+      || process.env.SUPABASE_SECRET_KEY
+      || ""
+  ).trim();
+  if (!url || !/^https:\/\//i.test(url) || !key) {
     const err = new Error("missing_supabase_env");
     err.code = "missing_supabase_env";
     throw err;
