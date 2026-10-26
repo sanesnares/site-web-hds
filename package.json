@@ -1,0 +1,8 @@
+{
+  "name": "site-web-hds",
+  "private": true,
+  "description": "92 Rush — Hauts-de-Seine",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0"
+  }
+}

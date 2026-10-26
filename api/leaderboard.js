@@ -1,17 +1,32 @@
 /**
- * Classement partagé 92 Rush — merge gossip + identité APPAREIL.
- * GET  → ?deviceId=… → { scores, me }
- * POST → { scores, name?, deviceId? } → merge + lie le pseudo à l’appareil
+ * Classement partagé 92 Rush — Supabase (saison 4).
+ * GET  → ?deviceId=… → { scores, me, season }
+ * POST → { scores, name?, deviceId? } → claim pseudo + upsert best score
  *
- * Un téléphone = un deviceId (localStorage). Jamais d’IP → pseudo
- * (sinon toute une classe derrière le même Wi‑Fi partage le même compte).
+ * Un téléphone = un deviceId (localStorage). Jamais d’IP → pseudo.
+ * Accès DB uniquement via SUPABASE_SERVICE_ROLE_KEY (serveur).
  */
 
+const { createClient } = require("@supabase/supabase-js");
+
 const MAX = 40;
-const SEASON = 3;
-const BLOB_PATHNAME = "hds92-leaderboard-s" + SEASON + "-dev.json";
+const SEASON = 4;
 const POST_COOLDOWN_MS = 1200;
-const PERSIST_MIN_INTERVAL_MS = 1500;
+
+const rateLimit = Object.create(null);
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    const err = new Error("missing_supabase_env");
+    err.code = "missing_supabase_env";
+    throw err;
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 function rank(a, b) {
   if (!!a.win !== !!b.win) return a.win ? -1 : 1;
@@ -26,194 +41,85 @@ function cleanDeviceId(raw) {
   return id.length >= 8 ? id : "";
 }
 
-function cleanEntry(e) {
-  if (!e || typeof e !== "object") return null;
-  if ((e.season | 0) !== SEASON) return null;
-  const name = String(e.name || "")
+function cleanName(raw) {
+  return String(raw || "")
     .trim()
     .slice(0, 20)
     .replace(/[<>&"']/g, "");
+}
+
+function cleanIncomingScore(e) {
+  if (!e || typeof e !== "object") return null;
+  if ((e.season | 0) !== SEASON) return null;
+  const name = cleanName(e.name);
   if (!name) return null;
   const timeMs = Math.max(0, Math.min(9 * 3600 * 1000, e.timeMs | 0));
   const meters = Math.max(0, Math.min(5000, e.meters | 0));
   const cams = Math.max(0, Math.min(999, e.cams | 0));
   const win = !!e.win;
   const at = Math.max(0, e.at | 0) || Date.now();
-  const id = String(e.id || name.toLowerCase() + "_" + at).slice(0, 64);
-  const did = cleanDeviceId(e.did);
-  const roseAt = Math.max(0, e.roseAt | 0);
-  const out = { id, name, timeMs, meters, cams, win, at, season: SEASON };
-  if (did) out.did = did;
-  if (roseAt && Date.now() - roseAt < 90 * 1000) out.roseAt = roseAt;
+  return { name, timeMs, meters, cams, win, at, season: SEASON };
+}
+
+function rowToScore(row) {
+  if (!row) return null;
+  const atMs = row.at ? new Date(row.at).getTime() : Date.now();
+  const roseMs = row.rose_at ? new Date(row.rose_at).getTime() : 0;
+  const out = {
+    id: String(row.id != null ? row.id : row.name_key || row.name),
+    name: row.name,
+    timeMs: row.time_ms | 0,
+    meters: row.meters | 0,
+    cams: row.cams | 0,
+    win: !!row.win,
+    at: atMs,
+    season: row.season | 0 || SEASON,
+  };
+  if (row.device_id) out.did = row.device_id;
+  if (roseMs && Date.now() - roseMs < 90 * 1000) out.roseAt = roseMs;
   return out;
 }
 
-function findOwnerDeviceId(mem, nameLower) {
-  if (!mem || !nameLower) return "";
-  for (const e of mem.scores || []) {
-    if (e && e.name && e.name.toLowerCase() === nameLower && e.did) {
-      return e.did;
-    }
-  }
-  const devs = mem.devices || {};
-  for (const did of Object.keys(devs)) {
-    const d = devs[did];
-    if (d && d.name && d.name.toLowerCase() === nameLower) {
-      return did;
-    }
-  }
-  return "";
+function isBetter(candidate, existing) {
+  if (!existing) return true;
+  return rank(candidate, existing) < 0;
 }
 
-function mergeBoards(existingScores, incomingScores, mem) {
-  const byName = new Map();
-
-  for (const raw of existingScores || []) {
-    const e = cleanEntry(raw);
-    if (!e) continue;
-    byName.set(e.name.toLowerCase(), e);
-  }
-
-  for (const raw of incomingScores || []) {
-    const e = cleanEntry(raw);
-    if (!e) continue;
-    const key = e.name.toLowerCase();
-    const prev = byName.get(key);
-
-    const ownerDid = (prev && prev.did) || findOwnerDeviceId(mem, key);
-    if (ownerDid && e.did && e.did !== ownerDid) {
-      continue;
-    }
-    if (ownerDid && !e.did) {
-      e.did = ownerDid;
-    }
-
-    if (!prev || rank(e, prev) < 0) {
-      if (prev && rank(e, prev) < 0) {
-        e.roseAt = Date.now();
-      } else if (e.roseAt && prev && prev.roseAt && prev.roseAt > e.roseAt) {
-        e.roseAt = prev.roseAt;
-      }
-      if (!e.did && prev && prev.did) e.did = prev.did;
-      byName.set(key, e);
-    } else if (prev && !prev.did && e.did && (!ownerDid || ownerDid === e.did)) {
-      prev.did = e.did;
-      byName.set(key, prev);
-    }
-  }
-
-  return Array.from(byName.values()).sort(rank).slice(0, MAX);
+async function fetchTopScores(sb) {
+  const { data, error } = await sb
+    .from("scores")
+    .select("id, season, name, device_id, time_ms, meters, cams, win, at, rose_at")
+    .eq("season", SEASON)
+    .limit(200);
+  if (error) throw error;
+  const scores = (data || []).map(rowToScore).filter(Boolean);
+  scores.sort(rank);
+  return scores.slice(0, MAX);
 }
 
-function getMem() {
-  const key = "__HDS92_STORE_S" + SEASON + "_DEV";
-  if (!globalThis[key]) {
-    globalThis[key] = {
-      scores: [],
-      devices: Object.create(null),
-      rateLimit: Object.create(null),
-      lastPersistAt: 0,
-      season: SEASON,
-    };
-  }
-  return globalThis[key];
-}
-
-function rebuildDevicesFromScores(scores, devices) {
-  const map = devices && typeof devices === "object" ? { ...devices } : Object.create(null);
-  for (const e of scores || []) {
-    if (!e || !e.did || !e.name) continue;
-    const prev = map[e.did];
-    if (!prev || (e.at | 0) >= (prev.at | 0)) {
-      map[e.did] = { name: e.name, at: e.at | 0 || Date.now() };
-    }
-  }
-  return map;
-}
-
-async function loadPersist() {
-  const mem = getMem();
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token || mem._loaded) return mem;
-  try {
-    const url =
-      process.env.HDS92_BLOB_URL ||
-      ("https://blob.vercel-storage.com/" + BLOB_PATHNAME);
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-        "x-api-version": "7",
-      },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const scores = mergeBoards(data.scores || [], mem.scores || [], mem);
-      const devices = rebuildDevicesFromScores(
-        scores,
-        data.devices || mem.devices
-      );
-      mem.scores = scores;
-      mem.devices = devices;
-    }
-  } catch (_) {}
-  mem._loaded = true;
-  return mem;
-}
-
-async function persistNow(mem, force) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return;
-  const now = Date.now();
-  if (!force && now - (mem.lastPersistAt || 0) < PERSIST_MIN_INTERVAL_MS) return;
-  mem.lastPersistAt = now;
-  try {
-    const body = JSON.stringify({
-      scores: mem.scores || [],
-      devices: mem.devices || {},
-      at: now,
-    });
-    await fetch("https://blob.vercel-storage.com/" + BLOB_PATHNAME, {
-      method: "PUT",
-      headers: {
-        Authorization: "Bearer " + token,
-        "x-api-version": "7",
-        "x-content-type": "application/json",
-        "x-vercel-blob-access": "private",
-        "x-add-random-suffix": "0",
-        "x-allow-overwrite": "true",
-      },
-      body,
-    });
-  } catch (_) {}
-}
-
-function resolveMe(mem, deviceId) {
+async function resolveMe(sb, deviceId) {
   if (!deviceId) return null;
-  const bind = mem.devices && mem.devices[deviceId];
-  let name = bind && bind.name ? String(bind.name) : "";
-  if (!name) {
-    const hit = (mem.scores || []).find((e) => e && e.did === deviceId);
-    if (hit) name = hit.name;
-  }
-  if (!name) return null;
-  const entry =
-    (mem.scores || []).find((e) => e.name.toLowerCase() === name.toLowerCase()) || null;
-  return { name, entry, deviceId };
-}
+  const { data: player, error: pErr } = await sb
+    .from("players")
+    .select("device_id, name")
+    .eq("device_id", deviceId)
+    .maybeSingle();
+  if (pErr) throw pErr;
+  if (!player || !player.name) return null;
 
-function bindDevice(mem, deviceId, name) {
-  if (!deviceId || !name) return;
-  const key = name.toLowerCase();
-  const ownerDid = findOwnerDeviceId(mem, key);
-  if (ownerDid && ownerDid !== deviceId) return;
+  const { data: scoreRow, error: sErr } = await sb
+    .from("scores")
+    .select("id, season, name, device_id, time_ms, meters, cams, win, at, rose_at")
+    .eq("season", SEASON)
+    .eq("name_key", player.name.toLowerCase())
+    .maybeSingle();
+  if (sErr) throw sErr;
 
-  mem.devices[deviceId] = { name, at: Date.now() };
-  mem.scores = (mem.scores || []).map((e) => {
-    if (e.name.toLowerCase() !== key) return e;
-    if (e.did && e.did !== deviceId) return e;
-    return { ...e, did: deviceId };
-  });
+  return {
+    name: player.name,
+    entry: rowToScore(scoreRow),
+    deviceId,
+  };
 }
 
 function readDeviceId(req, body) {
@@ -223,6 +129,147 @@ function readDeviceId(req, body) {
     if (q) return cleanDeviceId(q);
   } catch (_) {}
   return "";
+}
+
+async function claimOrCheckName(sb, deviceId, claimName) {
+  const nameKey = claimName.toLowerCase();
+  const { data: owner, error } = await sb
+    .from("players")
+    .select("device_id, name")
+    .eq("name_key", nameKey)
+    .maybeSingle();
+  if (error) throw error;
+
+  if (owner && owner.device_id !== deviceId) {
+    return { nameTaken: true, canClaim: false };
+  }
+
+  const now = new Date().toISOString();
+  const { error: upErr } = await sb.from("players").upsert(
+    {
+      device_id: deviceId,
+      name: claimName,
+      updated_at: now,
+    },
+    { onConflict: "device_id" }
+  );
+  if (upErr) {
+    // Course : un autre device a pris le name_key entre-temps
+    if (String(upErr.code) === "23505" || /unique|duplicate/i.test(upErr.message || "")) {
+      return { nameTaken: true, canClaim: false };
+    }
+    throw upErr;
+  }
+
+  // Vérifier qu’on n’a pas volé un name déjà pris (race sur name_key)
+  const { data: verify } = await sb
+    .from("players")
+    .select("device_id")
+    .eq("name_key", nameKey)
+    .maybeSingle();
+  if (verify && verify.device_id !== deviceId) {
+    return { nameTaken: true, canClaim: false };
+  }
+
+  // Lier le score existant de ce pseudo à ce device (pseudo libéré / reclaim)
+  await sb
+    .from("scores")
+    .update({ device_id: deviceId })
+    .eq("season", SEASON)
+    .eq("name_key", nameKey);
+
+  return { nameTaken: false, canClaim: true };
+}
+
+async function upsertBestScore(sb, deviceId, entry) {
+  const nameKey = entry.name.toLowerCase();
+  const { data: prevRow, error: prevErr } = await sb
+    .from("scores")
+    .select("id, season, name, device_id, time_ms, meters, cams, win, at, rose_at")
+    .eq("season", SEASON)
+    .eq("name_key", nameKey)
+    .maybeSingle();
+  if (prevErr) throw prevErr;
+
+  const prev = rowToScore(prevRow);
+  // Refuser d’écraser le score d’un autre device (sauf si ce device possède le pseudo)
+  if (prevRow && prevRow.device_id && deviceId && prevRow.device_id !== deviceId) {
+    const { data: owner } = await sb
+      .from("players")
+      .select("device_id")
+      .eq("name_key", nameKey)
+      .maybeSingle();
+    if (!owner || owner.device_id !== deviceId) return false;
+  }
+
+  const candidate = {
+    name: entry.name,
+    timeMs: entry.timeMs,
+    meters: entry.meters,
+    cams: entry.cams,
+    win: entry.win,
+    at: entry.at,
+    season: SEASON,
+  };
+
+  if (prev && !isBetter(candidate, prev)) {
+    // Lier device_id si manquant
+    if (deviceId && prevRow && !prevRow.device_id) {
+      await sb
+        .from("scores")
+        .update({ device_id: deviceId })
+        .eq("id", prevRow.id);
+    }
+    return false;
+  }
+
+  const rose = prev && isBetter(candidate, prev);
+  const payload = {
+    season: SEASON,
+    name: entry.name,
+    device_id: deviceId || (prevRow && prevRow.device_id) || null,
+    time_ms: entry.timeMs,
+    meters: entry.meters,
+    cams: entry.cams,
+    win: entry.win,
+    at: new Date(entry.at || Date.now()).toISOString(),
+    rose_at: rose ? new Date().toISOString() : prevRow && prevRow.rose_at ? prevRow.rose_at : null,
+  };
+
+  if (prevRow && prevRow.id != null) {
+    const { error } = await sb.from("scores").update(payload).eq("id", prevRow.id);
+    if (error) throw error;
+  } else {
+    const { error } = await sb.from("scores").insert(payload);
+    if (error) {
+      if (String(error.code) === "23505") {
+        // Retry update on race
+        const { error: e2 } = await sb
+          .from("scores")
+          .update(payload)
+          .eq("season", SEASON)
+          .eq("name_key", nameKey);
+        if (e2) throw e2;
+      } else {
+        throw error;
+      }
+    }
+  }
+  return true;
+}
+
+function pickBestIncoming(incoming, claimName, deviceId) {
+  let best = null;
+  for (const raw of incoming || []) {
+    const e = cleanIncomingScore(raw);
+    if (!e) continue;
+    if (claimName && e.name.toLowerCase() !== claimName.toLowerCase()) continue;
+    if (!claimName && deviceId) {
+      // sans claim : n’accepter que si le nom matche déjà (géré côté claim)
+    }
+    if (!best || isBetter(e, best)) best = e;
+  }
+  return best;
 }
 
 module.exports = async function handler(req, res) {
@@ -236,78 +283,83 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const mem = await loadPersist();
+    const sb = getSupabase();
 
     if (req.method === "GET") {
       const deviceId = readDeviceId(req, null);
-      mem.devices = rebuildDevicesFromScores(mem.scores, mem.devices);
-      res.status(200).json({
-        scores: mem.scores || [],
-        me: resolveMe(mem, deviceId),
-        season: SEASON,
-      });
+      const [scores, me] = await Promise.all([
+        fetchTopScores(sb),
+        resolveMe(sb, deviceId),
+      ]);
+      res.status(200).json({ scores, me, season: SEASON });
       return;
     }
 
     if (req.method === "POST") {
       let body = req.body;
       if (typeof body === "string") {
-        try { body = JSON.parse(body); } catch (_) { body = {}; }
+        try {
+          body = JSON.parse(body);
+        } catch (_) {
+          body = {};
+        }
       }
       const deviceId = readDeviceId(req, body);
 
       if (deviceId) {
         const now = Date.now();
-        const lastAt = mem.rateLimit[deviceId] || 0;
+        const lastAt = rateLimit[deviceId] || 0;
         if (now - lastAt < POST_COOLDOWN_MS) {
+          const [scores, me] = await Promise.all([
+            fetchTopScores(sb),
+            resolveMe(sb, deviceId),
+          ]);
           res.status(200).json({
-            scores: mem.scores || [],
-            me: resolveMe(mem, deviceId),
+            scores,
+            me,
             season: SEASON,
             throttled: true,
           });
           return;
         }
-        mem.rateLimit[deviceId] = now;
+        rateLimit[deviceId] = now;
       }
 
-      const incoming = (body && body.scores) || [];
-      const claimName = String((body && body.name) || "")
-        .trim()
-        .slice(0, 20)
-        .replace(/[<>&"']/g, "");
+      const claimName = cleanName(body && body.name);
+      let nameTaken = false;
 
-      const claimOwner = claimName ? findOwnerDeviceId(mem, claimName.toLowerCase()) : "";
-      const canClaim = !claimOwner || claimOwner === deviceId;
-      const nameTaken = !!(claimName && claimOwner && claimOwner !== deviceId);
-
-      const stamped = (Array.isArray(incoming) ? incoming : []).map((raw) => {
-        const e = cleanEntry(raw);
-        if (!e) return null;
-        if (
-          deviceId &&
-          claimName &&
-          canClaim &&
-          e.name.toLowerCase() === claimName.toLowerCase()
-        ) {
-          e.did = deviceId;
+      if (claimName && deviceId) {
+        const claim = await claimOrCheckName(sb, deviceId, claimName);
+        nameTaken = !!claim.nameTaken;
+        if (claim.canClaim) {
+          const best = pickBestIncoming(
+            (body && body.scores) || [],
+            claimName,
+            deviceId
+          );
+          if (best) {
+            await upsertBestScore(sb, deviceId, best);
+          }
         }
-        return e;
-      }).filter(Boolean);
-
-      const prevSnap = JSON.stringify(mem.scores);
-      mem.scores = mergeBoards(mem.scores, stamped, mem);
-      if (deviceId && claimName && canClaim) {
-        bindDevice(mem, deviceId, claimName);
+      } else if (deviceId && Array.isArray(body && body.scores) && body.scores.length) {
+        // Submit score sans renommer : utiliser le pseudo déjà lié à l’appareil
+        const me = await resolveMe(sb, deviceId);
+        if (me && me.name) {
+          const best = pickBestIncoming(body.scores, me.name, deviceId);
+          if (best) {
+            best.name = me.name;
+            await upsertBestScore(sb, deviceId, best);
+          }
+        }
       }
-      mem.devices = rebuildDevicesFromScores(mem.scores, mem.devices);
 
-      const changed = JSON.stringify(mem.scores) !== prevSnap;
-      await persistNow(mem, changed);
-
+      const [scores, me] = await Promise.all([
+        fetchTopScores(sb),
+        resolveMe(sb, deviceId),
+      ]);
       res.status(200).json({
-        scores: mem.scores,
-        me: resolveMe(mem, deviceId),
+        scores,
+        me,
         nameTaken,
         season: SEASON,
       });
@@ -316,10 +368,20 @@ module.exports = async function handler(req, res) {
 
     res.status(405).json({ error: "method" });
   } catch (err) {
-    const mem = getMem();
+    const code = err && err.code;
+    if (code === "missing_supabase_env") {
+      res.status(503).json({
+        error: "supabase_not_configured",
+        scores: [],
+        me: null,
+        season: SEASON,
+      });
+      return;
+    }
+    console.error("[leaderboard]", err && err.message ? err.message : err);
     res.status(500).json({
       error: "server",
-      scores: mem.scores || [],
+      scores: [],
       me: null,
       season: SEASON,
     });

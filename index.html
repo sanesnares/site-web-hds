@@ -5417,12 +5417,12 @@ on</button>
   const SOUND_TIP_KEY = "hds92_sound_tip_v1";
   const META_KEY = "hds92_meta_v1";
   const ADMIN_KEY = "hds92_admin_v1";
-  const PSEUDO_KEY = "hds92_pseudo_v3"; // reset global saison 3
-  const BOARD_KEY = "hds92_board_v3";
-  const DEVICE_KEY = "hds92_device_v1"; // 1 téléphone = 1 id (jamais l’IP)
+  const PSEUDO_KEY = "hds92_pseudo_v4"; // reset global saison 4 (Supabase)
+  const BOARD_KEY = "hds92_board_v4";
+  const DEVICE_KEY = "hds92_device_v1"; // 1 téléphone = 1 id (conservé entre saisons)
   const BOARD_API = "/api/leaderboard";
   const BOARD_MAX = 40;
-  const BOARD_SEASON = 3;
+  const BOARD_SEASON = 4;
   const ADMIN_PIN = "4889";
   let adminMode = false;
   try { adminMode = localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) {}
