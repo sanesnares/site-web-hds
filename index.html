@@ -3814,7 +3814,7 @@
       appearance: none;
       position: absolute;
       z-index: 24;
-      top: max(10px, env(safe-area-inset-top));
+      top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
       left: 50%;
       transform: translateX(-50%);
       width: 40px;
