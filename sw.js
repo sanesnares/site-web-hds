@@ -1,5 +1,5 @@
 /* 92 Rush — service worker PWA */
-const CACHE = "hds-rush-92-v19";
+const CACHE = "hds-rush-92-v20";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -31,16 +31,24 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // API classement : toujours réseau (pas de cache)
-  if (url.pathname.startsWith("/api/")) return;
+  if (url.pathname.startsWith("/api/") || url.pathname.endsWith("/sw.js")) return;
 
-  // Navigations : réseau d'abord, fallback cache (maj du jeu)
+  // Safari iOS utilise des requêtes Range (206 Partial Content) pour les sons
+  if (req.headers.has("range")) {
+    event.respondWith(
+      fetch(req).catch(() => caches.match(req))
+    );
+    return;
+  }
+
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-cache" })
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          if (res.ok && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          }
           return res;
         })
         .catch(() => caches.match("./index.html"))
@@ -48,13 +56,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Assets / sons : cache-first
   if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/sounds/")) {
     event.respondWith(
       caches.match(req).then((hit) => {
         if (hit) return hit;
         return fetch(req).then((res) => {
-          if (res.ok) {
+          if (res.ok && res.status === 200) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }
@@ -65,12 +72,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Autres (manifest, sw exclus) : stale-while-revalidate léger
   event.respondWith(
     caches.match(req).then((hit) => {
       const fetched = fetch(req)
         .then((res) => {
-          if (res.ok) {
+          if (res.ok && res.status === 200) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }
