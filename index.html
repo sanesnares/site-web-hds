@@ -154,7 +154,8 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: max(10px, env(safe-area-inset-top)) 14px 0;
+      /* +8px sous la status bar / Dynamic Island (PWA black-translucent) */
+      padding: max(12px, calc(env(safe-area-inset-top, 0px) + 10px)) 14px 0;
       pointer-events: none;
       gap: 8px;
     }
@@ -2500,17 +2501,20 @@
     }
 
     html.phone-portrait.play-ui #hud {
-      top: auto;
-      /* Juste au-dessus du canvas (centré au-dessus de la zone pouces) */
-      bottom: calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + var(--game-h, 300px) + 6px);
-      padding: 0 8px;
+      /* Ancré sous la safe-area iOS (pas sous le notch / Dynamic Island) */
+      top: 0;
+      bottom: auto;
+      padding:
+        max(12px, calc(env(safe-area-inset-top, 0px) + 10px))
+        8px
+        0;
       gap: 6px;
     }
     html.phone-portrait.play-ui #minimap {
       right: max(8px, env(safe-area-inset-right));
       left: auto;
-      top: auto;
-      bottom: calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + var(--game-h, 300px) + 6px);
+      top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
+      bottom: auto;
       height: clamp(48px, 9vh, 64px);
     }
     html.phone-portrait.play-ui #minimap.visible { opacity: 0.4; }
@@ -2537,11 +2541,11 @@
     }
 
     html.phone-portrait.play-ui .btn-pause {
-      top: auto;
-      bottom: calc(var(--game-canvas-bottom, var(--game-bottom, 168px)) + var(--game-h, 300px) + 8px);
-      width: 52px;
-      height: 52px;
-      font-size: 15px;
+      top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
+      bottom: auto;
+      width: 48px;
+      height: 48px;
+      font-size: 14px;
     }
 
     html.phone-portrait .overlay {
