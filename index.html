@@ -2479,12 +2479,12 @@
     }
     html.phone-portrait .jumps label { font-size: 9px; }
 
-    /* Mute mobile : bas-gauche, compact — jamais en jeu (seulement menus / pause) */
+    /* Mute mobile : bas-gauche, au-dessus du home indicator iOS */
     html.phone-portrait .audio-btns {
-      left: max(10px, env(safe-area-inset-left));
+      left: max(12px, env(safe-area-inset-left, 0px));
       right: auto;
       top: auto;
-      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
+      bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px));
       flex-direction: row;
       gap: 6px;
       transform: none;
@@ -2557,9 +2557,15 @@
     html.phone-portrait #start-screen.overlay {
       justify-content: stretch;
       overflow-x: hidden;
-      overflow-y: auto; /* pad admin / hub accessibles au scroll */
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      box-sizing: border-box;
+      /* PWA black-translucent : content sous status bar → padding obligatoire */
+      padding-top: max(28px, calc(env(safe-area-inset-top, 0px) + 20px));
+      padding-bottom: 0;
+      padding-left: 0;
+      padding-right: 0;
     }
     html.phone-portrait #start-screen .wait-ui {
       touch-action: pan-y;
@@ -2569,9 +2575,9 @@
       justify-content: safe center;
       align-items: center;
       padding:
-        max(28px, calc(env(safe-area-inset-top, 0px) + 22px))
+        max(32px, calc(env(safe-area-inset-top, 0px) + 24px))
         16px
-        max(56px, calc(env(safe-area-inset-bottom, 0px) + 48px)); /* place mutes bas */
+        max(72px, calc(env(safe-area-inset-bottom, 0px) + 60px)); /* place mutes + home bar */
       box-sizing: border-box;
       overflow-x: hidden;
       overflow-y: auto;
@@ -2590,9 +2596,9 @@
       justify-content: flex-start;
       align-items: center;
       padding:
-        max(20px, calc(env(safe-area-inset-top, 0px) + 14px))
+        max(28px, calc(env(safe-area-inset-top, 0px) + 20px))
         14px
-        max(52px, calc(env(safe-area-inset-bottom, 0px) + 44px));
+        max(72px, calc(env(safe-area-inset-bottom, 0px) + 60px));
       box-sizing: border-box;
       overflow: hidden; /* scroll = end-main uniquement */
       -webkit-overflow-scrolling: touch;
@@ -2699,10 +2705,10 @@
       grid-template-rows: 1fr;
       align-content: stretch;
       gap: 0;
+      /* top déjà géré par #start-screen ; bas = place mutes + home indicator */
       padding:
-        max(10px, calc(env(safe-area-inset-top) + 6px))
-        12px
-        max(72px, calc(env(safe-area-inset-bottom) + 58px)); /* mutes bas, sans overlap */
+        6px 12px
+        max(96px, calc(env(safe-area-inset-bottom, 0px) + 80px));
     }
     html.phone-portrait .wait-map {
       display: none !important;
@@ -2727,9 +2733,9 @@
     html.phone-portrait #start-screen .hint {
       display: none; /* consignes déjà dans le jeu ; gagne de la place */
     }
+    /* Brand-tag : masqué en PWA téléphone (coupait sous la status bar) */
     html.phone-portrait #start-screen .brand-tag {
-      margin: 2px 0 0;
-      font-size: 10px;
+      display: none !important;
     }
     html.phone-portrait .wait-ui .neon-title,
     html.phone-portrait .wait-ui h1 {
@@ -2790,7 +2796,7 @@
     html.phone-portrait .wait-ui .btn-row--secondary,
     html.phone-portrait #start-admin-row {
       gap: 6px;
-      margin: 4px auto 8px;
+      margin: 6px auto 20px;
       width: min(160px, 48vw);
     }
     /* CTA pleine largeur — sauf OK pseudo */
@@ -3418,10 +3424,10 @@
     html:not(.play-ui) .audio-btns,
     html.end-ui .audio-btns {
       display: flex;
-      left: max(10px, env(safe-area-inset-left));
+      left: max(12px, env(safe-area-inset-left, 0px));
       right: auto;
       top: auto;
-      bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
+      bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px));
       flex-direction: row;
       gap: 6px;
       transform: none;
