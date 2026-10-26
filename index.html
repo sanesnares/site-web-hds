@@ -748,8 +748,8 @@
     /* Badge CHDS — PNG recadré, taille modérée, entier */
     .chds-badge {
       position: relative;
-      width: min(168px, 40vw);
-      margin: 2px auto 6px;
+      width: min(260px, 62vw);
+      margin: 4px auto 8px;
       overflow: visible;
       filter:
         drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))
@@ -970,7 +970,75 @@
 
     @media (max-width: 520px) {
       .feat-list { grid-template-columns: 1fr; width: min(300px, 92vw); }
-      .chds-badge { width: min(150px, 48vw); }
+      .chds-badge { width: min(240px, 78vw); }
+    }
+
+    /* Classement flottant (accueil) */
+    .board-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+      background: rgba(2, 6, 12, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-sizing: border-box;
+    }
+    .board-modal.hidden { display: none !important; }
+    .board-modal__panel {
+      position: relative;
+      width: min(360px, 94vw);
+      max-height: min(72vh, 520px);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 16px 14px;
+      border: 1px solid rgba(61, 196, 255, 0.4);
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(12, 24, 40, 0.98) 0%, rgba(4, 10, 18, 0.98) 100%);
+      box-shadow:
+        0 0 0 1px rgba(61, 196, 255, 0.15),
+        0 18px 40px rgba(0, 0, 0, 0.55);
+      text-align: left;
+    }
+    .board-modal__close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(61, 196, 255, 0.35);
+      border-radius: 8px;
+      background: rgba(6, 12, 22, 0.9);
+      color: #e8f0fa;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .board-modal__close:hover,
+    .board-modal__close:focus-visible {
+      border-color: #3dc4ff;
+      color: #ffe566;
+      outline: none;
+    }
+    .board-modal .board-title {
+      margin: 0 40px 10px 0;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+    }
+    .board-modal .board-list {
+      max-height: none;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .btn.btn-board {
+      letter-spacing: 0.12em;
     }
 
     /* —— End screen —— */
@@ -2648,14 +2716,6 @@
     html.phone-portrait #start-screen .ysemo-hub {
       display: none !important;
     }
-    html.phone-portrait #start-screen .board-box {
-      width: min(300px, 92vw);
-      max-height: min(22vh, 140px);
-      margin: 4px auto 2px;
-    }
-    html.phone-portrait #start-screen .board-list {
-      max-height: min(16vh, 110px);
-    }
     html.phone-portrait #start-screen .hint {
       display: none; /* consignes déjà dans le jeu ; gagne de la place */
     }
@@ -2672,7 +2732,10 @@
     html.phone-portrait .feat-list {
       display: none; /* gagne de la place vs Listenify / boutons */
     }
-    html.phone-portrait .chds-badge { width: min(88px, 28vw); margin-bottom: 2px; }
+    html.phone-portrait .chds-badge {
+      width: min(280px, 86vw);
+      margin: 6px auto 8px;
+    }
     html.phone-portrait .wait-ui .btn-row {
       display: flex;
       flex-direction: column;
@@ -2685,7 +2748,8 @@
     html.phone-portrait .wait-ui .btn.btn-listenify,
     html.phone-portrait .wait-ui .btn.btn-admin,
     html.phone-portrait .wait-ui .btn.btn-admin-off,
-    html.phone-portrait .wait-ui .btn.btn-shop {
+    html.phone-portrait .wait-ui .btn.btn-shop,
+    html.phone-portrait .wait-ui .btn.btn-board {
       width: 100%;
       box-sizing: border-box;
       margin-top: 0;
@@ -3278,8 +3342,8 @@
       margin: -2px 0 4px;
     }
     html.platform-desktop #start-screen .chds-badge {
-      margin: 2px auto 4px;
-      width: min(148px, 32vw);
+      margin: 4px auto 8px;
+      width: min(280px, 38vw);
     }
     html.platform-desktop #start-screen .ysemo-hub {
       margin: 8px auto 2px;
@@ -4669,12 +4733,9 @@ on</button>
             </div>
             <p class="pseudo-msg" id="pseudo-msg" role="alert"></p>
           </div>
-          <div class="board-box" id="start-board" aria-label="Classement">
-            <p class="board-title">Classement</p>
-            <ol class="board-list" id="start-board-list"></ol>
-          </div>
           <div class="btn-row">
             <button class="btn" id="btn-start" type="button">Jouer</button>
+            <button class="btn btn-board" id="btn-board" type="button">Classement</button>
             <a class="btn btn-listenify" id="btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
             <button class="btn btn-shop hidden" id="btn-shop" type="button">Boutique</button>
             <button class="btn btn-admin" id="btn-admin" type="button">Admin ON</button>
@@ -4685,6 +4746,14 @@ on</button>
             <span class="hint-kb">Clavier : ← → · Espace (Saut / Jetpack) · E / X (Action)<br /></span>
             Mobile : Stick gauche · Saut / Jetpack à droite · Camemberts roses = bouclier
           </p>
+        </div>
+
+        <div id="board-modal" class="board-modal hidden" role="dialog" aria-modal="true" aria-labelledby="board-modal-title">
+          <div class="board-modal__panel" id="start-board">
+            <button type="button" class="board-modal__close" id="btn-board-close" aria-label="Fermer">×</button>
+            <p class="board-title" id="board-modal-title">Classement</p>
+            <ol class="board-list" id="start-board-list"></ol>
+          </div>
         </div>
 
         <div class="wait-map" id="wait-map">
@@ -16549,7 +16618,49 @@ on</button>
   function syncMuteBtn() { syncAudioBtns(); }
   syncAudioBtns();
 
-  document.getElementById("btn-start").addEventListener("click", startGame);
+  const boardModal = document.getElementById("board-modal");
+  const btnBoard = document.getElementById("btn-board");
+  const btnBoardClose = document.getElementById("btn-board-close");
+
+  function openBoardModal() {
+    if (!boardModal) return;
+    refreshBoardUI();
+    boardModal.classList.remove("hidden");
+    try { btnBoardClose && btnBoardClose.focus(); } catch (_) {}
+  }
+  function closeBoardModal() {
+    if (!boardModal) return;
+    boardModal.classList.add("hidden");
+  }
+  if (btnBoard) {
+    btnBoard.addEventListener("click", (e) => {
+      e.preventDefault();
+      openBoardModal();
+    });
+  }
+  if (btnBoardClose) {
+    btnBoardClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeBoardModal();
+    });
+  }
+  if (boardModal) {
+    boardModal.addEventListener("click", (e) => {
+      if (e.target === boardModal) closeBoardModal();
+    });
+  }
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (boardModal && !boardModal.classList.contains("hidden")) {
+      e.preventDefault();
+      closeBoardModal();
+    }
+  });
+
+  document.getElementById("btn-start").addEventListener("click", () => {
+    closeBoardModal();
+    startGame();
+  });
   async function shareRunScore() {
     const dist = Math.min(FINISH_METERS, Math.round(maxReachX / PX_PER_METER));
     const isWin = state === "win" || dist >= FINISH_METERS;
