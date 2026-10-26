@@ -2674,26 +2674,25 @@
     }
     html.phone-portrait .chds-badge { width: min(88px, 28vw); margin-bottom: 2px; }
     html.phone-portrait .wait-ui .btn-row {
-      gap: 8px;
-      margin: 6px 0 4px;
-      width: min(300px, 92vw);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      margin: 8px 0 6px;
+      width: min(320px, 92vw);
     }
-    html.phone-portrait .wait-ui .btn {
-      font-size: 13px;
-      padding: 10px 14px;
-      min-height: 42px;
-    }
+    html.phone-portrait .wait-ui .btn,
     html.phone-portrait .wait-ui .btn.btn-listenify,
     html.phone-portrait .wait-ui .btn.btn-admin,
     html.phone-portrait .wait-ui .btn.btn-admin-off,
     html.phone-portrait .wait-ui .btn.btn-shop {
+      width: 100%;
+      box-sizing: border-box;
       margin-top: 0;
-    }
-    html.phone-portrait .wait-ui .btn.btn-listenify {
-      font-size: 11px;
-      padding: 8px 12px;
-      min-height: 38px;
-      letter-spacing: 0.06em;
+      font-size: 15px;
+      letter-spacing: 0.1em;
+      padding: 14px 16px;
+      min-height: 52px;
     }
     html.phone-portrait #pause-screen .btn.btn-listenify {
       margin-top: 6px;
