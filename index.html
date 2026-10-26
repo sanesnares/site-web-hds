@@ -16958,7 +16958,7 @@ on</button>
     const isWin = state === "win" || dist >= FINISH_METERS;
     const pseudo = playerPseudo || loadPseudo() || "Runner 92";
     const timeStr = formatRunTime(runTimeMs);
-    const shareUrl = "https://site-web-hds.vercel.app";
+    const shareUrl = "https://92rush.vercel.app";
     const text = isWin
       ? `🏆 J'ai plié les 920 m de 92 Rush en ${timeStr} (${camCount} ●) ! Tu fais mieux ?`
       : `🔥 ${dist} m sur 92 Rush (${camCount} ● en ${timeStr}) ! Essaie de me battre :`;
@@ -16969,6 +16969,7 @@ on</button>
       c.width = 600;
       c.height = 315;
       const g = c.getContext("2d");
+      const cx = 300;
       const grad = g.createLinearGradient(0, 0, 600, 315);
       grad.addColorStop(0, "#060b14");
       grad.addColorStop(1, "#12243a");
@@ -16977,18 +16978,20 @@ on</button>
       g.strokeStyle = "#3dc4ff";
       g.lineWidth = 4;
       g.strokeRect(12, 12, 576, 291);
+      g.textAlign = "center";
+      g.textBaseline = "middle";
       g.fillStyle = "#3dc4ff";
       g.font = "700 14px Orbitron, sans-serif";
-      g.fillText("CERTIFIÉ HAUTS-DE-SEINE · 92 RUSH", 36, 52);
+      g.fillText("CERTIFIÉ HAUTS-DE-SEINE · 92 RUSH", cx, 58);
       g.fillStyle = "#ffe566";
-      g.font = "800 54px Bebas Neue, Impact, sans-serif";
-      g.fillText(isWin ? `ARRIVÉE 920 M — ${timeStr}` : `DISTANCE : ${dist} M`, 36, 135);
+      g.font = "800 48px Bebas Neue, Impact, sans-serif";
+      g.fillText(isWin ? `ARRIVÉE 920 M — ${timeStr}` : `DISTANCE : ${dist} M`, cx, 145);
       g.fillStyle = "#f0f4fa";
-      g.font = "600 22px Sora, sans-serif";
-      g.fillText(`Joueur : ${pseudo}   ·   Camemberts : ${camCount} ●`, 36, 195);
+      g.font = "600 20px Sora, sans-serif";
+      g.fillText(`Joueur : ${pseudo}   ·   Camemberts : ${camCount} ●`, cx, 210);
       g.fillStyle = "#7aafd0";
       g.font = "600 16px Orbitron, sans-serif";
-      g.fillText("site-web-hds.vercel.app", 36, 265);
+      g.fillText("92rush.vercel.app", cx, 268);
       const blob = await new Promise((res) => c.toBlob(res, "image/png"));
       if (blob) file = new File([blob], "92-rush-score.png", { type: "image/png" });
     } catch (_) {}
