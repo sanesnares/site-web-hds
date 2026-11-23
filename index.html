@@ -6646,10 +6646,10 @@ on</button>
   }
 
   const C = {
-    sky0: "#040810", sky1: "#0b172a", sky2: "#162a48", sky3: "#243c5c", sky4: "#344e70",
+    sky0: "#03040e", sky1: "#08102c", sky2: "#121f52", sky3: "#26347a", sky4: "#4a4f96",
     haze: "#c888a8", sun: "#d8b098", sunCore: "#f8e8d8",
     far: "#0f1724", mid: "#1f2c3e", near: "#303f52", lite: "#425468",
-    win: "#8eb0c8", winOff: "#182230", winM: "#c898b0", winW: "#d0b090",
+    win: "#9fd4ff", winOff: "#0f1630", winM: "#ff9ed0", winW: "#ffd89a",
     water0: "#0e2030", water1: "#18324e", water2: "#2e5878",
     ground: "#222a34", groundTop: "#3e4a58", edge: "#5e6c7c", grass: "#425e68",
     float: "#2c3846", floatTop: "#5c748c", floatAcc: "#a87890",
@@ -14403,151 +14403,141 @@ on</button>
   }
 
   /** Sol de début : pierres jusqu’en bas, zones denses / cassées / vides en alternance */
+  /**
+   * Quai : bordure claire, trottoir en dalles régulières, liseré lumineux,
+   * puis mur en gros blocs qui s’assombrit vers le bas. Aligné sur le monde
+   * (les joints ne glissent pas quand la caméra bouge).
+   */
+  const QUAY_TONES = ["#2b3442", "#303a49", "#27303d", "#333d4c"];
   function drawStoneSlabGround(px, py, pw, ph, worldX) {
     const fillH = Math.max(ph, H - py + 8);
-    // Fond sombre (terre / vide sous les pierres)
-    fr(px, py, pw, fillH, "#0c1016");
-    fr(px, py, pw, 3, "#1a2028");
+    px = Math.round(px);
+    py = Math.round(py);
 
-    const tones = ["#3e4650", "#485058", "#363e48", "#424a54", "#3a424c", "#505860"];
-    const brokenT = ["#2e343c", "#323840", "#282e36", "#3a4048"];
-    const dirtT = ["#1a1e24", "#161a20", "#1e2228"];
-    const rowH = 13;
-
-    for (let row = 0, y = 0; y < fillH; row++, y += rowH) {
-      const stagger = (row % 2) * 8;
-      let x = -stagger;
-      while (x < pw) {
-        const wx = (worldX + x + row * 17) | 0;
-        const zone = ((Math.floor(wx / 96) % 4) + 4) % 4; // 0 dense, 1 gaps, 2 cassé, 3 dense+cassé
-        const n = ((wx * 13 + row * 31) ^ (wx >> 3)) >>> 0;
-        const tw = Math.min(14 + (n % 12), pw - x + 4);
-        if (tw < 4) { x += 4; continue; }
-
-        const rx = px + x;
-        const ry = py + y;
-        const deep = y > fillH * 0.55;
-
-        // Zone avec trous / pas de pierres
-        if (zone === 1 && (n % 5) === 0) {
-          fr(rx, ry, Math.min(tw, pw - x), rowH, dirtT[n % 3]);
-          if ((n % 3) === 0) fr(rx + 2, ry + 3, 3, 2, "#252a32");
-          x += tw + 2;
-          continue;
-        }
-        // Petite faille occasionnelle même en zone dense
-        if ((zone === 0 || zone === 3) && (n % 17) === 2) {
-          fr(rx, ry, Math.min(tw - 2, pw - x), rowH, dirtT[(n + 1) % 3]);
-          x += tw;
-          continue;
-        }
-
-        const broken = zone === 2 || (zone === 3 && (n % 3) === 0) || (n % 11) === 4;
-        const hOff = n % 3;
-        const bw = Math.min(tw - 1, pw - x);
-        if (bw < 3) { x += tw; continue; }
-
-        if (broken) {
-          const t = brokenT[n % 4];
-          fr(rx, ry + hOff, bw, rowH - 2 - hOff, t);
-          // Morceaux cassés
-          fr(rx, ry + hOff, bw, 1, "#4a5058");
-          fr(rx + 1, ry + hOff + 3, Math.max(1, (bw / 2) | 0), 1, "#222830");
-          if (bw > 8) {
-            fr(rx + ((bw * 0.55) | 0), ry + hOff + 1, 1, rowH - 4 - hOff, "#1c2028");
-            fr(rx + 2, ry + hOff + 5, Math.max(2, bw - 6), 1, "#2a3038");
-          }
-          // Coin manquant
-          if ((n % 2) === 0) fr(rx + bw - 3, ry + hOff, 3, 3, "#12161c");
-        } else {
-          const t = tones[n % 6];
-          const dim = deep ? "#2a3038" : t;
-          fr(rx, ry + hOff, bw, rowH - 1 - hOff, dim);
-          fr(rx, ry + hOff, bw, 2, deep ? "#3a424c" : "#5c6470");
-          if (bw > 5) fr(rx + 1, ry + hOff + 2, Math.max(1, bw - 4), 1, deep ? "#343c46" : "#525a64");
-          fr(rx, ry + rowH - 2, bw, 1, "#1a1e26");
-          fr(rx + bw - 1, ry + hOff, 1, rowH - 1 - hOff, "#222830");
-          // Grain / caillou
-          if ((n % 7) === 1) fr(rx + 3, ry + hOff + 4, 2, 2, "#606870");
-        }
-        x += tw;
+    // Mur du quai
+    fr(px, py, pw, fillH, "#1c232e");
+    const rowH = 18, bw = 46;
+    for (let row = 0, y = 17; y < fillH; row++, y += rowH) {
+      const off = (row % 2) * 23;
+      let x = -((((worldX + off) % bw) + bw) % bw);
+      for (; x < pw; x += bw) {
+        const x0 = Math.max(0, x), x1 = Math.min(pw, x + bw - 1);
+        if (x1 - x0 < 2) continue;
+        const wx = worldX + x;
+        const n = (((wx * 13) ^ (row * 57) ^ (wx >> 4)) >>> 0);
+        fr(px + x0, py + y, x1 - x0, rowH - 1, QUAY_TONES[n % 4]);
+        fr(px + x0, py + y, x1 - x0, 1, "#3d4858");
+        // coulure d’humidité de temps en temps
+        if (n % 7 === 0 && x1 - x0 > 14) fr(px + x0 + 8 + (n % 9), py + y + 3, 2, rowH - 6, "#1a2530");
       }
     }
+    // Profondeur : le mur s’enfonce dans le noir
+    const dg = ctx.createLinearGradient(0, py + 16, 0, py + Math.min(fillH, 190));
+    dg.addColorStop(0, "rgba(3,6,12,0)");
+    dg.addColorStop(1, "rgba(3,6,12,0.78)");
+    ctx.fillStyle = dg;
+    ctx.fillRect(px, py + 16, pw, fillH - 16);
 
-    // Rebord de surface (lisible)
-    fr(px, py, pw, 2, "#6a727c");
-    fr(px, py + 2, pw, 1, "#4a525c");
+    // Trottoir : dalles régulières
+    fr(px, py + 4, pw, 12, "#3e4959");
+    fr(px, py + 4, pw, 1, "#5a6779");
+    {
+      const tile = 32;
+      let x = -(((worldX % tile) + tile) % tile);
+      for (; x < pw; x += tile) {
+        if (x > 0) fr(px + x, py + 5, 1, 11, "#2a323f");
+      }
+    }
+    fr(px, py + 16, pw, 2, "#10151d");
+
+    // Bordure en pierre claire (bien lisible : c’est là qu’on marche)
+    fr(px, py, pw, 3, "#b4bfcd");
+    fr(px, py, pw, 1, "#e2e9f2");
+    fr(px, py + 3, pw, 1, "#6a7586");
+
+    // Liseré lumineux sous le trottoir
+    ctx.globalAlpha = 0.55;
+    fr(px, py + 17, pw, 1, "#3dc4ff");
+    ctx.globalAlpha = 0.1;
+    fr(px, py + 18, pw, 5, "#3dc4ff");
+    ctx.globalAlpha = 1;
+
+    // Arêtes du quai + écume là où l’eau touche la pierre
+    fr(px, py + 3, 2, fillH, "#465162");
+    fr(px + pw - 2, py + 3, 2, fillH, "#10151d");
+    const foam = Math.sin(time * 2.2 + worldX * 0.01) * 1.5;
+    ctx.globalAlpha = 0.6;
+    fr(px - 6 + foam, py + 5, 8, 2, "#eaf6ff");
+    fr(px + pw - 2 - foam, py + 5, 8, 2, "#eaf6ff");
+    ctx.globalAlpha = 0.3;
+    fr(px - 11 - foam, py + 7, 9, 1, "#eaf6ff");
+    fr(px + pw + 3 + foam, py + 7, 9, 1, "#eaf6ff");
+    ctx.globalAlpha = 1;
   }
 
   /** Sol hiver : neige en surface, pierres gelées jusqu’en bas (zones / cassures) */
+  const ICE_TONES = ["#30455a", "#385066", "#2a3d50", "#3e586e"];
   function drawIceGround(px, py, pw, ph, worldX) {
     const fillH = Math.max(ph, H - py + 8);
-    fr(px, py + 12, pw, fillH - 12, "#141c24");
-
-    const stone = ["#3a4a58", "#445464", "#2e3c48", "#4a5a68", "#364450"];
-    const cracked = ["#243038", "#2a3840", "#1e2830"];
-    const rowH = 13;
-    for (let row = 0, y = 12; y < fillH; row++, y += rowH) {
-      const stagger = (row % 2) * 7;
-      let x = -stagger;
-      while (x < pw) {
-        const wx = (worldX + x + row * 19) | 0;
-        const zone = ((Math.floor(wx / 100) % 4) + 4) % 4;
-        const n = ((wx * 17 + row * 23) ^ (wx >> 2)) >>> 0;
-        const tw = Math.min(13 + (n % 11), pw - x + 3);
-        if (tw < 4) { x += 4; continue; }
-        const rx = px + x;
-        const ry = py + y;
-        if (zone === 1 && (n % 5) === 0) {
-          fr(rx, ry, Math.min(tw, pw - x), rowH, "#1a242c");
-          x += tw + 2;
-          continue;
+    px = Math.round(px);
+    py = Math.round(py);
+    // Mur du quai gelé
+    fr(px, py, pw, fillH, "#1a2632");
+    const rowH = 18, bw = 46;
+    for (let row = 0, y = 17; y < fillH; row++, y += rowH) {
+      const off = (row % 2) * 23;
+      let x = -((((worldX + off) % bw) + bw) % bw);
+      for (; x < pw; x += bw) {
+        const x0 = Math.max(0, x), x1 = Math.min(pw, x + bw - 1);
+        if (x1 - x0 < 2) continue;
+        const wx = worldX + x;
+        const n = (((wx * 13) ^ (row * 57) ^ (wx >> 4)) >>> 0);
+        fr(px + x0, py + y, x1 - x0, rowH - 1, ICE_TONES[n % 4]);
+        fr(px + x0, py + y, x1 - x0, 1, "#5c7a92");
+        // givre
+        if (n % 5 === 0 && x1 - x0 > 16) {
+          ctx.globalAlpha = 0.35;
+          fr(px + x0 + 6 + (n % 11), py + y + 3, 7, 1, "#cfe6f4");
+          fr(px + x0 + 9 + (n % 11), py + y + 5, 3, 1, "#cfe6f4");
+          ctx.globalAlpha = 1;
         }
-        const broken = zone === 2 || (n % 9) === 3;
-        const bw = Math.min(tw - 1, pw - x);
-        if (bw < 3) { x += tw; continue; }
-        if (broken) {
-          fr(rx, ry, bw, rowH - 1, cracked[n % 3]);
-          fr(rx, ry, bw, 1, "#3a4850");
-          if (bw > 7) fr(rx + ((bw * 0.4) | 0), ry + 1, 1, rowH - 3, "#121820");
-        } else {
-          fr(rx, ry, bw, rowH - 1, stone[n % 5]);
-          fr(rx, ry, bw, 1, "#5a6a78");
-          fr(rx, ry + rowH - 2, bw, 1, "#1c2830");
-        }
-        x += tw;
       }
     }
+    const dg = ctx.createLinearGradient(0, py + 16, 0, py + Math.min(fillH, 190));
+    dg.addColorStop(0, "rgba(4,10,18,0)");
+    dg.addColorStop(1, "rgba(4,10,18,0.74)");
+    ctx.fillStyle = dg;
+    ctx.fillRect(px, py + 16, pw, fillH - 16);
 
-    // Neige tassée + surface
-    fr(px, py + 5, pw, 9, "#a8b8c8");
-    let x = 0;
-    while (x < pw) {
-      const wx = (worldX + x) | 0;
-      const tw = Math.min(22 + (wx % 10), pw - x);
-      const hOff = (wx * 3) % 3;
-      const tones = ["#e8eef4", "#dde6ee", "#f2f6fa", "#d4dee8", "#eaf0f6"];
-      const t = tones[(wx * 11) % 5];
-      fr(px + x, py + hOff - 1, tw - 1, 7 - hOff, t);
-      fr(px + x, py + hOff - 1, tw - 1, 2, "#ffffff");
-      fr(px + x, py + 5, tw - 1, 1, "#8a9aac");
-      if ((wx % 19) === 3) {
-        fr(px + x + 2, py + hOff - 4, Math.min(14, tw - 4), 3, "#f6fafc");
-        fr(px + x + 4, py + hOff - 5, Math.min(8, tw - 6), 2, "#ffffff");
+    // Glace vive sous la neige
+    fr(px, py + 5, pw, 11, "#7ea8c6");
+    fr(px, py + 5, pw, 1, "#c4e2f4");
+    {
+      let x = -(((worldX % 26) + 26) % 26);
+      for (; x < pw; x += 26) {
+        if (x > 2 && x < pw - 8) fr(px + x, py + 8, 7, 1, "#d8eefa");
       }
-      if ((wx % 13) === 1) {
-        fr(px + x + 1, py + 2, 3, 2, "#c8d4e0");
-      }
-      x += tw;
     }
-    fr(px, py + 11, pw, 2, "#6a7c8c");
-    fr(px, py + 13, pw, 1, "#4a5c6c");
+    fr(px, py + 16, pw, 2, "#12202c");
+
+    // Manteau de neige (léger relief, aligné sur le monde)
+    fr(px, py, pw, 5, "#eef4fa");
+    fr(px, py, pw, 2, "#ffffff");
+    {
+      let x = -(((worldX % 22) + 22) % 22);
+      for (; x < pw; x += 22) {
+        const n = ((((worldX + x) * 7) >>> 0) % 3);
+        const x0 = Math.max(0, x + 3), x1 = Math.min(pw, x + 14 + n * 2);
+        if (x1 - x0 > 2) fr(px + x0, py - 2 - (n === 0 ? 1 : 0), x1 - x0, 2 + (n === 0 ? 1 : 0), "#ffffff");
+      }
+    }
+    fr(px, py + 4, pw, 1, "#b9d0e2");
+
+    // Arêtes
+    fr(px, py + 5, 2, fillH, "#557088");
+    fr(px + pw - 2, py + 5, 2, fillH, "#12202c");
   }
 
-  /**
-   * Stalactite de glace pixel — accrochée en (ax, ay), pointe vers le bas.
-   * seed varie la silhouette ; tipScale affine la pointe.
-   */
   function drawIceStalactite(ax, ay, tw, th, seed, tipScale) {
     const w = Math.max(4, tw | 0);
     const h = Math.max(8, th | 0);
@@ -14638,22 +14628,35 @@ on</button>
       }
       return;
     }
-    // Béton / métal : corps + dessus + pieds
-    fr(px, py + 3, pw, ph + 6, "#1a222c");
-    fr(px, py, pw, ph, "#3a4654");
-    fr(px, py, pw, 4, "#6a7888");
-    fr(px + 1, py + 1, pw - 2, 1, "#9aacbc");
-    fr(px, py + ph - 2, pw, 2, "#2a343e");
-    fr(px, py, 2, ph, "#4a5664");
-    fr(px + pw - 2, py, 2, ph, "#2a343e");
-    for (let i = 8; i < pw - 6; i += 16) {
-      fr(px + i, py + 6, 2, 2, "#5a6878");
-      fr(px + i, py + 10, 2, 1, "#2a343e");
+    // Passerelle suspendue : plaque claire, caisson sombre, liseré néon, flotteurs
+    px = Math.round(px);
+    py = Math.round(py);
+    fr(px + 2, py + ph, pw - 4, 5, "#0a0f1c");          // ombre / dessous
+    fr(px, py, pw, ph, "#1b2540");                      // caisson
+    fr(px, py, pw, 4, "#b4bfcd");                       // dessus (là où on marche)
+    fr(px, py, pw, 1, "#e6edf6");
+    fr(px, py + 4, pw, 1, "#5d6a80");
+    fr(px, py + 5, 2, ph - 5, "#33406a");
+    fr(px + pw - 2, py + 5, 2, ph - 5, "#0d1326");
+    for (let i = 10; i < pw - 8; i += 18) fr(px + i, py + 7, 6, 2, "#27335a"); // panneaux
+    // liseré lumineux sous le caisson
+    ctx.globalAlpha = 0.9;
+    fr(px + 3, py + ph - 2, pw - 6, 1, "#3dc4ff");
+    ctx.globalAlpha = 0.14;
+    fr(px + 1, py + ph - 1, pw - 2, 6, "#3dc4ff");
+    // flotteurs antigravité qui pulsent
+    const pu = 0.55 + 0.45 * Math.sin(time * 4 + worldX * 0.02);
+    for (const fx of [px + 6, px + pw - 14]) {
+      ctx.globalAlpha = 1;
+      fr(fx, py + ph, 8, 4, "#27335a");
+      fr(fx + 1, py + ph + 4, 6, 2, "#0d1326");
+      ctx.globalAlpha = 0.35 + 0.5 * pu;
+      fr(fx + 2, py + ph + 6, 4, 2, "#8fe6ff");
+      ctx.globalAlpha = 0.12 + 0.14 * pu;
+      fr(fx, py + ph + 8, 8, 7, "#3dc4ff");
+      fr(fx + 2, py + ph + 15, 4, 5, "#3dc4ff");
     }
-    fr(px + 5, py + ph, 5, 14, "#2a343e");
-    fr(px + pw - 10, py + ph, 5, 14, "#2a343e");
-    fr(px + 6, py + ph, 3, 14, "#3a4654");
-    fr(px + pw - 9, py + ph, 3, 14, "#3a4654");
+    ctx.globalAlpha = 1;
   }
 
   function easeOutCubic(t) {
@@ -15254,24 +15257,40 @@ on</button>
     const sunY = 96;
     const moonA = (1 - sunEnter * 0.9) * (seine > 0.55 ? 0.35 : 1);
 
+    // Lueur de la ville à l’horizon (nuit seulement)
+    if (!winter && seine < 0.5) {
+      const hy = sy(GROUND_Y - 40);
+      const hg = ctx.createLinearGradient(0, hy - 230, 0, hy);
+      hg.addColorStop(0, "rgba(255,140,120,0)");
+      hg.addColorStop(0.6, "rgba(255,130,150,0.10)");
+      hg.addColorStop(1, "rgba(255,170,110,0.22)");
+      ctx.globalAlpha = 1 - seine * 2;
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, hy - 230, W, 230);
+      ctx.globalAlpha = 1;
+    }
+
     if (moonA > 0.04) {
-      // Halo froid
-      ctx.globalAlpha = 0.1 * moonA;
-      fr(moonX - 28, moonY - 18, 56, 40, "#a8c0d8");
-      ctx.globalAlpha = 0.22 * moonA;
-      fr(moonX - 14, moonY - 10, 28, 22, "#d0dce8");
-      // Disque
-      ctx.globalAlpha = 0.85 * moonA;
-      fr(moonX - 8, moonY - 7, 16, 14, "#e8f0f8");
-      ctx.globalAlpha = 0.95 * moonA;
-      fr(moonX - 5, moonY - 5, 11, 10, "#f4f8fc");
-      // Croissant / ombre douce (côté droit)
-      ctx.globalAlpha = 0.35 * moonA;
-      fr(moonX + 2, moonY - 4, 6, 9, "#b8c8d8");
-      // Cratères discrets
-      ctx.globalAlpha = 0.2 * moonA;
-      fr(moonX - 3, moonY - 1, 2, 2, "#c8d4e0");
-      fr(moonX + 1, moonY + 2, 2, 1, "#c8d4e0");
+      // Lune ronde + halo doux
+      const halo = ctx.createRadialGradient(moonX, moonY, 6, moonX, moonY, 70);
+      halo.addColorStop(0, "rgba(210,225,255,0.34)");
+      halo.addColorStop(0.4, "rgba(170,195,240,0.12)");
+      halo.addColorStop(1, "rgba(170,195,240,0)");
+      ctx.globalAlpha = moonA;
+      ctx.fillStyle = halo;
+      ctx.fillRect(moonX - 72, moonY - 72, 144, 144);
+      ctx.fillStyle = "#f4f8ff";
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.28 * moonA;
+      ctx.fillStyle = "#9fb4d4";
+      ctx.beginPath();
+      ctx.arc(moonX + 4, moonY - 3, 3, 0, Math.PI * 2);
+      ctx.arc(moonX - 5, moonY + 4, 2.2, 0, Math.PI * 2);
+      ctx.arc(moonX + 2, moonY + 6, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     if (sunEnter > 0.02) {
@@ -15310,10 +15329,10 @@ on</button>
       ctx.globalAlpha = 1;
     }
 
-    ctx.globalAlpha = 0.45;
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 34; i++) {
       const x = ((i * 83 + 25) - camX * 0.007) % W;
-      fr(x < 0 ? x + W : x, sy(14 + (i * 39) % 105), 1 + (i % 2), 1, C.white);
+      ctx.globalAlpha = 0.25 + 0.4 * (0.5 + 0.5 * Math.sin(time * (0.8 + (i % 5) * 0.35) + i * 1.9));
+      fr(x < 0 ? x + W : x, sy(10 + (i * 39) % 128), 1 + (i % 3 === 0 ? 1 : 0), 1 + (i % 7 === 0 ? 1 : 0), i % 6 === 0 ? "#bfe0ff" : C.white);
     }
     ctx.globalAlpha = 1;
 
@@ -15351,40 +15370,40 @@ on</button>
     const w = winterBlend();
     if (depth === 0) {
       return {
-        body: w > 0.5 ? "#0a121c" : "#0a1018",
-        mid: w > 0.5 ? "#101820" : "#0e1620",
-        lite: w > 0.5 ? "#1a2834" : "#182430",
+        body: w > 0.5 ? "#0a121c" : "#161d4a",
+        mid: w > 0.5 ? "#101820" : "#1c2456",
+        lite: w > 0.5 ? "#1a2834" : "#262f6a",
         dark: "#060a10",
-        glass: w > 0.5 ? "#1a3040" : "#143048",
+        glass: w > 0.5 ? "#1a3040" : "#243272",
       };
     }
     if (depth === 1) {
       return {
-        body: w > 0.5 ? "#121c28" : "#121a28",
-        mid: w > 0.5 ? "#1a2838" : "#1a2434",
-        lite: w > 0.5 ? "#2a3c4c" : "#2a3848",
+        body: w > 0.5 ? "#121c28" : "#11183c",
+        mid: w > 0.5 ? "#1a2838" : "#18214c",
+        lite: w > 0.5 ? "#2a3c4c" : "#2a366e",
         dark: "#0a1018",
-        glass: w > 0.5 ? "#243848" : "#1e3850",
-        accent: w > 0.5 ? "#3a5060" : "#3a4860",
+        glass: w > 0.5 ? "#243848" : "#223f7c",
+        accent: w > 0.5 ? "#3a5060" : "#3e4e8e",
       };
     }
     if (depth === 2) {
       return {
-        body: w > 0.5 ? "#1a2838" : C.mid,
-        mid: w > 0.5 ? "#243848" : "#283848",
-        lite: w > 0.5 ? "#3a5068" : C.lite,
+        body: w > 0.5 ? "#1a2838" : "#0e1632",
+        mid: w > 0.5 ? "#243848" : "#182342",
+        lite: w > 0.5 ? "#3a5068" : "#2b3c66",
         dark: "#121820",
-        glass: w > 0.5 ? "#3a6078" : "#2a4860",
-        accent: w > 0.5 ? "#5a7890" : "#4a6080",
-        rim: w > 0.5 ? "#6a8898" : "#5a7088",
+        glass: w > 0.5 ? "#3a6078" : "#1f4c7c",
+        accent: w > 0.5 ? "#5a7890" : "#4b6ca4",
+        rim: w > 0.5 ? "#6a8898" : "#6e92cc",
       };
     }
     return {
-      body: w > 0.5 ? "#2a3c4c" : C.near,
-      mid: w > 0.5 ? "#344858" : "#384858",
-      lite: w > 0.5 ? "#4a6478" : "#506070",
+      body: w > 0.5 ? "#2a3c4c" : "#0b1124",
+      mid: w > 0.5 ? "#344858" : "#131c34",
+      lite: w > 0.5 ? "#4a6478" : "#263756",
       dark: "#1a2430",
-      glass: w > 0.5 ? "#4a7088" : "#3a5880",
+      glass: w > 0.5 ? "#4a7088" : "#2a5c90",
       accent: C.mag,
       rim: "#6888a0",
     };
@@ -15620,6 +15639,8 @@ on</button>
     ctx.globalAlpha = Math.max(0, 1 - seine * 0.9);
     skyline(base);
     skyline(base + 1400);
+    skylineNeons(base);
+    skylineNeons(base + 1400);
     ctx.restore();
 
     // Brume de profondeur (shader atmosphère)
@@ -15681,6 +15702,41 @@ on</button>
     ctx.restore();
   }
 
+  /** Écran géant : couleur qui tourne + ligne de balayage */
+  const BILLBOARD_COLS = ["#ff4f9a", "#3dc4ff", "#ffe566", "#8ff0d8"];
+  function skyBillboard(x, y, w, h, k) {
+    const c = BILLBOARD_COLS[(Math.floor(time * 0.45 + k) % 4 + 4) % 4];
+    ctx.globalAlpha = 0.16;
+    fr(x - 4, y - 4, w + 8, h + 8, c);
+    ctx.globalAlpha = 1;
+    fr(x - 1, y - 1, w + 2, h + 2, "#070b18");
+    ctx.globalAlpha = 0.85;
+    fr(x, y, w, h, c);
+    ctx.globalAlpha = 0.5;
+    fr(x + 2, y + 2, (w * 0.45) | 0, 2, "#ffffff");
+    fr(x + 2, y + 6, (w * 0.7) | 0, 1, "#0a0f1e");
+    fr(x + 2, y + 9, (w * 0.55) | 0, 1, "#0a0f1e");
+    ctx.globalAlpha = 0.35;
+    fr(x, y + (((time * 9 + k * 5) % h) | 0), w, 1, "#ffffff");
+    ctx.globalAlpha = 1;
+  }
+
+  /** Néons posés sur des tours précises de skyline() (mêmes décalages) */
+  function skylineNeons(ox) {
+    ox = Math.floor(ox);
+    if (ox > W + 40 || ox + 1300 < -40) return;
+    const top = (h) => sy(GROUND_Y - 16 - h) | 0;
+    const pulse = (k) => 0.5 + 0.3 * Math.sin(time * 1.5 + k);
+    glowRect(ox + 123, top(268) + 34, 2, 62, "#ff4f9a", pulse(0.4));   // tour étagée
+    glowRect(ox + 178, top(188) + 12, 2, 92, "#3dc4ff", pulse(1.1));   // tour de verre
+    glowRect(ox + 280, top(235) + 22, 36, 2, "#ff4f9a", pulse(2.0));   // anneau cylindre
+    skyBillboard(ox + 624, top(208) + 30, 26, 14, 0);
+    glowRect(ox + 728, top(198) + 16, 30, 2, "#8ff0d8", pulse(3.3));
+    glowRect(ox + 918, top(258) + 40, 2, 72, "#ffe566", pulse(4.1));
+    glowRect(ox + 942, top(198) + 14, 36, 2, "#3dc4ff", pulse(5.2));
+    skyBillboard(ox + 1227, top(265) + 42, 26, 14, 2);
+  }
+
   function skyline(ox) {
     ox = Math.floor(ox);
     const pal = cityPal(2);
@@ -15730,8 +15786,7 @@ on</button>
     fr(x + 3, y + 3, w - 6, 2, pal.accent || pal.lite);
     const cx = x + (w / 2 | 0);
     fr(cx - 1, y - 22, 2, 22, C.spike);
-    fr(cx - 2, y - 26, 4, 4, C.mag);
-    fr(cx - 1, y - 28, 2, 2, C.winW);
+    glowRect(cx - 2, y - 27, 4, 4, "#ff3b4f", 0.25 + 0.75 * Math.max(0, Math.sin(time * 2.4 + seed)));
     roofSnow(x - 1, y, w + 2, seed);
   }
 
@@ -15989,41 +16044,101 @@ on</button>
     roofSnow(x - 1, y, w + 2, seed);
   }
 
+  /**
+   * Seine : dégradé de profondeur, reflets des lumières de la ville,
+   * crêtes de vagues en parallaxe, ligne d’écume et scintillements.
+   */
+  const WATER_LIGHTS = ["#ffd98a", "#9fd8ff", "#ff9ec4", "#fff2c2", "#8ff0d8"];
   function drawWater() {
     const seine = seineBlend();
     const wy = sy(GROUND_Y + 5);
     if (wy > H) return;
     const top = Math.max(0, wy);
     const winter = isWinter() && seine < 0.5;
-    // Seine plus large / plus vive vers l’arrivée
     const deep = seine > 0.35;
-    fr(0, top, W, H - top + 4, deep ? "#1a3a50" : (winter ? "#1a3040" : C.water0));
+
+    // Corps de l’eau
+    const g = ctx.createLinearGradient(0, top, 0, H + 4);
     if (deep) {
-      fr(0, top, W, 28, "#243e58");
-      fr(0, top + 40, W, Math.max(0, H - top - 40), "#122838");
+      g.addColorStop(0, "#4a8db4");
+      g.addColorStop(0.3, "#27628a");
+      g.addColorStop(1, "#0d2f4c");
+    } else if (winter) {
+      g.addColorStop(0, "#2f566e");
+      g.addColorStop(0.35, "#173244");
+      g.addColorStop(1, "#081824");
+    } else {
+      g.addColorStop(0, "#1f5280");
+      g.addColorStop(0.35, "#103058");
+      g.addColorStop(1, "#050f26");
     }
-    const speed = deep ? 58 : 32;
-    const wx = -(camX * 0.48 + time * speed) % 48;
-    for (let x = wx - 48; x < W + 48; x += 24) {
-      const bob = winter ? 0.4 : Math.sin(time * (deep ? 2.4 : 1.6) + x * 0.05) * (deep ? 2.6 : 1.8);
-      fr(x, wy + 3 + bob, 16, 4, deep ? "#4a88a8" : (winter ? "#3a6078" : C.water1));
-      fr(x + 8, wy + 12 + bob, 12, 3, deep ? "#6aa8c0" : (winter ? "#5a88a0" : C.water2));
-      fr(x + 2, wy + 22, 18, 2, deep ? "#3a7088" : (winter ? "#4a7088" : C.water1));
-      if (deep) fr(x + 4, wy + 32 + bob * 0.5, 14, 2, "#2a5870");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, top, W, H - top + 4);
+
+    // Reflets verticaux des lumières (cassés par les vagues)
+    const span = W + 80;
+    const litA = deep ? 0.5 : (winter ? 0.55 : 1);
+    for (let i = 0; i < 13; i++) {
+      let x = ((i * 79 + 31) - camX * 0.28) % span;
+      if (x < 0) x += span;
+      x -= 40;
+      const col = WATER_LIGHTS[i % WATER_LIGHTS.length];
+      const segs = 4 + (i % 3);
+      for (let k = 0; k < segs; k++) {
+        const wob = Math.sin(time * 2.1 + i * 1.7 + k * 0.9) * (2 + k * 0.6);
+        const a = (0.26 - k * 0.035) * litA;
+        if (a <= 0.02) continue;
+        ctx.globalAlpha = a;
+        fr(x + wob, wy + 5 + k * 8, 3 + ((i + k) % 2) * 2, 4, col);
+      }
     }
+
+    // Crêtes de vagues : 5 rangées, plus rapides et plus grandes au premier plan
+    const crest = deep ? "#bfe4f6" : (winter ? "#9ec4d8" : "#7fb6de");
+    const crest2 = deep ? "#e6f6ff" : (winter ? "#c8e0ec" : "#b8dcf4");
+    for (let row = 0; row < 5; row++) {
+      const y = wy + 7 + row * 12;
+      if (y > H) break;
+      const speed = (16 + row * 11) * (deep ? 1.7 : 1) * (winter ? 0.35 : 1);
+      const step = 58 + row * 10;
+      let x0 = -((camX * (0.5 + row * 0.07) + time * speed) % step);
+      for (let x = x0 - step; x < W + step; x += step) {
+        const bob = Math.sin(time * 1.9 + x * 0.045 + row * 1.3) * (1.2 + row * 0.35);
+        ctx.globalAlpha = 0.42 - row * 0.06;
+        fr(x + row * 13, y + bob, 20 + row * 3, 2, crest);
+        ctx.globalAlpha = 0.3 - row * 0.04;
+        fr(x + row * 13 + 24 + row * 3, y + bob + 3, 9 + row, 1, crest2);
+      }
+    }
+
+    // Ligne de surface : brillance + écume qui glisse
+    ctx.globalAlpha = winter ? 0.5 : 0.6;
+    fr(0, wy, W, 1, "#cdeaff");
+    ctx.globalAlpha = 0.22;
+    fr(0, wy + 1, W, 2, "#8cc6ea");
+    ctx.globalAlpha = 0.5;
+    {
+      let fx = -((camX * 0.5 + time * 22) % 44);
+      for (let x = fx - 44; x < W + 44; x += 44) {
+        fr(x + Math.sin(time * 2.4 + x * 0.07) * 2, wy - 1, 10, 1, "#ffffff");
+      }
+    }
+
+    // Scintillements
+    for (let i = 0; i < 9; i++) {
+      const tw = Math.sin(time * 3.1 + i * 2.3);
+      if (tw < 0.55) continue;
+      let x = ((i * 117 + 60) - camX * 0.4) % W;
+      if (x < 0) x += W;
+      ctx.globalAlpha = (tw - 0.55) * 1.8;
+      fr(x, wy + 9 + (i % 4) * 9, 2, 2, "#ffffff");
+    }
+
     if (winter && seine < 0.4) {
       ctx.globalAlpha = 0.35 * (1 - seine * 2);
       fr(0, wy, W, 6, C.iceTop);
       ctx.globalAlpha = 0.2 * (1 - seine * 2);
       fr(0, wy + 2, W, 2, C.iceShine);
-    } else {
-      ctx.globalAlpha = deep ? 0.14 : 0.08;
-      fr(0, wy, W, deep ? 36 : 20, deep ? "#80c0d8" : C.win);
-    }
-    ctx.globalAlpha = deep ? 0.12 : 0.05;
-    for (let i = 0; i < (deep ? 14 : 8); i++) {
-      const rx = ((i * 140 + time * (deep ? 55 : 32)) - camX * 0.2) % W;
-      fr(rx < 0 ? rx + W : rx, wy + 6 + (i % 3) * 8, 40 + (i % 2) * 12, 2, C.white);
     }
     ctx.globalAlpha = 1;
   }
@@ -16055,34 +16170,43 @@ on</button>
   /** Tablier de pont / quai — pierres claires, pas de neige */
   function drawQuaiBridgeGround(px, py, pw, ph, worldX) {
     const fillH = Math.max(ph, H - py + 8);
-    fr(px, py, pw, fillH, "#1a2228");
-    // Tablier
-    fr(px, py, pw, 12, "#7a828c");
-    fr(px, py, pw, 3, "#a8b0b8");
-    fr(px, py + 10, pw, 2, "#5a626c");
-    let x = 0;
-    while (x < pw) {
-      const wx = (worldX + x) | 0;
-      const tw = Math.min(28 + (wx % 8), pw - x);
-      const t = ["#6a727c", "#747c86", "#626a74", "#808890"][(wx * 5) % 4];
-      fr(px + x, py + 3, tw - 1, 7, t);
-      fr(px + x, py + 3, tw - 1, 1, "#b0b8c0");
-      fr(px + x + tw - 2, py + 3, 1, 7, "#4a5058");
-      // Joints
-      if ((wx % 3) === 0) fr(px + x + 2, py + 5, Math.max(2, tw - 6), 1, "#5a6068");
-      x += tw;
-    }
-    // Dessous du pont (vide / ombre → Seine visible)
-    fr(px, py + 12, pw, 10, "#121820");
-    fr(px, py + 14, pw, fillH - 14, "#0a1016");
-    // Piliers espacés
-    for (let i = 0; i < pw; i += 56) {
-      const wx = worldX + i;
-      if (((wx / 56) | 0) % 2 === 0) {
-        fr(px + i + 16, py + 12, 14, Math.min(50, fillH - 12), "#2a3038");
-        fr(px + i + 18, py + 12, 10, 4, "#4a5058");
+    px = Math.round(px);
+    py = Math.round(py);
+    // Dessous du pont : vide sombre (la Seine passe dessous)
+    fr(px, py + 14, pw, fillH - 14, "#0b121a");
+    // Piles régulières, alignées sur le monde
+    {
+      const stepP = 112;
+      let x = -(((worldX % stepP) + stepP) % stepP) + 20;
+      for (; x < pw; x += stepP) {
+        const x0 = Math.max(0, x), x1 = Math.min(pw, x + 22);
+        if (x1 - x0 < 3) continue;
+        const ph2 = Math.min(64, fillH - 14);
+        fr(px + x0, py + 14, x1 - x0, ph2, "#39424f");
+        fr(px + x0, py + 14, Math.min(3, x1 - x0), ph2, "#566070");
+        fr(px + x0, py + 14, x1 - x0, 4, "#6b7686");
       }
     }
+    // Tablier : dalles claires régulières
+    fr(px, py + 4, pw, 9, "#8a94a2");
+    fr(px, py + 4, pw, 1, "#aeb8c6");
+    {
+      let x = -(((worldX % 32) + 32) % 32);
+      for (; x < pw; x += 32) {
+        if (x > 0) fr(px + x, py + 5, 1, 8, "#69727f");
+      }
+    }
+    fr(px, py + 13, pw, 2, "#2a323d");
+    // Bordure claire
+    fr(px, py, pw, 3, "#cfd8e3");
+    fr(px, py, pw, 1, "#f4f8fc");
+    fr(px, py + 3, pw, 1, "#7d8898");
+    // Écume aux extrémités
+    const foam = Math.sin(time * 2.2 + worldX * 0.01) * 1.5;
+    ctx.globalAlpha = 0.55;
+    fr(px - 6 + foam, py + 5, 8, 2, "#eaf6ff");
+    fr(px + pw - 2 - foam, py + 5, 8, 2, "#eaf6ff");
+    ctx.globalAlpha = 1;
   }
 
   function drawGround() {
@@ -16608,73 +16732,145 @@ on</button>
     const by = idle + copOffsetY;
     const sx = 0;
 
-    // Jambes (oscillation fluide)
+    const helm = kind === "crs" || kind === "riot" || kind === "angry" || kind === "boss";
+    // Uniforme bleu marine ; version rouge sombre pour le condé énervé
+    const uni = angry ? "#3a1420" : "#18264a";
+    const uniL = angry ? "#5c2030" : "#2b3e70";
+    const uniD = angry ? "#1c0a10" : "#0c1428";
+    const ARM = "#0a0d13", ARML = "#262d3a";
+    const WHITE = "#f2f5f8", YEL = "#ffd21e";
+    // Bandeau « POLICE » (jamais en miroir, quel que soit le sens du perso)
+    const policeBand = (x, y, w, h) => {
+      fr(x, y, w, h, WHITE);
+      ctx.save();
+      const k = artScale;
+      ctx.translate((x + w / 2) * k, (y + h / 2) * k);
+      if (face >= 0) ctx.scale(-1, 1);
+      ctx.fillStyle = "#0c1428";
+      ctx.font = "900 " + (h * k * 0.9).toFixed(1) + "px Sora, Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("POLICE", 0, k * 0.4, w * k - 2);
+      ctx.restore();
+    };
+
+    // Jambes (oscillation fluide) : pantalon marine, rangers noires
     const leg1X = sx + 5 + Math.round(copLegSwing * 3);
     const leg1Y = by + 28 - Math.round(Math.max(0, copLegSwing * 3));
     const leg2X = sx + 15 - Math.round(copLegSwing * 3);
     const leg2Y = by + 28 - Math.round(Math.max(0, -copLegSwing * 3));
-    fr(leg1X, leg1Y, 6, 12, coatD);
-    fr(leg2X, leg2Y, 6, 12, coatD);
-    fr(leg1X - 1, leg1Y + 10, 8, 4, C.shoe);
-    fr(leg2X - 1, leg2Y + 10, 8, 4, C.shoe);
+    fr(leg1X, leg1Y, 6, 12, uniD);
+    fr(leg2X, leg2Y, 6, 12, uniD);
+    fr(leg1X - 1, leg1Y + 8, 8, 6, ARM);
+    fr(leg2X - 1, leg2Y + 8, 8, 6, ARM);
+    fr(leg1X - 1, leg1Y + 13, 8, 1, "#3a4250");
+    fr(leg2X - 1, leg2Y + 13, 8, 1, "#3a4250");
+    if (helm) {
+      // Protège-tibias + genouillères (tenue maintien de l’ordre)
+      fr(leg1X, leg1Y + 3, 6, 5, ARML);
+      fr(leg2X, leg2Y + 3, 6, 5, ARML);
+      fr(leg1X, leg1Y + 2, 6, 1, "#4a5364");
+      fr(leg2X, leg2Y + 2, 6, 1, "#4a5364");
+    }
 
-    // Doudoune matelassée (plus large)
-    fr(sx + 3, by + 12, 20, 18, coat);
-    fr(sx + 4, by + 13, 18, 2, coatL);
-    // Coutures horizontales (matelassage)
-    for (let i = 0; i < 4; i++) fr(sx + 4, by + 15 + i * 4, 18, 1, coatD);
-    // Col fourrure
-    fr(sx + 6, by + 11, 14, 3, C.coatFur);
-    fr(sx + 8, by + 10, 10, 2, C.coatFurL);
-    // Zip central
-    fr(sx + 12, by + 14, 1, 14, angry ? "#c03040" : "#8a9098");
-    glowRect(sx + 17, by + 16, 3, 3, angry ? "#ff4050" : C.badge, angry ? 1 : 0.85);
+    // Buste
+    fr(sx + 3, by + 12, 20, 18, uni);
+    fr(sx + 4, by + 13, 18, 2, uniL);
+    if (helm) {
+      // Gilet tactique + épaulières
+      fr(sx + 4, by + 14, 18, 14, ARM);
+      fr(sx + 5, by + 14, 16, 1, ARML);
+      fr(sx + 5, by + 24, 4, 3, ARML);
+      fr(sx + 11, by + 24, 4, 3, ARML);
+      fr(sx + 17, by + 24, 4, 3, ARML);
+      fr(sx + 1, by + 11, 7, 4, ARML);
+      fr(sx + 18, by + 11, 7, 4, ARML);
+      fr(sx + 1, by + 11, 7, 1, "#4a5364");
+      fr(sx + 18, by + 11, 7, 1, "#4a5364");
+    } else {
+      // Polo police nationale : col + liseré
+      fr(sx + 9, by + 11, 8, 2, uniD);
+      fr(sx + 3, by + 22, 20, 1, uniL);
+    }
+    policeBand(sx + 4, by + 17, 18, 5);
+    // Ceinturon
+    fr(sx + 3, by + 28, 20, 2, ARM);
+    fr(sx + 12, by + 28, 3, 2, "#aab2be");
+    glowRect(sx + 19, by + 15, 2, 2, angry ? "#ff4050" : C.badge, angry ? 1 : 0.85);
 
-    // Bras manches doudoune (levés à l’alerte)
-    fr(sx + 0 - a, by + 14 - armUp, 5, 10 + a, coat);
-    fr(sx + 19 + a, by + 14 + batonSwing * 0.3 - armUp * 0.9, 5, 10 + a, coat);
-    fr(sx + 0 - a, by + 22 - armUp, 4, 3, C.copSkin);
-    fr(sx + 20 + a, by + 22 + batonSwing * 0.3 - armUp * 0.9, 4, 3, C.copSkin);
+    // Bras (levés à l’alerte) + écusson tricolore à l’épaule
+    fr(sx + 0 - a, by + 14 - armUp, 5, 10 + a, uni);
+    fr(sx + 19 + a, by + 14 + batonSwing * 0.3 - armUp * 0.9, 5, 10 + a, uni);
+    fr(sx + 20 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#2f6fe0");
+    fr(sx + 21 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#ffffff");
+    fr(sx + 22 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#e03a3a");
+    const hand = helm ? ARM : C.copSkin; // CRS : gants
+    fr(sx + 0 - a, by + 22 - armUp, 4, 3, hand);
+    fr(sx + 20 + a, by + 22 + batonSwing * 0.3 - armUp * 0.9, 4, 3, hand);
 
     // Matraque (remontée un peu à l’alerte)
     const bx = sx - 3 - a * 2;
     const byB = by + 10 + batonSwing - armUp * 0.85;
-    fr(bx, byB, 3, 16, angry ? "#1a0808" : C.baton);
-    fr(bx - 1, byB - 2, 5, 3, angry ? "#ff3040" : C.suitL);
+    fr(bx, byB, 3, 16, angry ? "#1a0808" : "#0c0e12");
+    fr(bx - 1, byB - 2, 5, 3, angry ? "#ff3040" : "#3a4250");
     fr(bx + 1, byB + 14, 1, 2, C.white);
 
     // Tête (regard vers le joueur via flip du corps)
     const hx = sx;
-    const helm = kind === "crs" || kind === "riot" || kind === "angry" || kind === "boss";
     if (helm) {
-      fr(hx + 6, by + 1, 14, 10, C.helmet);
-      fr(hx + 5, by + 4, 16, 6, C.helmet);
-      fr(hx + 7, by + 7, 12, 4, angry ? "#401018" : C.visor);
-      fr(hx + 8, by + 8, 10, 2, "#152030");
-      fr(hx + 9, by + 11, 8, 2, C.helmet);
-      fr(hx + 8, by + 10, 10, 4, C.copSkin);
-      fr(hx + 9, by + 8, 3, 1, angry ? "#ff4050" : C.blue);
+      // Casque CRS : coque marine, deux bandes jaunes, visière relevable, bavolet
+      const shell = angry ? "#2a0c14" : "#101a36";
+      fr(hx + 8, by + 6, 11, 7, C.copSkin);
+      fr(hx + 9, by + 8, 2, 2, "#0c0e12");
+      fr(hx + 14, by + 8, 2, 2, "#0c0e12");
+      fr(hx + 6, by + 0, 14, 7, shell);
+      fr(hx + 5, by + 2, 16, 5, shell);
+      fr(hx + 7, by + 0, 12, 1, angry ? "#4a1828" : "#22346a");
+      fr(hx + 5, by + 2, 16, 1, YEL);
+      fr(hx + 5, by + 4, 16, 1, YEL);
+      fr(hx + 18, by + 6, 3, 8, shell);       // bavolet (nuque)
+      fr(hx + 5, by + 12, 13, 2, shell);      // mentonnière
+      ctx.globalAlpha = 0.5;                  // visière transparente
+      fr(hx + 5, by + 6, 13, 6, angry ? "#ff8a96" : "#a8dcf4");
+      ctx.globalAlpha = 0.85;
+      fr(hx + 6, by + 7, 5, 1, "#ffffff");
+      ctx.globalAlpha = 1;
     } else {
-      fr(hx + 7, by + 2, 12, 4, coatD);
-      fr(hx + 8, by + 1, 10, 2, coat);
+      // Policier national : casquette à bandeau blanc + écusson
       fr(hx + 6, by + 5, 14, 8, C.copSkin);
       fr(hx + 10, by + 7, 3, 3, C.eyeW);
       fr(hx + 16, by + 7, 3, 3, C.eyeW);
       fr(hx + 11, by + 8, 2, 2, C.eye);
       fr(hx + 17, by + 8, 2, 2, C.eye);
-      fr(hx + 12, by + 1, 4, 2, C.badge);
+      fr(hx + 6, by + 0, 14, 4, uniD);
+      fr(hx + 7, by - 1, 12, 2, uni);
+      fr(hx + 6, by + 3, 14, 1, WHITE);
+      fr(hx + 3, by + 4, 10, 2, ARM);         // visière de casquette
+      fr(hx + 11, by + 0, 3, 2, C.badge);
     }
 
     if (kind === "riot" || kind === "boss") {
-      fr(sx - 9 - a * 2, by + 9 - armUp * 0.2, 9, 24, C.shield);
-      fr(sx - 8 - a * 2, by + 11 - armUp * 0.2, 7, 20, coatL);
-      fr(sx - 7 - a * 2, by + 18 - armUp * 0.2, 5, 5, C.white);
-      glowRect(sx - 8 - a * 2, by + 10 - armUp * 0.2, 7, 2, angry ? "#ff4050" : C.blue, 0.4);
+      // Bouclier anti-émeute transparent, bandeau POLICE
+      const shx = sx - 10 - a * 2, shy = by + 7 - armUp * 0.2;
+      ctx.globalAlpha = 0.34;
+      fr(shx, shy, 10, 28, "#a8dcf4");
+      ctx.globalAlpha = 0.7;
+      fr(shx, shy, 10, 1, "#e6f6ff");
+      fr(shx, shy, 1, 28, "#e6f6ff");
+      fr(shx + 9, shy, 1, 28, "#6f9cb8");
+      fr(shx, shy + 27, 10, 1, "#6f9cb8");
+      ctx.globalAlpha = 0.9;
+      fr(shx + 1, shy + 9, 8, 4, WHITE);
+      fr(shx + 2, shy + 10, 1, 2, "#0c1428");
+      fr(shx + 4, shy + 10, 1, 2, "#0c1428");
+      fr(shx + 6, shy + 10, 1, 2, "#0c1428");
+      ctx.globalAlpha = 1;
+      glowRect(shx + 1, shy + 2, 8, 1, angry ? "#ff4050" : C.blue, 0.4);
     }
     if (kind === "boss") {
       // Bandes / présence massive
-      fr(sx + 4, by + 16, 18, 2, "#ffe566");
-      fr(sx + 5, by + 24, 16, 1, "#ff4050");
+      fr(sx + 4, by + 23, 18, 1, YEL);
+      fr(sx + 5, by + 26, 16, 1, "#ff4050");
     }
     artScale = 1;
     ctx.restore();
@@ -16753,8 +16949,15 @@ on</button>
       fr(x + 6, y + 2, 1, 1, "#f4f6f8");
       fr(x + 4, y + 3, 2, 1, "#f4f6f8");
     } else {
-      fr(x, y, 8, 5, C.shoe);
-      fr(x + 1, y, 6, 1, C.shoeL);
+      // Jordan 1 bleu / blanc cassé
+      fr(x, y, 8, 5, HERO.shoeW);
+      fr(x, y, 3, 3, HERO.shoeB);          // talon
+      fr(x + 2, y - 1, 3, 2, HERO.shoeB);  // tige
+      fr(x + 5, y + 2, 3, 2, HERO.shoeB);  // bout
+      fr(x, y, 1, 3, HERO.shoeBD);
+      fr(x + 3, y + 2, 3, 1, "#14161c");   // virgule
+      fr(x + 5, y + 1, 1, 1, "#14161c");
+      fr(x, y + 4, 8, 1, "#f7f4ec");       // semelle
     }
   }
 
@@ -16845,6 +17048,54 @@ on</button>
       fr(8, by + 26, 3, 3 + (flicker * 2) | 0, "#ff8040");
       fr(9, by + 28, 2, 2 + (flicker * 3) | 0, "#fff0a0");
     }
+  }
+
+  /** Palette du héros (réf. pixel art : torse nu, short jean, Jordan bleues) */
+  const HERO = {
+    skin: "#96481c", skinD: "#6c3010", skinL: "#b4602a",
+    denim: "#51688a", denimL: "#7388a6", denimD: "#33455f",
+    sock: "#ece4dc", shoeB: "#4f6f9c", shoeBD: "#34507a", shoeW: "#ebe6da",
+    silver: "#c8d0d8", silverL: "#f2f6fa",
+  };
+
+  /** Jambe du héros : short large jusqu’au genou, mollet nu, chaussette, basket */
+  function drawHeroLeg(x, top, h, shoeY, nike, back) {
+    h = Math.max(2, h);
+    const shortH = Math.min(h, 7);
+    // mollet
+    if (h > shortH) {
+      fr(x + 1, top + shortH, 4, h - shortH, HERO.skin);
+      fr(x + 1, top + shortH, 1, h - shortH, HERO.skinD);
+    }
+    // chaussette
+    if (h > shortH + 2) fr(x + 1, top + h - 2, 4, 2, HERO.sock);
+    // short (plus large que la jambe)
+    fr(x - 1, top, 8, shortH, HERO.denim);
+    fr(x - 1, top, 2, shortH, back ? HERO.denimD : HERO.denim);
+    fr(x + 4, top + 1, 2, Math.max(1, shortH - 2), HERO.denimL);
+    fr(x - 1, top + shortH - 1, 8, 1, HERO.denimL); // revers
+    if (!back && shortH >= 6) fr(x + 2, top + 2, 3, 3, HERO.denimD); // poche cargo
+    drawCharShoe(x - 1, shoeY, nike);
+  }
+
+  /** Cheveux du héros : tresses plaquées sur le dessus + dreads qui tombent */
+  function drawHeroHair(by, swing) {
+    const sw = Math.max(-2, Math.min(2, (swing || 0) * 0.35));
+    // dessus : tresses plaquées
+    fr(11, by, 13, 3, C.dread);
+    fr(12, by - 1, 11, 1, C.dreadL);
+    for (let x = 12; x <= 22; x += 2) fr(x, by, 1, 3, C.dreadH);
+    // dreads côté nuque (jusqu’aux épaules)
+    fr(8, by + 2, 3, 6, C.dread);
+    fr(8 + Math.round(sw * 0.5), by + 8, 2, 5, C.dread);
+    fr(10 + Math.round(sw * 0.5), by + 8, 2, 6, C.dreadL);
+    fr(8 + Math.round(sw), by + 13, 2, 4, C.dreadL);
+    fr(10 + Math.round(sw), by + 14, 2, 3, C.dread);
+    fr(9 + Math.round(sw), by + 17, 1, 1, C.dreadH);
+    // une dread devant l’oreille
+    fr(23, by + 2, 2, 5, C.dread);
+    fr(23 + Math.round(sw * 0.5), by + 7, 2, 5, C.dreadL);
+    fr(23 + Math.round(sw), by + 12, 2, 3, C.dread);
   }
 
   function drawPlayer() {
@@ -16962,8 +17213,8 @@ on</button>
     const rTop = waistY + Math.max(0, -legR);
     const pant = tee ? "#14161c" : C.suit;
     const nike = hasShoes();
-    const skinBase = C.skin;
-    const skinDeep = C.skinD;
+    const skinBase = HERO.skin;
+    const skinDeep = HERO.skinD;
 
     // Neige (~700 m) : même perso / physiques, nouveaux habits (inspi PNG)
     if (hasWinterSkinZone()) {
@@ -16974,13 +17225,9 @@ on</button>
         ctx.globalAlpha = 1;
       }
     } else {
-      fr(10 + legSwingX, lTop, 6, 10 + legL, pant);
-      drawCharShoe(9 + legSwingX, waistY + 10 + legL, nike);
-      if (!tee) fr(10 + legSwingX, lTop, 2, 9 + legL, C.stripe);
-
-      fr(17 - legSwingX, rTop, 6, 10 + legR, pant);
-      drawCharShoe(16 - legSwingX, waistY + 10 + legR, nike);
-      if (!tee) fr(21 - legSwingX, rTop, 2, 9 + legR, C.stripe2);
+      // Jambes : short en jean large (genou), mollet, chaussette, Jordan
+      drawHeroLeg(10 + legSwingX, lTop, 10 + legL, waistY + 10 + legL, nike, true);
+      drawHeroLeg(17 - legSwingX, rTop, 10 + legR, waistY + 10 + legR, nike, false);
 
       if (tee) {
         // T-shirt (silhouette, pas un bloc plein)
@@ -16998,30 +17245,54 @@ on</button>
         // Ourlet
         fr(9, by + 11 + torsoH, 14, 1, "#080a0e");
       } else {
-        fr(8, by + 12, 17, torsoH, C.suit);
-        fr(9, by + 13, 15, 4, C.suitL);
-        fr(8, by + 12, 2, torsoH, C.stripe);
-        fr(9, by + 14, 1, torsoH - 4, C.stripe2);
-        fr(10, by + 11, 13, 3, C.suitD);
-
-        fr(3, by + 13 + arm, 6, 11, C.suit);
-        fr(3, by + 22 + arm, 5, 3, skinBase);
-        fr(24, by + 13 - arm, 6, 11, C.suit);
-        fr(25, by + 22 - arm, 5, 3, skinBase);
-        fr(3, by + 13 + arm, 2, 10, C.stripe);
+        // Torse nu : épaules, pecs, abdos
+        fr(8, by + 12, 17, 7, skinBase);            // épaules / pecs
+        fr(9, by + 19, 15, torsoH - 9, skinBase);   // buste
+        fr(10, by + 13, 5, 4, HERO.skinL);          // reflet pec arrière
+        fr(18, by + 13, 5, 4, HERO.skinL);          // reflet pec avant
+        fr(10, by + 18, 13, 1, skinDeep);           // dessous des pecs
+        fr(16, by + 13, 1, torsoH - 6, skinDeep);   // ligne médiane
+        fr(12, by + 22, 9, 1, skinDeep);            // abdos
+        fr(12, by + 25, 9, 1, skinDeep);
+        fr(13, by + 28, 7, 1, skinDeep);
+        fr(9, by + 19, 1, torsoH - 10, skinDeep);   // ombre flanc
+        // Bras nus + bracelet argent
+        fr(3, by + 13 + arm, 6, 12, skinBase);
+        fr(3, by + 13 + arm, 2, 11, skinDeep);
+        fr(5, by + 14 + arm, 3, 4, HERO.skinL);
+        fr(3, by + 22 + arm, 6, 1, HERO.silver);
+        fr(24, by + 13 - arm, 6, 12, skinBase);
+        fr(26, by + 14 - arm, 3, 4, HERO.skinL);
+        fr(24, by + 22 - arm, 6, 1, HERO.silver);
+        // Chaîne fine + pendentif
+        fr(12, by + 13, 1, 2, HERO.silver);
+        fr(13, by + 15, 1, 1, HERO.silver);
+        fr(20, by + 13, 1, 2, HERO.silver);
+        fr(19, by + 15, 1, 1, HERO.silver);
+        fr(14, by + 16, 5, 1, HERO.silver);
+        fr(15, by + 17, 3, 3, HERO.silverL);
+        fr(16, by + 18, 1, 1, HERO.silver);
       }
+      // Élastique du caleçon + ceinture du short
+      fr(9, waistY - 4, 15, 1, "#eeeae4");
+      fr(9, waistY - 3, 15, 1, "#b8b4ae");
+      fr(8, waistY - 2, 17, 3, HERO.denimD);
+      fr(15, waistY - 2, 3, 2, "#c8ccd2"); // boucle
 
       // Dreads d’abord (derrière la tête), puis visage par-dessus
       drawDreads(8, by + 4, lift, swing);
 
       fr(10, by + 2, 14, 12, skinBase);
       fr(12, by + 4, 10, 8, skinDeep);
+      fr(13, by + 3, 9, 2, HERO.skinL);
       fr(14, by + 5, 3, 3, C.eyeW);
       fr(21, by + 5, 3, 3, C.eyeW);
       fr(15, by + 6, 2, 2, C.eye);
       fr(22, by + 6, 2, 2, C.eye);
-      fr(18, by + 8, 2, 2, skinDeep);
-      fr(16, by + 11, 5, 1, skinDeep);
+      fr(18, by + 8, 2, 2, skinBase);
+      // Sourire grillz
+      fr(15, by + 10, 7, 2, "#2a120a");
+      fr(16, by + 10, 5, 1, "#f6f6f2");
 
       if (player.invuln > 0.2 && spawnNoBlinkT <= 0 && !isIntroCam()) {
         ctx.globalAlpha = 0.2 + Math.sin(time * 14) * 0.1;
@@ -17029,7 +17300,7 @@ on</button>
         ctx.globalAlpha = 1;
       }
 
-      drawHairCap(by);
+      drawHeroHair(by, swing);
 
       if (teeFront) drawTeeChestLogo(8, by + 15, 16, 12, f);
       if (teeBack) drawTeeBackPrint(7, by + 14, 18, 13, f);
@@ -17072,7 +17343,7 @@ on</button>
     }
   }
 
-  /** Companion « L au carré » — survêt rouge / bande or, fade court */
+  /** Companion « L au carré » — afro, barbe, maillot jaune/vert n°9, jean large */
   function drawCompanion() {
     const px = Math.floor(sx(companion.x));
     const py = Math.floor(sy(companion.y));
@@ -17087,11 +17358,13 @@ on</button>
     const legSwing = moving ? Math.sin(companion.runPhase || 0) : 0;
     const torsoOffsetY = Math.round(runBounce * 2);
 
-    const stripe = "#e8b040";
-    const stripe2 = "#c07040";
-    const suit = "#1a1014";
-    const suitL = "#2e1c24";
-    const suitD = "#0c080a";
+    const L = {
+      skin: "#c86c36", skinD: "#9c4f24", skinL: "#dc8448",
+      hair: "#1c0f0b", hairL: "#3a2218", beard: "#1a0c0a",
+      yel: "#e8b41a", yelD: "#b8860c", grn: "#1c8228", grnD: "#125a1a",
+      jean: "#3f5680", jeanL: "#5d74a0", jeanD: "#22324c",
+      shoe: "#efe4d0", shoeD: "#cdbfa6", silver: "#d4dce4",
+    };
 
     beginCharDraw(px, py, f, companion.w, companion.h);
 
@@ -17111,38 +17384,76 @@ on</button>
     const torsoH = 22;
     const waistY = by + 12 + torsoH;
 
-    fr(10 + legSwingX, waistY + Math.max(0, -legL), 6, 10 + legL, suit);
-    fr(9 + legSwingX, waistY + 10 + legL, 8, 5, C.shoe);
-    fr(10 + legSwingX, waistY + Math.max(0, -legL), 2, 9 + legL, stripe);
+    // Jean large pleine longueur + baskets crème / virgule verte
+    const leg = (x, top, h, shoeY, back) => {
+      h = Math.max(2, h);
+      fr(x - 1, top, 8, h, L.jean);
+      fr(x - 1, top, 2, h, back ? L.jeanD : L.jean);
+      fr(x + 4, top + 1, 2, Math.max(1, h - 2), L.jeanL);
+      fr(x - 1, top + h - 1, 8, 1, L.jeanD); // ourlet qui casse sur la chaussure
+      fr(x - 1, shoeY, 9, 5, L.shoe);
+      fr(x, shoeY, 7, 1, "#faf4e6");
+      fr(x + 2, shoeY + 2, 4, 1, L.grn);
+      fr(x + 5, shoeY + 1, 2, 1, L.grn);
+      fr(x - 1, shoeY + 4, 9, 1, L.shoeD);
+    };
+    leg(10 + legSwingX, waistY + Math.max(0, -legL), 10 + legL, waistY + 10 + legL, true);
+    leg(17 - legSwingX, waistY + Math.max(0, -legR), 10 + legR, waistY + 10 + legR, false);
 
-    fr(17 - legSwingX, waistY + Math.max(0, -legR), 6, 10 + legR, suit);
-    fr(16 - legSwingX, waistY + 10 + legR, 8, 5, C.shoe);
-    fr(21 - legSwingX, waistY + Math.max(0, -legR), 2, 9 + legR, stripe2);
+    // Maillot jaune / vert, n°9
+    fr(8, by + 12, 17, torsoH, L.yel);
+    fr(8, by + 12, 2, torsoH, L.yelD);
+    fr(19, by + 12, 6, 6, L.grn);                 // empiècement épaule
+    for (let k = 0; k < 8; k++) fr(8 + k * 2, by + 31 - k, 3, 3, L.grn); // bande diagonale
+    fr(11, by + 11, 11, 2, L.grn);                // col
+    fr(12, by + 11, 9, 1, L.grnD);
+    // le 9
+    fr(13, by + 16, 3, 1, L.grn);
+    fr(13, by + 17, 1, 1, L.grn);
+    fr(15, by + 17, 1, 1, L.grn);
+    fr(13, by + 18, 3, 1, L.grn);
+    fr(15, by + 19, 1, 1, L.grn);
+    fr(13, by + 20, 3, 1, L.grn);
+    fr(8, by + 11 + torsoH, 17, 1, L.yelD);       // ourlet
 
-    fr(8, by + 12, 17, torsoH, suit);
-    fr(9, by + 13, 15, 4, suitL);
-    fr(8, by + 12, 2, torsoH, stripe);
-    fr(9, by + 14, 1, torsoH - 4, stripe2);
-    fr(10, by + 11, 13, 3, suitD);
+    // Manches courtes à revers vert + avant-bras + bracelet
+    fr(3, by + 13 + arm, 6, 7, L.yel);
+    fr(3, by + 19 + arm, 6, 1, L.grn);
+    fr(4, by + 20 + arm, 4, 5, L.skin);
+    fr(4, by + 23 + arm, 4, 1, L.silver);
+    fr(24, by + 13 - arm, 6, 7, L.yel);
+    fr(24, by + 19 - arm, 6, 1, L.grn);
+    fr(25, by + 20 - arm, 4, 5, L.skin);
+    fr(25, by + 23 - arm, 4, 1, L.silver);
 
-    fr(3, by + 13 + arm, 6, 11, suit);
-    fr(3, by + 22 + arm, 5, 3, C.skin);
-    fr(24, by + 13 - arm, 6, 11, suit);
-    fr(25, by + 22 - arm, 5, 3, C.skin);
-    fr(3, by + 13 + arm, 2, 10, stripe);
+    // Afro (derrière le visage)
+    fr(9, by - 5, 16, 9, L.hair);
+    fr(8, by - 3, 18, 9, L.hair);
+    fr(11, by - 6, 12, 2, L.hair);
+    fr(7, by - 1, 2, 6, L.hair);
+    fr(25, by - 1, 2, 5, L.hair);
+    for (let k = 0; k < 9; k++) {
+      fr(9 + ((k * 5) % 15), by - 5 + ((k * 3) % 7), 1, 1, L.hairL); // boucles
+    }
 
-    fr(10, by + 2, 14, 12, C.skin);
-    fr(12, by + 4, 10, 8, C.skinD);
+    // Visage
+    fr(11, by + 2, 13, 12, L.skin);
+    fr(13, by + 3, 9, 2, L.skinL);
+    fr(11, by + 2, 2, 12, L.skinD);
     fr(14, by + 5, 3, 3, C.eyeW);
     fr(21, by + 5, 3, 3, C.eyeW);
     fr(15, by + 6, 2, 2, C.eye);
     fr(22, by + 6, 2, 2, C.eye);
-    fr(18, by + 8, 2, 2, C.skinD);
-    fr(16, by + 11, 5, 1, C.skinD);
-
-    drawHairCap(by);
-    fr(12, by + 14, 10, 1, stripe);
-    fr(16, by + 15, 2, 2, C.accent);
+    fr(14, by + 4, 3, 1, L.hair); // sourcils
+    fr(21, by + 4, 3, 1, L.hair);
+    fr(18, by + 8, 2, 2, L.skinD);
+    // Barbe + moustache
+    fr(11, by + 10, 13, 4, L.beard);
+    fr(12, by + 14, 11, 1, L.beard);
+    fr(15, by + 9, 7, 1, L.beard);
+    fr(16, by + 11, 5, 1, L.skinD); // bouche
+    fr(11, by + 7, 1, 3, L.beard);  // patte
+    fr(10, by + 8, 1, 1, L.silver); // boucle d’oreille
 
     if (hasWinterSkinZone()) drawWinterDoudoune(by, arm, torsoH);
 
