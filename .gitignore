@@ -18,3 +18,6 @@ node_modules/
 POUR_GEMINI/
 POUR_GEMINI.zip
 A_ENVOYER_A_GEMINI/
+
+# Sauvegardes locales
+index_SAUVEGARDE_*.html

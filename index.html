@@ -10612,7 +10612,27 @@ on</button>
   const tableImg = new Image();
   tableImg.src = "assets/table.webp";
   const flecheImg = new Image();
-  flecheImg.src = "assets/flecheskin.png?v=2";
+  flecheImg.src = "assets/fleche2.webp";
+  // Planches de sprites fournies (8 cases de 168 px, pieds en bas au centre)
+  const heroSprImg = new Image();
+  heroSprImg.src = "assets/hero-sprites.webp?v=2";
+  const lSprImg = new Image();
+  lSprImg.src = "assets/l-sprites.webp?v=2";
+  const SPR_CELL = 168;
+  const SPR_SCALE = 100 / 148; // perso debout (148 px sur la planche) = 100 px en jeu
+  /** Dessine une case de planche : pieds posés en (cx, feetY), miroir si facing < 0 */
+  function drawSpriteCell(img, idx, cx, feetY, facing, scale) {
+    const d = SPR_CELL * (scale || SPR_SCALE);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+    ctx.translate(Math.round(cx), Math.round(feetY));
+    if (facing < 0) ctx.scale(-1, 1);
+    ctx.drawImage(img, idx * SPR_CELL, 0, SPR_CELL, SPR_CELL, -d / 2, -d, d, d);
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
+  }
+  function sprReady(img) { return img.complete && img.naturalWidth > 0; }
   const jetpackImg = new Image();
   jetpackImg.src = "assets/jetpack.png";
   const scooterImg = new Image();
@@ -10796,19 +10816,19 @@ on</button>
 
   /** PNJ fin de course — flecheskin.png (face gauche), sinon silhouette noire vers la table */
   function drawFlecheNpc(px, py, w, h, facing) {
-    // facing -1 = regarde la table (à gauche) ; art PNG déjà orienté à gauche
+    // facing -1 = regarde la table (à gauche) ; le nouvel art regarde à droite
     const face = facing < 0 ? -1 : 1;
     if (flecheImg.complete && flecheImg.naturalWidth > 0) {
+      const dh = h * 1.12;
+      const dw = dh * flecheImg.naturalWidth / flecheImg.naturalHeight;
       ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      if (face > 0) {
-        ctx.translate(px + w, py);
-        ctx.scale(-1, 1);
-        ctx.drawImage(flecheImg, 0, 0, w, h);
-      } else {
-        ctx.drawImage(flecheImg, px, py, w, h);
-      }
+      ctx.imageSmoothingEnabled = true;
+      if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+      ctx.translate(Math.round(px + w / 2), Math.round(py + h));
+      if (face < 0) ctx.scale(-1, 1);
+      ctx.drawImage(flecheImg, -dw / 2, -dh, dw, dh);
       ctx.restore();
+      ctx.imageSmoothingEnabled = false;
       return;
     }
     // Silhouette noire (attente flecheskin.png)
@@ -15463,6 +15483,9 @@ on</button>
 
   let FAR_SIL = null;
   let FAR_TOWERS = null;
+  // Skyline La Défense (rendu Blender) — visible au départ, défile en parallaxe
+  const DEFENSE_IMG = new Image();
+  DEFENSE_IMG.src = "assets/defense_skyline.png";
   function drawParallaxFar() {
     const blend = winterBlend();
     const seine = seineBlend();
@@ -15470,9 +15493,13 @@ on</button>
     const pal0 = cityPal(0);
     // Immeubles lointains — s’effacent vers les quais
     ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - seine * 0.95);
+    // Avec la bande illustrée : les silhouettes sombres ne restent que derrière la ville de nuit
+    const nightOnly = cityBgReady()
+      ? Math.max(0, Math.min(1, (620 * PX_PER_METER - camX) / (70 * PX_PER_METER)))
+      : 1;
+    ctx.globalAlpha = Math.max(0, 1 - seine * 0.95) * nightOnly;
     // Plan 0 — silhouettes lointaines (ombres derrière)
-    for (let i = -1; i < 3; i++) {
+    if (nightOnly > 0.02) for (let i = -1; i < 3; i++) {
       const ox = i * 880 - (far % 880);
       const sil = FAR_SIL || (FAR_SIL = [
         [8, 90, 22], [36, 140, 18], [62, 110, 28], [98, 168, 20],
@@ -15516,7 +15543,7 @@ on</button>
     // Plan 1 — immeubles lointains plus définis
     const far2 = camX * 0.12;
     const pal1 = cityPal(1);
-    for (let i = -1; i < 3; i++) {
+    if (nightOnly > 0.02) for (let i = -1; i < 3; i++) {
       const ox = i * 760 - (far2 % 760);
       const towers = FAR_TOWERS || (FAR_TOWERS = [
         [10, 150, 30, 0], [48, 198, 24, 1], [82, 128, 36, 2], [128, 220, 28, 3],
@@ -15526,6 +15553,18 @@ on</button>
       ]);
       for (const [tx, th, tw, kind] of towers) {
         drawFarTower((ox + tx) | 0, th, tw, kind, pal1);
+      }
+    }
+
+    // Remplacée par la bande illustrée (assets/bg) dès que celle-ci est chargée
+    if (!cityBgReady() && DEFENSE_IMG.complete && DEFENSE_IMG.naturalWidth) {
+      const dW = DEFENSE_IMG.naturalWidth, dH = DEFENSE_IMG.naturalHeight;
+      const dx = Math.floor(-120 - camX * 0.12);
+      if (dx + dW > 0 && dx < W) {
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(DEFENSE_IMG, dx, Math.floor(sy(GROUND_Y - 26) - dH));
+        ctx.imageSmoothingEnabled = smooth;
       }
     }
 
@@ -15543,7 +15582,7 @@ on</button>
     ctx.fillRect(0, 40, W, 260);
     ctx.restore();
 
-    if (seine > 0.04) drawSeineFarBanks(seine);
+    if (seine > 0.04 && !cityBgReady()) drawSeineFarBanks(seine);
   }
 
   /** Berges lointaines + arbres + ponts au loin (fondu Seine) */
@@ -15635,13 +15674,16 @@ on</button>
     const seine = seineBlend();
     const mid = camX * 0.28;
     const base = Math.floor((-mid % 1400) - 60);
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - seine * 0.9);
-    skyline(base);
-    skyline(base + 1400);
-    skylineNeons(base);
-    skylineNeons(base + 1400);
-    ctx.restore();
+    const illustrated = drawCityBg();
+    if (!illustrated) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - seine * 0.9);
+      skyline(base);
+      skyline(base + 1400);
+      skylineNeons(base);
+      skylineNeons(base + 1400);
+      ctx.restore();
+    }
 
     // Brume de profondeur (shader atmosphère)
     const blend = winterBlend();
@@ -15656,7 +15698,7 @@ on</button>
     ctx.fillRect(0, y0, W, y1 - y0);
     ctx.globalAlpha = 1;
 
-    if (seine > 0.08) drawSeineMidBanks(seine);
+    if (seine > 0.08 && !illustrated) drawSeineMidBanks(seine);
   }
 
   /** Quais mid + verdure + piles de pont */
@@ -15735,6 +15777,75 @@ on</button>
     glowRect(ox + 918, top(258) + 40, 2, 72, "#ffe566", pulse(4.1));
     glowRect(ox + 942, top(198) + 14, 36, 2, "#3dc4ff", pulse(5.2));
     skyBillboard(ox + 1227, top(265) + 42, 26, 14, 2);
+  }
+
+  /* ============================================================
+     FOND ILLUSTRÉ — bande de 8 images (La Défense nuit → glace → Paris / viaduc)
+     Les images se recouvrent de 40 px (bords fondus) pour masquer les raccords.
+     ============================================================ */
+  const CITY_BG = {
+    order: [0, 1, 0, 2, 3, 4, 5, 6], // index du fichier pour chaque position
+    flip: [0, 0, 1, 0, 0, 0, 0, 0],  // la 3ᵉ = 1ʳᵉ image en miroir (zone nuit plus longue)
+    step: 920, w: 960, h: 508 * (960 / 1440),
+    baseFromTop: 332,                // ligne de sol dans l’image (px jeu)
+    imgs: [],
+  };
+  for (let i = 0; i < 7; i++) {
+    const im = new Image();
+    im.decoding = "async";
+    im.src = "assets/bg/city-" + i + ".webp";
+    CITY_BG.imgs.push(im);
+  }
+  /** Position de la caméra → décalage dans la bande, calé sur les zones du jeu */
+  const CITY_BG_ANCHORS = [
+    [0, 0],                         // départ : La Défense de nuit
+    [610 * PX_PER_METER, 3010],     // la glace entre à l’écran
+    [775 * PX_PER_METER, 4850],     // fin de l’hiver → Paris
+    [FINISH_METERS * PX_PER_METER, 6440], // arrivée : fin du viaduc
+  ];
+  function cityBgOffset() {
+    const A = CITY_BG_ANCHORS;
+    const x = Math.max(0, camX);
+    for (let i = 1; i < A.length; i++) {
+      if (x <= A[i][0]) {
+        const t = (x - A[i - 1][0]) / (A[i][0] - A[i - 1][0]);
+        return A[i - 1][1] + (A[i][1] - A[i - 1][1]) * t;
+      }
+    }
+    return A[A.length - 1][1];
+  }
+  function cityBgReady() {
+    const im = CITY_BG.imgs[0];
+    return !!im && im.complete && im.naturalWidth > 0;
+  }
+  function drawCityBg() {
+    if (!cityBgReady()) return false;
+    const z = renderZoom;
+    const off = cityBgOffset();
+    const top = sy(GROUND_Y + 6 - CITY_BG.baseFromTop);
+    const w = CITY_BG.w * z, h = CITY_BG.h * z;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+    for (let i = 0; i < CITY_BG.order.length; i++) {
+      const x = (i * CITY_BG.step - off) * z;
+      if (x + w < 0 || x > W) continue;
+      const im = CITY_BG.imgs[CITY_BG.order[i]];
+      if (!im.complete || !im.naturalWidth) continue;
+      if (CITY_BG.flip[i]) {
+        ctx.save();
+        ctx.translate(Math.round(x) + w, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(im, 0, top, w, h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(im, Math.round(x), top, w, h);
+      }
+    }
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
+    return true;
   }
 
   function skyline(ox) {
@@ -15938,11 +16049,13 @@ on</button>
     const seine = seineBlend();
     const near = camX * 0.45;
     const base = Math.floor((-near % 1600) + 120);
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - seine * 0.92);
-    nearCluster(base, 1);
-    nearCluster(base + 1600, 2);
-    ctx.restore();
+    if (!cityBgReady()) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - seine * 0.92);
+      nearCluster(base, 1);
+      nearCluster(base + 1600, 2);
+      ctx.restore();
+    }
 
     // Voile de profondeur avant le sol
     const blend = winterBlend();
@@ -17167,6 +17280,28 @@ on</button>
       ctx.translate(-cx, -cy);
     }
 
+    const heroSprite = sprReady(heroSprImg) && activeSkin() === "default";
+    if (heroSprite) {
+      // Jetpack derrière le corps
+      if (hasJetpack()) {
+        beginCharDraw(px, py, f, player.w, player.h);
+        drawPlayerJetpack(2);
+        endCharDraw();
+      }
+      // Cases : 0 debout · 1-3 course (appui, poussée, foulée) · 5 saut · 6 accroupi
+      // (seules les poses dont la coupe de cheveux est intacte sont utilisées)
+      let cell = 0, lift2 = 0;
+      if (spinning) cell = 6;
+      else if (onScooter) { cell = 6; lift2 = 10; }
+      else if (inAir) cell = 5;
+      else if (moving) {
+        const ph = ((player.runPhase / (Math.PI * 2)) % 1 + 1) % 1;
+        cell = 1 + Math.min(2, Math.floor(ph * 3));
+      } else {
+        lift2 = Math.round(breath * 0.5);
+      }
+      drawSpriteCell(heroSprImg, cell, px + player.w * 0.5, py + player.h + 3 - lift2, f);
+    } else {
     beginCharDraw(px, py, f, player.w, player.h);
 
     let legL = 0, legR = 0, bodyBob = breath, arm = breath * 0.35;
@@ -17319,6 +17454,7 @@ on</button>
     if (hasJetpack()) drawPlayerJetpack(by);
 
     endCharDraw();
+    }
     if (poseXform) ctx.restore();
 
     // Liseré lumineux par-dessus (ronds un peu plus discrets)
@@ -17358,6 +17494,24 @@ on</button>
     const legSwing = moving ? Math.sin(companion.runPhase || 0) : 0;
     const torsoOffsetY = Math.round(runBounce * 2);
 
+    if (sprReady(lSprImg)) {
+      // Cases : 0 debout · 1-4 course · 5 bond · 6 saut (coupes de cheveux intactes uniquement)
+      let cell = 0;
+      if (inAir) cell = 6;
+      else if (moving) {
+        const ph = (((companion.runPhase || 0) / (Math.PI * 2)) % 1 + 1) % 1;
+        cell = 1 + Math.floor(ph * 4);
+      }
+      const lift2 = moving || inAir ? 0 : Math.round(breath * 0.5);
+      drawSpriteCell(lSprImg, cell, px + companion.w * 0.5, py + companion.h + 3 - lift2, f, 100 / 147);
+      if (!companion.active) {
+        ctx.globalAlpha = 0.2 + Math.sin(time * 3) * 0.08;
+        ctx.fillStyle = C.accent;
+        ctx.fillRect(px + 6, py + companion.h - 4, companion.w - 12, 5);
+        ctx.globalAlpha = 1;
+      }
+      return;
+    }
     const L = {
       skin: "#c86c36", skinD: "#9c4f24", skinL: "#dc8448",
       hair: "#1c0f0b", hairL: "#3a2218", beard: "#1a0c0a",
