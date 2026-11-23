@@ -24,10 +24,18 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="92 Rush" />
   <meta property="og:description" content="Course arcade La Défense → Berges de Seine." />
-  <meta property="og:image" content="assets/minia.png" />
+  <meta property="og:url" content="https://92rush.vercel.app/" />
+  <meta property="og:site_name" content="92 Rush" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:image" content="https://92rush.vercel.app/assets/minia.jpg" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="1024" />
+  <meta property="og:image:alt" content="92 Rush — course arcade dans les Hauts-de-Seine" />
+  <link rel="canonical" href="https://92rush.vercel.app/" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="92 Rush" />
-  <meta name="twitter:image" content="assets/minia.png" />
+  <meta name="twitter:description" content="Course arcade La Défense → Berges de Seine." />
+  <meta name="twitter:image" content="https://92rush.vercel.app/assets/minia.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -801,8 +809,8 @@
         transparent 68%
       );
       mix-blend-mode: soft-light;
-      -webkit-mask-image: url("assets/CHDS.png?v=trim2");
-      mask-image: url("assets/CHDS.png?v=trim2");
+      -webkit-mask-image: url("assets/chds.webp");
+      mask-image: url("assets/chds.webp");
       -webkit-mask-size: 100% 100%;
       mask-size: 100% 100%;
       -webkit-mask-repeat: no-repeat;
@@ -4888,6 +4896,1231 @@
     #start-admin-row .btn {
       width: 100%;
     }
+
+    /* ============================================================
+       ACCUEIL v2 — une colonne, une action (JOUER), rien qui se chevauche
+       Tout est scopé sous #start-screen .home (les anciennes règles
+       .wait-ui / .wait-stage ne s’appliquent plus).
+       ============================================================ */
+    html #start-screen.overlay {
+      display: block;
+      padding: 0;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background:
+        radial-gradient(ellipse 80% 46% at 50% 0%, rgba(61, 196, 255, 0.16) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(255, 229, 102, 0.07) 0%, transparent 60%),
+        linear-gradient(180deg, #050b16 0%, #04080f 60%, #05070c 100%);
+    }
+
+    #start-screen .home {
+      --home-w: 380px;
+      --home-gap: 20px;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: safe center;
+      gap: var(--home-gap);
+      /* bas : place réservée aux boutons son (coin bas-gauche) + home indicator */
+      padding:
+        calc(max(20px, var(--sat)) + 8px)
+        max(20px, var(--sal), var(--sar))
+        calc(max(16px, var(--sab)) + 68px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      scrollbar-width: none;
+      text-align: center;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #start-screen .home::-webkit-scrollbar { display: none; }
+    #start-screen .home > * {
+      width: min(var(--home-w), 100%);
+      flex: 0 0 auto;
+      margin: 0;
+    }
+    #start-screen.launching .home {
+      opacity: 0;
+      transform: scale(0.985);
+      pointer-events: none;
+    }
+
+    /* —— Marque —— */
+    #start-screen .home-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    #start-screen .home .brand-tag {
+      margin: 0;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--blue-dim);
+      opacity: 0.9;
+    }
+    #start-screen .home .chds-badge {
+      width: min(210px, 52vw);
+      margin: 2px auto 0;
+    }
+    #start-screen .home .chds-badge img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #start-screen .home-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(56px, 15vw, 76px);
+      font-weight: 400;
+      line-height: 0.92;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--white);
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), 0 0 28px rgba(61, 196, 255, 0.25);
+    }
+    #start-screen .home-title span {
+      color: var(--accent);
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), 0 0 26px rgba(255, 229, 102, 0.4);
+    }
+    #start-screen .home-route {
+      margin: 0;
+      font-family: var(--font-arcade);
+      font-size: clamp(9px, 2.75vw, 11px);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      white-space: nowrap;
+      text-transform: uppercase;
+      color: var(--neon-b);
+    }
+    #start-screen .home-route span { color: var(--accent); }
+
+    /* —— Bloc principal : pseudo + JOUER + record —— */
+    #start-screen .home-main {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    #start-screen .home .player-id {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 0;
+    }
+    #start-screen .home .player-id-row {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+      margin: 0;
+    }
+    #start-screen .home .pseudo-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: auto;
+      height: 52px;
+      margin: 0;
+      padding: 0 16px;
+      font-family: var(--font-ui);
+      font-size: 16px; /* ≥ 16px : pas de zoom auto iOS */
+      font-weight: 600;
+      color: var(--white);
+      text-align: left;
+      background: rgba(8, 16, 28, 0.85);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: none;
+      outline: none;
+      touch-action: manipulation;
+      -webkit-user-select: text;
+      user-select: text;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    #start-screen .home .pseudo-input::placeholder { color: rgba(168, 178, 192, 0.7); font-weight: 500; }
+    #start-screen .home .pseudo-input:focus-visible {
+      border-color: var(--neon-b);
+      box-shadow: 0 0 0 3px rgba(61, 196, 255, 0.22);
+    }
+    #start-screen .home .pseudo-input.pseudo-missing {
+      border-color: #ff6b81;
+      box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.25);
+      animation: home-shake 0.32s ease;
+    }
+    #start-screen .home .pseudo-ok {
+      flex: 0 0 auto;
+      min-width: 64px;
+      height: 52px;
+      padding: 0 16px;
+      font-family: var(--font-arcade);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--white);
+      background: rgba(61, 196, 255, 0.14);
+      border: 1px solid rgba(61, 196, 255, 0.5);
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #start-screen .home .pseudo-ok.is-saved {
+      color: #06121c;
+      background: #6ee7a8;
+      border-color: #6ee7a8;
+    }
+    #start-screen .home .pseudo-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      max-width: 100%;
+      padding: 0 16px;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      background: rgba(8, 16, 28, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #start-screen .home .pseudo-chip svg { flex: 0 0 auto; color: var(--blue-dim); }
+    #start-screen .home .pseudo-chip__name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Pseudo déjà choisi : une simple pastille, le champ ne revient qu’au clic */
+    #start-screen .home .player-id.has-pseudo:not(.editing) .pseudo-chip { display: inline-flex; }
+    #start-screen .home .player-id.has-pseudo:not(.editing) .player-id-row { display: none; }
+    #start-screen .home .pseudo-msg {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      color: #ff8aa0;
+    }
+
+    #start-screen .home .home-play {
+      position: relative;
+      width: 100%;
+      height: 72px;
+      margin: 0;
+      padding: 0 24px;
+      font-family: var(--font-arcade);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-indent: 0.22em;
+      text-transform: uppercase;
+      color: #0a0f18;
+      background: linear-gradient(180deg, #fff0a0 0%, #ffe566 45%, #ffc93a 100%);
+      border: 0;
+      border-radius: 16px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 -3px 0 rgba(160, 100, 0, 0.35) inset,
+        0 10px 30px rgba(255, 200, 60, 0.28),
+        0 0 0 1px rgba(255, 229, 102, 0.5);
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s var(--ease-out), box-shadow 0.2s ease, filter 0.2s ease;
+      animation: home-play-pulse 2.6s ease-in-out infinite;
+    }
+    #start-screen .home .home-play:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    #start-screen .home .home-play:active { transform: translateY(2px) scale(0.985); filter: brightness(0.96); animation: none; }
+    #start-screen .home .home-play:disabled { opacity: 0.75; animation: none; cursor: default; }
+    #start-screen .home .home-play:focus-visible,
+    #start-screen .home .home-nav__btn:focus-visible,
+    #start-screen .home .pseudo-chip:focus-visible,
+    #start-screen .home .pseudo-ok:focus-visible {
+      outline: 3px solid var(--white);
+      outline-offset: 3px;
+    }
+
+    #start-screen .home .home-best {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--grey);
+      white-space: nowrap;
+    }
+    #start-screen .home .home-best.hidden { display: none; }
+    #start-screen .home .home-best__label strong { color: var(--accent); font-weight: 800; }
+    #start-screen .home .home-best__bar {
+      flex: 1 1 auto;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(140, 210, 255, 0.14);
+      overflow: hidden;
+    }
+    #start-screen .home .home-best__bar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--neon-b), var(--accent));
+      transition: width 0.6s var(--ease-out);
+    }
+
+    /* —— Équipements : pastilles compactes —— */
+    #start-screen .home .item-loadout {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background: none;
+      border: 0;
+      border-radius: 0;
+      text-align: center;
+    }
+    #start-screen .home .loadout-bank,
+    #start-screen .home .loadout-tog {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      margin: 0;
+      padding: 0 12px 0 6px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      background: rgba(8, 16, 28, 0.6);
+      border: 1px solid var(--glass-border);
+    }
+    #start-screen .home .loadout-bank { border-color: rgba(236, 200, 120, 0.35); }
+    #start-screen .home .loadout-bank.hidden,
+    #start-screen .home .loadout-tog.hidden { display: none; }
+    #start-screen .home .loadout-tog { min-height: 44px; }
+    #start-screen .home .loadout-tog:not(.off) { border-color: rgba(61, 196, 255, 0.6); }
+    #start-screen .home .loadout-ico {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      box-shadow: none;
+    }
+    #start-screen .home .loadout-ico img { width: 22px; height: 22px; object-fit: contain; }
+    #start-screen .home .loadout-bank .loadout-name { display: inline-flex; gap: 6px; align-items: baseline; }
+    #start-screen .home .loadout-bank .loadout-name > span { display: none; } /* l’icône suffit */
+    #start-screen .home .loadout-bank .loadout-name strong { color: var(--camembert); font-weight: 800; font-size: 15px; }
+    #start-screen .home .loadout-tog input { position: absolute; opacity: 0; pointer-events: none; }
+
+    /* —— Navigation secondaire : même style pour tous —— */
+    #start-screen .home-nav {
+      display: flex;
+      gap: 10px;
+    }
+    #start-screen .home .home-nav__btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 64px;
+      margin: 0;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: rgba(10, 20, 34, 0.7);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-out);
+    }
+    #start-screen .home .home-nav__btn.hidden { display: none; }
+    #start-screen .home .home-nav__btn svg { color: var(--neon-b); flex: 0 0 auto; }
+    #start-screen .home .home-nav__btn span { white-space: nowrap; }
+    #start-screen .home .home-nav__btn:hover { background: rgba(61, 196, 255, 0.12); border-color: rgba(61, 196, 255, 0.55); }
+    #start-screen .home .home-nav__btn:active { transform: scale(0.97); }
+
+    /* —— Admin : jamais proposé sur l’accueil (triple-tap sur le logo) ;
+          seul « Admin OFF » apparaît quand le mode est actif —— */
+    #start-screen .home .home-admin { display: flex; justify-content: center; }
+    #start-screen .home #btn-admin { display: none; }
+    #start-screen .home .home-admin__btn {
+      min-height: 44px;
+      padding: 0 16px;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #ff8aa0;
+      background: rgba(255, 107, 129, 0.1);
+      border: 1px solid rgba(255, 107, 129, 0.45);
+      border-radius: 999px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #start-screen .home .home-admin__btn.hidden { display: none; }
+    #start-screen .home .home-admin.is-empty { display: none; }
+
+    #start-screen .home-keys {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      color: var(--grey);
+      opacity: 0.8;
+    }
+    #start-screen .home-keys kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 2px 6px;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 5px;
+    }
+    html:not(.platform-desktop) #start-screen .home-keys { display: none; }
+
+    #start-screen .home .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    /* Entrée en scène courte, une seule fois */
+    #start-screen:not(.hidden):not(.launching) .home > * {
+      animation: home-in 0.45s var(--ease-out) both;
+    }
+    #start-screen:not(.hidden):not(.launching) .home > :nth-child(2) { animation-delay: 0.06s; }
+    #start-screen:not(.hidden):not(.launching) .home > :nth-child(3) { animation-delay: 0.12s; }
+    #start-screen:not(.hidden):not(.launching) .home > :nth-child(n+4) { animation-delay: 0.16s; }
+    @keyframes home-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes home-play-pulse {
+      0%, 100% { box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 -3px 0 rgba(160,100,0,0.35) inset, 0 10px 30px rgba(255,200,60,0.28), 0 0 0 1px rgba(255,229,102,0.5); }
+      50% { box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 -3px 0 rgba(160,100,0,0.35) inset, 0 12px 40px rgba(255,200,60,0.46), 0 0 0 5px rgba(255,229,102,0.16); }
+    }
+    @keyframes home-shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Petits téléphones en hauteur : on resserre, rien ne sort de l’écran */
+    @media (max-height: 700px) {
+      #start-screen .home { --home-gap: 14px; }
+      #start-screen .home .chds-badge { width: min(160px, 44vw); }
+      #start-screen .home-title { font-size: clamp(46px, 13vw, 60px); }
+      #start-screen .home .home-play { height: 64px; font-size: 23px; }
+      #start-screen .home .home-nav__btn { height: 58px; }
+    }
+    /* Paysage bas (téléphone couché) : marque à gauche, actions à droite */
+    @media (max-height: 520px) and (orientation: landscape) {
+      #start-screen .home {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        grid-template-rows: auto auto;
+        align-content: center;
+        justify-items: center;
+        column-gap: 28px;
+        row-gap: 10px;
+        padding:
+          max(12px, var(--sat))
+          calc(max(20px, var(--sar)) + 8px)
+          max(12px, var(--sab))
+          calc(max(20px, var(--sal)) + 96px);
+      }
+      #start-screen .home > * { width: min(var(--home-w), 100%); }
+      #start-screen .home-brand { grid-column: 1; grid-row: 1 / span 2; align-self: center; }
+      #start-screen .home-main { grid-column: 2; grid-row: 1; align-self: end; }
+      #start-screen .home-nav { grid-column: 2; grid-row: 2; align-self: start; }
+      #start-screen .home .home-admin { grid-column: 1; grid-row: 2; align-self: end; }
+      #start-screen .home .brand-tag, #start-screen .home-keys { display: none; }
+      #start-screen .home .chds-badge { width: min(150px, 22vw); }
+      #start-screen .home-title { font-size: 48px; }
+      #start-screen .home .home-play { height: 56px; font-size: 21px; }
+      #start-screen .home .home-nav__btn { height: 50px; flex-direction: row; gap: 6px; font-size: 9px; letter-spacing: 0.06em; }
+      #start-screen .home .home-nav__btn svg { width: 18px; height: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #start-screen .home > *, #start-screen .home .home-play { animation: none !important; }
+      #start-screen .home { transition: none; }
+    }
+
+    /* ============================================================
+       UI v2 — écrans Fin / Boutique / Pause / Classement
+       Même langage que l’accueil : une colonne, un bouton dominant
+       (jaune), des actions secondaires identiques, rien qui se chevauche.
+       ============================================================ */
+    html #end-screen.overlay,
+    html #shop-screen.overlay,
+    html #pause-screen.overlay {
+      display: block;
+      padding: 0;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      text-align: center;
+    }
+    html #end-screen.overlay { background: rgba(4, 8, 15, 0.93); }
+    html #pause-screen.overlay { background: rgba(4, 8, 15, 0.88); }
+    html #shop-screen.overlay {
+      background:
+        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(236, 200, 120, 0.12) 0%, transparent 62%),
+        linear-gradient(180deg, #050b16 0%, #04080f 60%, #05070c 100%);
+    }
+    html #end-screen.overlay.hidden,
+    html #shop-screen.overlay.hidden,
+    html #pause-screen.overlay.hidden { display: none; }
+
+    .u2 {
+      --u2-w: 380px;
+      --u2-gap: 16px;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: safe center;
+      gap: var(--u2-gap);
+      padding:
+        calc(max(16px, var(--sat)) + 8px)
+        max(20px, var(--sal), var(--sar))
+        calc(max(16px, var(--sab)) + 12px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      scrollbar-width: none;
+      font-family: var(--font-ui);
+      color: var(--white);
+      text-align: center;
+    }
+    .u2::-webkit-scrollbar { display: none; }
+    .u2 > * {
+      width: min(var(--u2-w), 100%);
+      flex: 0 0 auto;
+      margin: 0;
+    }
+    .u2 .hidden { display: none !important; }
+
+    /* —— Typo —— */
+    .u2 .u2-kicker {
+      display: inline-block;
+      width: auto;
+      margin: 0 auto;
+      padding: 5px 12px;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-indent: 0.24em;
+      text-transform: uppercase;
+      color: #ff8aa0;
+      background: rgba(255, 107, 129, 0.1);
+      border: 1px solid rgba(255, 107, 129, 0.4);
+      border-radius: 999px;
+    }
+    .u2 .u2-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(38px, 10.5vw, 52px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--white);
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+      text-wrap: balance;
+      animation: none;
+    }
+    .u2 .u2-sub {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.35;
+      color: var(--grey);
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .u2 .u2-hint {
+      margin: 0;
+      font-size: 12px;
+      color: var(--grey);
+      opacity: 0.75;
+    }
+    .u2 .u2-head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* —— Bouton dominant (un seul par écran) —— */
+    html #end-screen .u2 #btn-retry,
+    html #pause-screen .u2 #btn-resume,
+    .u2 .u2-cta {
+      position: relative;
+      display: block;
+      width: min(var(--u2-w), 100%);
+      min-width: 0;
+      height: 68px;
+      margin: 0;
+      padding: 0 24px;
+      font-family: var(--font-arcade);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.2em;
+      text-indent: 0.2em;
+      text-transform: uppercase;
+      color: #0a0f18;
+      background: linear-gradient(180deg, #fff0a0 0%, #ffe566 45%, #ffc93a 100%);
+      border: 0;
+      border-radius: 16px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 -3px 0 rgba(160, 100, 0, 0.35) inset,
+        0 10px 30px rgba(255, 200, 60, 0.26),
+        0 0 0 1px rgba(255, 229, 102, 0.5);
+      text-shadow: none;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s var(--ease-out), filter 0.2s ease;
+      animation: home-play-pulse 2.6s ease-in-out infinite;
+    }
+    html #end-screen .u2 #btn-retry:hover,
+    html #pause-screen .u2 #btn-resume:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    html #end-screen .u2 #btn-retry:active,
+    html #pause-screen .u2 #btn-resume:active { transform: translateY(2px) scale(0.985); filter: brightness(0.96); animation: none; }
+    html #end-screen .u2 #btn-retry::before, html #end-screen .u2 #btn-retry::after,
+    html #pause-screen .u2 #btn-resume::before, html #pause-screen .u2 #btn-resume::after { content: none; }
+
+    /* —— Actions secondaires : tuiles identiques —— */
+    .u2 .u2-tiles {
+      display: flex;
+      gap: 10px;
+    }
+    .u2 .u2-tile {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 60px;
+      margin: 0;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      box-shadow: none;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-out);
+    }
+    .u2 .u2-tile svg { color: var(--neon-b); flex: 0 0 auto; }
+    .u2 .u2-tile span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .u2 .u2-tile:hover { background: rgba(61, 196, 255, 0.12); border-color: rgba(61, 196, 255, 0.55); }
+    .u2 .u2-tile:active { transform: scale(0.97); }
+
+    /* —— Boutons plats (confirmations, offres) —— */
+    .u2 .u2-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 48px;
+      margin: 0;
+      padding: 0 16px;
+      font-family: var(--font-arcade);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--white);
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .u2 .u2-btn:hover { border-color: rgba(61, 196, 255, 0.55); }
+    .u2 .u2-btn--danger { color: #ff8aa0; border-color: rgba(255, 107, 129, 0.5); background: rgba(255, 107, 129, 0.1); }
+    .u2 .u2-btn--gold { color: var(--camembert); border-color: rgba(236, 200, 120, 0.5); background: rgba(236, 200, 120, 0.08); }
+    .u2 .u2-btn:disabled { opacity: 0.4; cursor: default; }
+    .u2 .u2-row { display: flex; gap: 10px; }
+
+    .u2 :is(.u2-tile, .u2-btn, .u2-cta, .u2-back, .s2-tab, .s2-buy, .s2-card):focus-visible,
+    html #end-screen .u2 #btn-retry:focus-visible,
+    html #pause-screen .u2 #btn-resume:focus-visible {
+      outline: 3px solid var(--white);
+      outline-offset: 3px;
+    }
+
+    /* ================= ÉCRAN DE FIN ================= */
+    .end2 .end2-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 16px 14px;
+      background: linear-gradient(180deg, rgba(20, 36, 60, 0.6), rgba(8, 14, 24, 0.6));
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+    }
+    .end2 #end-record {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 5px 12px;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #0a0f18;
+      background: var(--accent);
+      border-radius: 999px;
+      box-shadow: 0 0 22px rgba(255, 229, 102, 0.45);
+    }
+    .end2 #end-record.show { animation: u2-pop 0.5s var(--ease-spring) both; }
+    .end2 #end-record-val { display: none; }
+    .end2 .end2-score {
+      margin: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-display);
+      line-height: 0.9;
+      color: var(--white);
+    }
+    .end2 .end2-score strong {
+      font-size: clamp(72px, 21vw, 96px);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .end2 .end2-score span { font-size: 30px; color: var(--blue-dim); }
+    #end-screen.win-mode .end2 .end2-score strong { color: var(--accent); text-shadow: 0 0 34px rgba(255, 229, 102, 0.4); }
+    .end2 .end2-delta {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey);
+    }
+    .end2 .end2-delta strong { color: var(--accent); font-weight: 700; }
+    .end2 .end2-track {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 4px;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+      white-space: nowrap;
+    }
+    .end2 .end2-track__bar {
+      position: relative;
+      flex: 1 1 auto;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(140, 210, 255, 0.14);
+    }
+    .end2 .end2-track__bar i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--neon-b), var(--accent));
+      transition: width 0.9s var(--ease-out) 0.15s;
+    }
+    .end2 .end2-track__bar b {
+      position: absolute;
+      top: -4px;
+      width: 2px;
+      height: 16px;
+      margin-left: -1px;
+      border-radius: 2px;
+      background: var(--white);
+      opacity: 0.85;
+    }
+
+    .end2 .end2-stats {
+      display: flex;
+      gap: 10px;
+      font: inherit;
+      line-height: 1.2;
+    }
+    .end2 .end2-stat {
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      opacity: 1;
+      transform: none;
+    }
+    .end2 .end2-stat__k {
+      font-family: var(--font-arcade);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue-dim);
+    }
+    .end2 .end2-stat__v {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .end2 .end2-stat__v small { font-size: 11px; font-weight: 600; color: var(--camembert); }
+    .end2 #end-rank .end2-stat__v { color: var(--accent); }
+    .end2 #end-rank.climbing .end2-stat__v { color: var(--neon-b); }
+    .end2 #end-rank.landed .end2-stat__v { animation: u2-pop 0.45s var(--ease-spring) both; }
+
+    .end2 .end2-offers {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    html #end-screen #end-offers.end2-offers { width: min(var(--u2-w), 100%); margin: 0; align-items: stretch; gap: 8px; }
+    /* Fin de partie et boutique : écrans défilants → pas de boutons son flottants par-dessus */
+    html.end-ui .audio-btns,
+    html:has(#shop-screen:not(.hidden)) .audio-btns { display: none; }
+    .end2 .end2-offers .u2-row { width: 100%; }
+    .end2 .end2-offers .u2-btn { font-size: 11px; letter-spacing: 0.04em; white-space: nowrap; padding: 0 8px; }
+    html.end-ui #hud { opacity: 0; pointer-events: none; }
+    .end2 .end2-offers > p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--grey);
+    }
+    .end2 #end-remain {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--grey);
+    }
+    .end2 #end-remain strong { color: var(--white); }
+
+    /* —— Classement (fin + fenêtre accueil) —— */
+    .u2 .b2,
+    #board-modal .board-modal__panel {
+      padding: 12px 14px;
+      background: rgba(8, 14, 24, 0.82);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      text-align: left;
+      box-shadow: none;
+    }
+    #board-modal .board-modal__panel {
+      width: min(400px, calc(100vw - 32px));
+      max-height: min(78vh, 620px);
+      overflow-y: auto;
+      padding: 16px;
+      background: #0a1220;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    }
+    .u2 .b2 .board-title,
+    #board-modal .board-title {
+      margin: 0 0 8px;
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    #board-modal .board-title { font-size: 14px; margin-bottom: 12px; padding-right: 48px; }
+    .u2 .b2 .board-list,
+    #board-modal .board-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: none;
+      overflow: visible;
+    }
+    .u2 .b2 .board-list li,
+    #board-modal .board-list li {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) 14px auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      margin: 0;
+      padding: 4px 8px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: none;
+    }
+    #board-modal .board-list li { min-height: 42px; font-size: 14px; }
+    .u2 .b2 .board-list li:nth-child(odd),
+    #board-modal .board-list li:nth-child(odd) { background: rgba(140, 210, 255, 0.05); }
+    .u2 .b2 .board-list li:has(.is-you),
+    #board-modal .board-list li:has(.is-you) { background: rgba(255, 229, 102, 0.12); }
+    .u2 .b2 .board-list .rk,
+    #board-modal .board-list .rk {
+      font-family: var(--font-arcade);
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--blue-dim);
+      text-align: center;
+    }
+    .u2 .b2 .board-list li:nth-child(1) .rk, #board-modal .board-list li:nth-child(1) .rk { color: #ffd84a; }
+    .u2 .b2 .board-list li:nth-child(2) .rk, #board-modal .board-list li:nth-child(2) .rk { color: #cfd8e3; }
+    .u2 .b2 .board-list li:nth-child(3) .rk, #board-modal .board-list li:nth-child(3) .rk { color: #e0a070; }
+    .u2 .b2 .board-list .nm,
+    #board-modal .board-list .nm {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+      color: var(--white);
+    }
+    .u2 .b2 .board-list .nm.is-you, #board-modal .board-list .nm.is-you { color: var(--accent); }
+    .u2 .b2 .board-list .rise, #board-modal .board-list .rise { color: #6ee7a8; font-weight: 800; }
+    .u2 .b2 .board-list .meta,
+    #board-modal .board-list .meta {
+      font-size: 12px;
+      color: var(--grey);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .u2 .b2 .board-list .empty, #board-modal .board-list .empty { grid-column: 1 / -1; color: var(--grey); text-align: center; }
+    /* Fin de partie : top 5 + ta ligne */
+    .end2 .b2 .board-list li:nth-child(n+6):not(:has(.is-you)) { display: none; }
+    #board-modal .board-modal__close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    #board-modal .board-modal__panel { position: relative; }
+
+    /* ================= BOUTIQUE ================= */
+    .shop2 { justify-content: flex-start; --u2-w: 440px; }
+    .shop2 .shop2-head {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+    .u2 .u2-back {
+      width: 48px;
+      height: 48px;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .shop2 .shop2-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 34px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-align: left;
+      color: var(--white);
+    }
+    .u2 .u2-bank {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      margin: 0;
+      padding: 0 14px 0 8px;
+      background: rgba(236, 200, 120, 0.08);
+      border: 1px solid rgba(236, 200, 120, 0.4);
+      border-radius: 999px;
+    }
+    .u2 .u2-bank img { width: 26px; height: 26px; object-fit: contain; }
+    .u2 .u2-bank strong {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--camembert);
+      font-variant-numeric: tabular-nums;
+    }
+    .shop2 .s2-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+    }
+    .shop2 .s2-tab {
+      flex: 1 1 0;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-arcade);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--grey);
+      background: none;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .shop2 .s2-tab.active { color: #0a0f18; background: var(--white); }
+    .shop2 .s2-pane { display: flex; flex-direction: column; gap: 10px; }
+    .shop2 .s2-item,
+    .shop2 .s2-card {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      margin: 0;
+      padding: 12px;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      background: rgba(10, 20, 34, 0.75);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+    .shop2 .s2-card { cursor: pointer; touch-action: manipulation; }
+    .shop2 .s2-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .shop2 .s2-item.owned { border-color: rgba(61, 196, 255, 0.55); }
+    .shop2 .s2-ico {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+    }
+    .shop2 .s2-ico img, .shop2 .s2-ico svg { width: 48px; height: 48px; object-fit: contain; display: block; }
+    .shop2 .s2-ico--photo img { width: 100%; height: 100%; object-fit: cover; }
+    .shop2 .s2-card.locked .s2-ico--photo img { filter: saturate(0.6) brightness(0.8); }
+    .shop2 .s2-body { min-width: 0; }
+    .shop2 .s2-body h3 {
+      margin: 0 0 2px;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--white);
+    }
+    .shop2 .s2-body p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--grey);
+    }
+    .shop2 .s2-body .s2-uses { margin-top: 4px; font-weight: 600; color: var(--neon-b); }
+    .shop2 .s2-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .shop2 .s2-price {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--camembert);
+      font-variant-numeric: tabular-nums;
+    }
+    .shop2 .s2-price img { width: 20px; height: 20px; object-fit: contain; }
+    .shop2 .s2-buy,
+    .shop2 .s2-status {
+      min-width: 96px;
+      min-height: 44px;
+      margin: 0;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-arcade);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.2;
+      color: #0a0f18;
+      background: var(--accent);
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .shop2 .s2-buy:disabled {
+      color: var(--grey);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      cursor: default;
+    }
+    .shop2 .s2-card:not(.locked) .s2-status { color: var(--white); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); }
+    .shop2 .s2-card.selected .s2-status { color: #0a0f18; background: var(--white); border-color: var(--white); }
+    .shop2 .s2-card.poor .s2-status { color: var(--grey); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border); }
+    .shop2 .s2-card.poor { cursor: default; }
+    .shop2 .s2-ico--photo { background: linear-gradient(180deg, #3a4c66, #1c2a3e); }
+    .shop2 .s2-price img { width: 24px; height: 24px; }
+    .shop2 .s2-promo {
+      display: none;
+      margin-top: 6px;
+      padding: 4px 8px;
+      font-family: var(--font-arcade);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      background: rgba(255, 229, 102, 0.1);
+      border: 1px dashed rgba(255, 229, 102, 0.5);
+      border-radius: 8px;
+      width: fit-content;
+    }
+    .shop2 .s2-default-ico {
+      width: 34px;
+      height: 44px;
+      border-radius: 6px;
+      background: linear-gradient(180deg, #2a3a50, #121c2a);
+      border: 2px solid var(--blue-dim);
+    }
+
+    /* ================= PAUSE ================= */
+    .pause2 .pause2-main { display: flex; flex-direction: column; gap: var(--u2-gap); align-items: center; }
+    .pause2 .pause2-main > * { width: 100%; }
+    .pause2 .pause2-confirm { display: flex; flex-direction: column; gap: 12px; }
+    .pause2 .pause2-admin { display: flex; justify-content: center; gap: 8px; }
+    html:not(.is-admin) .pause2 .pause2-admin { display: none; }
+    .pause2 #btn-pause-admin-on { display: none; }
+    .pause2 .pause2-admin .u2-btn { flex: 0 0 auto; }
+
+    @media (max-width: 340px) {
+      .u2 .u2-tile, #start-screen .home .home-nav__btn { font-size: 9px; letter-spacing: 0.04em; }
+    }
+    @keyframes u2-pop {
+      from { opacity: 0; transform: scale(0.7); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-height: 700px) {
+      .u2 { --u2-gap: 12px; }
+      .end2 .end2-score strong { font-size: clamp(56px, 17vw, 72px); }
+      .end2 .end2-hero { padding: 12px 14px 10px; }
+      html #end-screen .u2 #btn-retry, html #pause-screen .u2 #btn-resume { height: 60px; font-size: 20px; }
+      .u2 .u2-tile { height: 54px; }
+    }
+    /* Téléphone couché : deux colonnes, rien ne déborde */
+    @media (max-height: 520px) and (orientation: landscape) {
+      .end2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-content: start;
+        justify-items: center;
+        column-gap: 24px;
+        row-gap: 10px;
+      }
+      .end2 > * { width: 100%; max-width: var(--u2-w); }
+      .end2 .u2-head { grid-column: 1; grid-row: 1; }
+      .end2 .end2-hero { grid-column: 1; grid-row: 2; }
+      .end2 .end2-stats { grid-column: 1; grid-row: 3 / span 3; align-self: start; }
+      .end2 #btn-retry { grid-column: 2; grid-row: 1; }
+      .end2 .u2-tiles { grid-column: 2; grid-row: 2; align-self: start; }
+      .end2 .end2-offers { grid-column: 2; grid-row: 3; }
+      .end2 #end-remain { grid-column: 2; grid-row: 4; }
+      .end2 .b2 { grid-column: 2; grid-row: 5; }
+      .end2 .u2-title { font-size: 30px; }
+      .end2 .end2-score strong { font-size: 52px; }
+      .pause2 { --u2-w: 420px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html #end-screen .u2 #btn-retry, html #pause-screen .u2 #btn-resume, .end2 #end-record.show { animation: none !important; }
+      .end2 .end2-track__bar i { transition: none; }
+    }
   </style>
 </head>
 <body>
@@ -4916,7 +6149,7 @@
 
     <a id="now-radio" class="now-radio" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer" aria-label="Radio : Ysemo - Certifié Hauts-de-seine">
       <span class="now-radio__disc" aria-hidden="true">
-        <img src="assets/pochette.png" alt="" width="72" height="72" draggable="false" decoding="async" />
+        <img src="assets/pochette.webp" alt="" width="72" height="72" draggable="false" decoding="async" />
       </span>
       <span class="now-radio__meta">
         <span class="now-radio__live">En direct</span>
@@ -4937,56 +6170,79 @@ on</button>
     </div>
     <button class="btn-pause" id="btn-pause" type="button" aria-label="Pause" title="Pause (P / Échap)">❚❚</button>
 
-    <div id="pause-screen" class="overlay hidden" role="dialog" aria-modal="true">
-      <p class="brand-tag">Hauts-de-Seine Rush 92</p>
-      <h1 class="neon-title">Pause</h1>
-      <p class="subtitle" id="pause-sub">Son étouffé · partie figée</p>
-      <div id="pause-main" class="btn-row btn-row--primary">
-        <button class="btn btn-cta" id="btn-resume" type="button">Reprendre</button>
-        <a class="btn btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
-        <button class="btn btn-pause-home btn-secondary" id="btn-pause-home" type="button">Retour accueil</button>
+    <div id="pause-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="u2 pause2">
+        <header class="u2-head">
+          <h1 class="u2-title" id="pause-title">Pause</h1>
+          <p class="u2-sub" id="pause-sub">Son étouffé · partie figée</p>
+        </header>
+        <div id="pause-main" class="pause2-main">
+          <button class="u2-cta" id="btn-resume" type="button">Reprendre</button>
+          <nav class="u2-tiles" aria-label="Pause">
+            <a class="u2-tile" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Listenify</span></a>
+            <button class="u2-tile" id="btn-pause-home" type="button"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1v-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Accueil</span></button>
+          </nav>
+        </div>
+        <div id="pause-confirm" class="pause2-confirm hidden">
+          <p class="u2-sub pause-confirm-msg">Ta distance ne sera pas enregistrée.</p>
+          <div class="u2-row">
+            <button class="u2-btn u2-btn--danger" id="btn-pause-yes" type="button">Quitter</button>
+            <button class="u2-btn" id="btn-pause-no" type="button">Rester</button>
+          </div>
+        </div>
+        <div class="pause2-admin" id="pause-admin" aria-label="Mode admin">
+          <button class="u2-btn" id="btn-pause-admin-on" type="button">Admin ON</button>
+          <button class="u2-btn u2-btn--danger" id="btn-pause-admin-off" type="button">Admin OFF</button>
+        </div>
+        <p class="u2-hint" id="pause-hint">P ou Échap pour reprendre</p>
       </div>
-      <div id="pause-confirm" class="btn-row hidden">
-        <p class="subtitle pause-confirm-msg">Retourner à l’accueil ?</p>
-        <button class="btn" id="btn-pause-yes" type="button">Oui</button>
-        <button class="btn btn-pause-home" id="btn-pause-no" type="button">Non</button>
-      </div>
-      <div class="pause-admin btn-row--secondary" id="pause-admin" aria-label="Mode admin">
-        <button class="btn btn-admin btn-secondary" id="btn-pause-admin-on" type="button">Admin ON</button>
-        <button class="btn btn-admin-off btn-secondary" id="btn-pause-admin-off" type="button">Admin OFF</button>
-      </div>
-      <div class="ysemo-hub-slot"></div>
-      <p class="hint" id="pause-hint">P ou Échap pour reprendre</p>
     </div>
 
     <div id="minimap" aria-hidden="true" title="Hauts-de-Seine 92">
-      <img src="assets/minimap-92.png" alt="" draggable="false" />
+      <img src="assets/minimap-92.webp" alt="" draggable="false" />
       <span class="pin"></span>
     </div>
 
     <div id="start-screen" class="overlay">
       <div class="amb-particles" id="amb-particles" aria-hidden="true"></div>
-      <div class="wait-stage">
-        <div class="wait-ui" id="wait-ui">
+      <div class="home" id="home">
+        <header class="home-brand">
           <p class="brand-tag">92 · Île-de-France</p>
           <div class="chds-badge" aria-label="Certifié Hauts de Seine">
-            <img src="assets/CHDS.png?v=trim2" alt="Certifié Hauts de Seine" draggable="false" width="2031" height="1021" />
+            <img src="assets/chds.webp" alt="Certifié Hauts de Seine" draggable="false" width="800" height="402" />
             <span class="chds-shine" aria-hidden="true"></span>
             <span class="chds-shine-2" aria-hidden="true"></span>
           </div>
-          <p class="wait-rush">92 Rush</p>
-          <p class="subtitle">La Défense → Berges de Seine</p>
-          <ul class="feat-list">
-            <li><span class="feat-ico" aria-hidden="true">↑↑</span> Double saut</li>
-            <li><span class="feat-ico" aria-hidden="true">●</span> Camemberts</li>
-            <li><span class="feat-ico" aria-hidden="true">✕</span> Évite les CRS</li>
-            <li><span class="feat-ico" aria-hidden="true">≈</span> Pas la Seine</li>
-          </ul>
+          <h1 class="home-title"><span>92</span> Rush</h1>
+          <p class="home-route">La Défense <span aria-hidden="true">→</span> Berges de Seine · 920 m</p>
+        </header>
+
+        <div class="home-main">
+          <div class="player-id" id="player-id">
+            <button class="pseudo-chip" id="pseudo-chip" type="button" aria-label="Changer de pseudo">
+              <span class="pseudo-chip__name" id="pseudo-chip-name"></span>
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="player-id-row">
+              <label class="sr-only" for="pseudo-input">Pseudo</label>
+              <input id="pseudo-input" class="pseudo-input" type="text" maxlength="20" autocomplete="nickname" enterkeyhint="done" placeholder="Choisis ton pseudo" spellcheck="false" inputmode="text" />
+              <button class="pseudo-ok" id="btn-pseudo-save" type="button">OK</button>
+            </div>
+            <p class="pseudo-msg" id="pseudo-msg" role="alert"></p>
+          </div>
+
+          <button class="home-play" id="btn-start" type="button">Jouer</button>
+
+          <div class="home-best hidden" id="home-best" aria-live="polite">
+            <span class="home-best__label" id="home-best-label">Record</span>
+            <span class="home-best__bar" aria-hidden="true"><i id="home-best-fill"></i></span>
+            <span class="home-best__goal">920 m</span>
+          </div>
+
           <div class="item-loadout hidden" id="item-loadout">
-            <p class="loadout-label">Équipements</p>
             <div class="loadout-bank" id="loadout-bank" aria-label="Stock camemberts">
               <span class="loadout-ico" aria-hidden="true">
-                <img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" width="44" height="44" draggable="false" decoding="async" />
+                <img class="cam-ico" src="assets/camembert.webp" alt="" width="44" height="44" draggable="false" decoding="async" />
               </span>
               <span class="loadout-name">
                 <span>Camemberts</span>
@@ -5006,127 +6262,56 @@ on</button>
               <input type="checkbox" id="tog-jetpack" checked />
             </label>
           </div>
-          <div class="player-id" id="player-id">
-            <label class="player-id-label" for="pseudo-input">Pseudo</label>
-            <div class="player-id-row">
-              <input id="pseudo-input" class="pseudo-input" type="text" maxlength="20" autocomplete="nickname" enterkeyhint="done" placeholder="Ton pseudo (max 20)" spellcheck="false" inputmode="text" />
-              <button class="btn btn-pseudo" id="btn-pseudo-save" type="button">OK</button>
-            </div>
-            <p class="pseudo-msg" id="pseudo-msg" role="alert"></p>
-          </div>
-          <div class="btn-row btn-row--primary">
-            <button class="btn btn-cta" id="btn-start" type="button">Jouer</button>
-            <button class="btn btn-board" id="btn-board" type="button">Classement</button>
-            <a class="btn btn-listenify" id="btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">Listenify</a>
-            <button class="btn btn-shop hidden" id="btn-shop" type="button">Boutique</button>
-          </div>
-          <div class="btn-row btn-row--secondary" id="start-admin-row" aria-label="Admin">
-            <button class="btn btn-admin btn-secondary" id="btn-admin" type="button">Admin ON</button>
-            <button class="btn btn-admin-off btn-secondary hidden" id="btn-admin-off" type="button">Admin OFF</button>
-          </div>
-          <div class="ysemo-hub-slot"></div>
-          <p class="hint">
-            <span class="hint-kb">Clavier : ← → · Espace (Saut / Jetpack) · E / X (Action)<br /></span>
-            Mobile : Stick gauche · Saut / Jetpack à droite · Camemberts roses = bouclier
-          </p>
         </div>
 
-        <div id="board-modal" class="board-modal hidden" role="dialog" aria-modal="true" aria-labelledby="board-modal-title">
-          <div class="board-modal__panel" id="start-board">
-            <button type="button" class="board-modal__close" id="btn-board-close" aria-label="Fermer">×</button>
-            <p class="board-title" id="board-modal-title">Classement</p>
-            <ol class="board-list" id="start-board-list"></ol>
-          </div>
+        <nav class="home-nav" aria-label="Menu">
+          <button class="home-nav__btn" id="btn-board" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 20h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Classement</span>
+          </button>
+          <button class="home-nav__btn hidden" id="btn-shop" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Boutique</span>
+          </button>
+          <a class="home-nav__btn" id="btn-listenify" href="https://ysemo.listenify.app/" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            <span>Listenify</span>
+          </a>
+        </nav>
+
+        <div class="home-admin is-empty" id="start-admin-row" aria-label="Admin">
+          <button class="home-admin__btn" id="btn-admin" type="button">Admin ON</button>
+          <button class="home-admin__btn hidden" id="btn-admin-off" type="button">Admin OFF</button>
         </div>
 
-        <div class="wait-map" id="wait-map">
-          <div class="wait-map-bg" aria-hidden="true">
-            <svg viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="isoSky" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#071428"/>
-                  <stop offset="55%" stop-color="#0c1e38"/>
-                  <stop offset="100%" stop-color="#081018"/>
-                </linearGradient>
-                <linearGradient id="neonBlue" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#3dc4ff"/>
-                  <stop offset="100%" stop-color="#7aeeff"/>
-                </linearGradient>
-                <linearGradient id="neonYellow" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stop-color="#ffe566"/>
-                  <stop offset="100%" stop-color="#ffb020"/>
-                </linearGradient>
-                <filter id="glowB" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="3.5" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <filter id="glowY" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="3" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <pattern id="isoGrid" width="28" height="16" patternUnits="userSpaceOnUse" patternTransform="skewX(-28)">
-                  <path d="M0 16 L14 0 L28 16" fill="none" stroke="rgba(61,196,255,0.12)" stroke-width="0.7"/>
-                </pattern>
-              </defs>
-              <rect width="520" height="540" fill="url(#isoSky)"/>
-              <rect width="520" height="540" fill="url(#isoGrid)" opacity="0.85"/>
-              <path d="M40 420 C120 390, 180 460, 260 430 S400 380, 490 410" fill="none" stroke="#1a4060" stroke-width="28" opacity="0.55"/>
-              <path d="M40 420 C120 390, 180 460, 260 430 S400 380, 490 410" fill="none" stroke="url(#neonBlue)" stroke-width="3" filter="url(#glowB)" opacity="0.9"/>
-              <path d="M55 428 C130 400, 185 465, 265 438 S395 390, 475 418" fill="none" stroke="url(#neonYellow)" stroke-width="1.5" filter="url(#glowY)" opacity="0.7" stroke-dasharray="6 8"/>
-              <g opacity="0.9">
-                <path d="M90 210 L130 188 L170 210 L130 232 Z" fill="#152838" stroke="#2a5070" stroke-width="1"/>
-                <path d="M130 232 L170 210 L170 280 L130 302 Z" fill="#0e1a28"/>
-                <path d="M90 210 L90 280 L130 302 L130 232 Z" fill="#1a3048"/>
-                <path d="M200 160 L250 132 L300 160 L250 188 Z" fill="#183048" stroke="#3dc4ff" stroke-width="1" opacity="0.95"/>
-                <path d="M250 188 L300 160 L300 250 L250 278 Z" fill="#0c1826"/>
-                <path d="M200 160 L200 250 L250 278 L250 188 Z" fill="#1e3a58"/>
-                <path d="M320 200 L360 178 L400 200 L360 222 Z" fill="#142434"/>
-                <path d="M360 222 L400 200 L400 270 L360 292 Z" fill="#0a1420"/>
-                <path d="M320 200 L320 270 L360 292 L360 222 Z" fill="#182c40"/>
-                <path d="M140 300 L190 272 L240 300 L190 328 Z" fill="#122030"/>
-                <path d="M190 328 L240 300 L240 360 L190 388 Z" fill="#091420"/>
-                <path d="M140 300 L140 360 L190 388 L190 328 Z" fill="#163048"/>
-              </g>
-              <g filter="url(#glowB)" transform="translate(228 95)">
-                <path d="M0 110 L18 100 L82 100 L100 110 L100 0 L82 10 L82 88 L18 88 L18 10 L0 0 Z" fill="#1a3550" stroke="#3dc4ff" stroke-width="2"/>
-                <rect x="28" y="18" width="44" height="62" fill="#071018" stroke="#ffe566" stroke-width="1.2" opacity="0.95"/>
-                <path d="M22 4 H78" stroke="#ffe566" stroke-width="2" opacity="0.8"/>
-              </g>
-              <path d="M278 205 C300 240, 310 280, 290 320 S240 380, 300 420 S400 400, 450 430" fill="none" stroke="url(#neonYellow)" stroke-width="3.5" filter="url(#glowY)" stroke-linecap="round"/>
-              <path d="M278 205 C300 240, 310 280, 290 320 S240 380, 300 420 S400 400, 450 430" fill="none" stroke="url(#neonBlue)" stroke-width="1.2" opacity="0.85" stroke-linecap="round"/>
-              <circle cx="278" cy="205" r="5" fill="#ffe566" filter="url(#glowY)"/>
-              <circle cx="450" cy="430" r="5" fill="#3dc4ff" filter="url(#glowB)"/>
-              <rect x="8" y="8" width="504" height="524" fill="none" stroke="rgba(61,196,255,0.28)" stroke-width="1.5"/>
-              <rect x="14" y="14" width="492" height="512" fill="none" stroke="rgba(255,229,102,0.12)" stroke-width="1"/>
-            </svg>
-          </div>
-          <div class="wait-map-metal">
-            <img src="assets/minimap-92.png" alt="" draggable="false" />
-            <span class="wait-map-pin"></span>
-          </div>
-          <span class="wait-route-tag from">La Défense</span>
-          <span class="wait-route-tag to">Berges de Seine</span>
+        <p class="home-keys" aria-hidden="true"><kbd>←</kbd> <kbd>→</kbd> courir · <kbd>Espace</kbd> sauter</p>
+      </div>
+
+      <div id="board-modal" class="board-modal hidden" role="dialog" aria-modal="true" aria-labelledby="board-modal-title">
+        <div class="board-modal__panel" id="start-board">
+          <button type="button" class="board-modal__close" id="btn-board-close" aria-label="Fermer">×</button>
+          <p class="board-title" id="board-modal-title">Classement</p>
+          <ol class="board-list" id="start-board-list"></ol>
         </div>
       </div>
+
     </div>
 
-    <div id="shop-screen" class="overlay hidden" role="dialog" aria-modal="true">
-      <div class="shop-panel">
-        <p class="brand-tag" style="text-align:center">Boutique 92</p>
-        <h1 class="neon-title" style="text-align:center;font-size:clamp(36px,9vw,52px)">Boutique</h1>
-        <div class="shop-tabs" role="tablist" aria-label="Boutique">
-          <button class="shop-tab active" type="button" role="tab" data-tab="items" aria-selected="true">Item</button>
-          <button class="shop-tab" type="button" role="tab" data-tab="skins" aria-selected="false">Skin</button>
+    <div id="shop-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+      <div class="u2 shop2">
+        <header class="shop2-head">
+          <button class="u2-back" id="btn-shop-close" type="button" aria-label="Retour"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <h1 class="shop2-title" id="shop-title">Boutique</h1>
+          <p class="u2-bank" aria-label="Camemberts en banque"><img src="assets/camembert.webp" alt="" draggable="false" width="26" height="26" /><strong id="shop-bank">0</strong></p>
+        </header>
+        <div class="s2-tabs" role="tablist" aria-label="Boutique">
+          <button class="s2-tab active" type="button" role="tab" data-tab="items" aria-selected="true">Objets</button>
+          <button class="s2-tab" type="button" role="tab" data-tab="skins" aria-selected="false">Skins</button>
         </div>
-        <p class="shop-bank" aria-label="Banque camemberts">
-          <img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="68" height="68" />
-          <strong id="shop-bank">0</strong>
-        </p>
 
-        <div class="shop-pane" id="shop-pane-items" role="tabpanel">
-          <div class="shop-item" data-item="shoes" id="shop-shoes">
-            <div class="shop-ico" aria-hidden="true">
-              <svg class="shoe-glow" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <div class="s2-pane" id="shop-pane-items" role="tabpanel">
+          <article class="s2-item" data-item="shoes" id="shop-shoes">
+            <div class="s2-ico" aria-hidden="true"><svg class="shoe-glow" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <!-- Nike Air Max — logo / basket rouge -->
                 <path d="M6 30c2-6 8-10 16-11 7-1 14 1 20 5-3 1-7 2-12 2-8 0-16 1-22 5 0-1-1-1-2-1z" fill="#ff2038"/>
                 <path d="M8 31c5-3 12-4 20-4 5 0 9 1 12 2l2 6c-4 1-9 2-15 2-7 0-13-1-18-3l-1-3z" fill="#c01028"/>
@@ -5136,117 +6321,115 @@ on</button>
                 <path d="M12 29c8-5 16-6 26-3-9-1-17 1-24 5-.1-1-.5-1.5-2-2z" fill="#ff1028"/>
                 <path d="M13 28.2c7.5-4.2 15-5.2 24-2.6-8.5-.8-16 1.2-22.5 4.4-.2-.7-.7-1.2-1.5-1.8z" fill="#fff0f2" opacity="0.35"/>
                 <ellipse cx="16" cy="20" rx="3" ry="2" fill="#ff6878" opacity="0.7"/>
-              </svg>
-            </div>
-            <div>
+              </svg></div>
+            <div class="s2-body">
               <h3>Nike Air Max</h3>
-              <p>3 utilisations · 1 partie = 1 charge. Course plus rapide sur les berges.</p>
-              <div class="price price-cam" id="shop-shoes-price">
-                <img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" />
-                <span>3</span>
-              </div>
-              <p class="shop-shoe-uses" id="shop-shoe-uses" style="margin:6px 0 0;font-size:12px;color:var(--neon-b);letter-spacing:0.08em">Charges : 0</p>
+              <p>Course plus rapide. 1 partie = 1 charge.</p>
+              <p class="s2-uses" id="shop-shoe-uses">Charges : 0</p>
             </div>
-            <button class="shop-buy" type="button" data-buy="shoes">Acheter ×3</button>
-          </div>
-          <div class="shop-item" data-item="jetpack" id="shop-jetpack">
-            <div class="shop-ico" aria-hidden="true">
-              <img class="jetpack-ico" src="assets/jetpack.png" alt="" width="128" height="128" draggable="false" decoding="async" />
+            <div class="s2-side">
+              <p class="s2-price" id="shop-shoes-price"><img src="assets/camembert.webp" alt="" draggable="false" width="26" height="26" /><span>3</span></p>
+              <button class="s2-buy" type="button" data-buy="shoes">Acheter ×3</button>
             </div>
-            <div>
+          </article>
+          <article class="s2-item" data-item="jetpack" id="shop-jetpack">
+            <div class="s2-ico" aria-hidden="true"><img src="assets/jetpack.png" alt="" width="128" height="128" draggable="false" decoding="async" /></div>
+            <div class="s2-body">
               <h3>Jetpack</h3>
-              <p>2 utilisations · 1 partie = 1 charge. Maintiens Espace pour planer.</p>
-              <div class="price price-cam" id="shop-jetpack-price">
-                <img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" />
-                <span>20</span>
-              </div>
-              <p class="shop-jet-uses" id="shop-jet-uses" style="margin:6px 0 0;font-size:12px;color:var(--neon-b);letter-spacing:0.08em">Charges : 0</p>
+              <p>Maintiens le saut pour planer. 1 partie = 1 charge.</p>
+              <p class="s2-uses" id="shop-jet-uses">Charges : 0</p>
             </div>
-            <button class="shop-buy" type="button" data-buy="jetpack">Acheter ×2</button>
-          </div>
+            <div class="s2-side">
+              <p class="s2-price" id="shop-jetpack-price"><img src="assets/camembert.webp" alt="" draggable="false" width="26" height="26" /><span>20</span></p>
+              <button class="s2-buy" type="button" data-buy="jetpack">Acheter ×2</button>
+            </div>
+          </article>
         </div>
 
-        <div class="shop-pane hidden" id="shop-pane-skins" role="tabpanel">
-          <div class="skin-grid">
-            <button class="skin-card selected" type="button" data-skin="default" id="skin-default">
-              <div class="skin-preview" aria-hidden="true">
-                <div class="skin-default-ico"></div>
-              </div>
+        <div class="s2-pane hidden" id="shop-pane-skins" role="tabpanel">
+          <button class="s2-card selected" type="button" data-skin="default" id="skin-default">
+            <span class="s2-ico" aria-hidden="true"><span class="s2-default-ico"></span></span>
+            <span class="s2-body">
               <h3>Défaut</h3>
               <p>Survêt de base</p>
-              <p class="skin-price">Gratuit</p>
-              <p class="skin-status">Équipé</p>
-            </button>
-            <button class="skin-card" type="button" data-skin="teeFront" id="skin-tee-front">
-              <div class="skin-preview">
-                <figure>
-                  <img src="assets/skin1_front.png" alt="T-shirt Face" draggable="false" width="512" height="512" />
-                  <figcaption>Face</figcaption>
-                </figure>
-              </div>
+            </span>
+            <span class="s2-side">
+              <span class="s2-price">Gratuit</span>
+              <span class="s2-status">Équipé</span>
+            </span>
+          </button>
+          <button class="s2-card" type="button" data-skin="teeFront" id="skin-tee-front">
+            <span class="s2-ico s2-ico--photo"><img src="assets/skin1_front.webp" alt="T-shirt, face" loading="lazy" decoding="async" draggable="false" width="640" height="640" /></span>
+            <span class="s2-body">
               <h3>T-shirt Physique</h3>
-              <p>Achète-le en vrai !</p>
-              <p class="skin-price"><img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" /><span>150</span></p>
-              <p class="skin-status">Débloquer code promo</p>
-              <p id="merch-promo" style="display: none; background: #222; color: #ffe566; padding: 4px; border-radius: 4px; margin-top: 5px; font-weight: bold; letter-spacing: 2px;">RUSH92</p>
-            </button>
-            <button class="skin-card" type="button" data-skin="teeBack" id="skin-tee-back">
-              <div class="skin-preview">
-                <figure>
-                  <img src="assets/skin1_back.png" alt="T-shirt Dos" draggable="false" width="512" height="512" />
-                  <figcaption>Dos</figcaption>
-                </figure>
-              </div>
+              <p>Débloque un code promo pour l’acheter en vrai.</p>
+              <span class="s2-promo" id="merch-promo">RUSH92</span>
+            </span>
+            <span class="s2-side">
+              <span class="s2-price"><img src="assets/camembert.webp" alt="" draggable="false" width="26" height="26" /><span>150</span></span>
+              <span class="s2-status">Débloquer</span>
+            </span>
+          </button>
+          <button class="s2-card" type="button" data-skin="teeBack" id="skin-tee-back">
+            <span class="s2-ico s2-ico--photo"><img src="assets/skin1_back.webp" alt="T-shirt, dos" loading="lazy" decoding="async" draggable="false" width="640" height="640" /></span>
+            <span class="s2-body">
               <h3>T-shirt Dos</h3>
-              <p>Carte 92 chrome</p>
-              <p class="skin-price"><img class="cam-ico" src="assets/camembert.png?v=shop1" alt="" draggable="false" width="36" height="36" /><span>16</span></p>
-              <p class="skin-status">Acheter</p>
-            </button>
-          </div>
-        </div>
-
-        <div style="text-align:center;margin-top:18px">
-          <button class="btn" id="btn-shop-close" type="button">Retour</button>
+              <p>Carte du 92 chromée dans le dos.</p>
+            </span>
+            <span class="s2-side">
+              <span class="s2-price"><img src="assets/camembert.webp" alt="" draggable="false" width="26" height="26" /><span>16</span></span>
+              <span class="s2-status">Acheter</span>
+            </span>
+          </button>
         </div>
       </div>
     </div>
 
-    <div id="end-screen" class="overlay hidden" role="dialog" aria-modal="true">
-      <div class="end-main">
-        <p class="brand-tag" style="margin-bottom:14px">Hauts-de-Seine Rush 92</p>
-        <h1 class="neon-title" id="end-title">Game Over</h1>
-        <p class="end-go" id="end-go">Game Over</p>
-        <p class="subtitle" id="end-sub">Course terminée</p>
-        <p class="end-record hidden" id="end-record" aria-live="polite">
-          <span class="end-record-label">Nouveau record</span>
-          <span class="end-record-val" id="end-record-val">0 m</span>
-        </p>
-        <p class="end-rank hidden" id="end-rank" aria-live="polite">
-          Rang <span class="end-rank-num" id="end-rank-num">#—</span>
-        </p>
-        <p class="stats" id="end-stats"></p>
-        <div class="board-box board-box--end" id="end-board" aria-label="Classement">
+    <div id="end-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="end-title">
+      <div class="u2 end2">
+        <header class="u2-head">
+          <p class="u2-kicker" id="end-go">Game Over</p>
+          <h1 class="u2-title" id="end-title">Game Over</h1>
+          <p class="u2-sub" id="end-sub">Course terminée</p>
+        </header>
+
+        <section class="end2-hero" aria-live="polite">
+          <p class="hidden" id="end-record"><span>★ Nouveau record</span><span id="end-record-val">0 m</span></p>
+          <p class="end2-score"><strong id="end-hero-val">0</strong><span id="end-hero-unit">m</span></p>
+          <p class="end2-delta hidden" id="end-delta"></p>
+          <div class="end2-track" aria-hidden="true">
+            <span class="end2-track__bar"><i id="end-track-fill"></i><b id="end-track-best"></b></span>
+            <span>920 m</span>
+          </div>
+        </section>
+
+        <div class="end2-stats" id="end-stats">
+          <p class="end2-stat"><span class="end2-stat__k">Temps</span><span class="end2-stat__v" id="end-time">0:00.0</span></p>
+          <p class="end2-stat"><span class="end2-stat__k">Camemberts</span><span class="end2-stat__v" id="end-cams">+0</span></p>
+          <p class="end2-stat hidden" id="end-rank" aria-live="polite"><span class="end2-stat__k">Rang</span><span class="end2-stat__v" id="end-rank-num">#—</span></p>
+        </div>
+
+        <button class="u2-cta" id="btn-retry" type="button">Rejouer</button>
+
+        <nav class="u2-tiles" aria-label="Après la course">
+          <button class="u2-tile" id="btn-share-score" type="button"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Partager</span></button>
+          <button class="u2-tile hidden" id="btn-shop-end" type="button"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Boutique</span></button>
+          <a class="u2-tile" id="btn-stream-end" href="https://ysemo.listenify.app/ysemo/faux-frere" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Faux Frère</span></a>
+        </nav>
+
+        <div id="end-offers" class="end2-offers hidden" aria-live="polite">
+          <p id="end-offers-label">Racheter maintenant ?</p>
+          <div class="u2-row">
+            <button class="u2-btn u2-btn--gold" id="btn-end-buy-jet" type="button">Jetpack</button>
+            <button class="u2-btn u2-btn--gold" id="btn-end-buy-shoes" type="button">Air Max</button>
+          </div>
+        </div>
+        <p class="hidden" id="end-remain"></p>
+
+        <div class="b2" id="end-board" aria-label="Classement">
           <p class="board-title">Classement</p>
           <ol class="board-list" id="end-board-list"></ol>
         </div>
-      </div>
-      <div class="end-actions">
-        <div class="btn-row btn-row--primary">
-          <button class="btn btn-cta" id="btn-retry" type="button">Rejouer</button>
-        </div>
-        <div class="btn-row btn-row--secondary">
-          <button class="btn btn-share btn-secondary" id="btn-share-score" type="button">Partager mon score</button>
-          <a class="btn btn-stream btn-secondary" id="btn-stream-end" href="https://ysemo.listenify.app/ysemo/faux-frere" target="_blank" rel="noopener noreferrer">
-            Écoute Faux Frère
-          </a>
-          <button class="btn btn-shop btn-secondary hidden" id="btn-shop-end" type="button">Boutique</button>
-        </div>
-        <div id="end-offers" class="hidden" aria-live="polite">
-          <p class="end-offer-label" id="end-offers-label">Racheter maintenant ?</p>
-          <button class="btn-end-buy jet" id="btn-end-buy-jet" type="button">Racheter Jetpack ●20</button>
-          <button class="btn-end-buy" id="btn-end-buy-shoes" type="button">Racheter Air Max ●3</button>
-        </div>
-        <p class="end-remain hidden" id="end-remain"></p>
       </div>
     </div>
 
@@ -5427,8 +6610,10 @@ on</button>
   let adminMode = false;
   try { adminMode = localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) {}
   function isAdmin() { return !!adminMode; }
+  let runTainted = false; // admin actif à un moment de la run en cours
   function setAdminMode(on, silent) {
     adminMode = !!on;
+    if (adminMode) runTainted = true;
     try { localStorage.setItem(ADMIN_KEY, adminMode ? "1" : "0"); } catch (_) {}
     try { syncAdminUI(); } catch (_) {}
     if (adminMode && !silent) {
@@ -5589,6 +6774,8 @@ on</button>
   // 4. Support Manette (Gamepad API)
   let gpPrevJump = false;
   let gpPrevPause = false;
+  let gpPrevL = false;
+  let gpPrevR = false;
   function pollGamepad() {
     if (!navigator.getGamepads) return;
     const pads = navigator.getGamepads();
@@ -5611,14 +6798,22 @@ on</button>
         finishIntroCinematic();
       }
     } else if (state === "play" && !paused) {
-      keys.left = axX < -0.28 || dpadL;
-      keys.right = axX > 0.28 || dpadR;
-      if (btnJump && !gpPrevJump) {
-        keys.jumpPressed = true;
-        keys.actionPressed = true;
+      // Ne touche aux touches que si la manette change d’état
+      // (sinon elle écrase clavier / stick tactile à chaque frame)
+      const gpL = !!(axX < -0.28 || dpadL);
+      const gpR = !!(axX > 0.28 || dpadR);
+      if (gpL !== gpPrevL) keys.left = gpL;
+      if (gpR !== gpPrevR) keys.right = gpR;
+      gpPrevL = gpL;
+      gpPrevR = gpR;
+      if (btnJump !== gpPrevJump) {
+        if (btnJump) {
+          keys.jumpPressed = true;
+          keys.actionPressed = true;
+        }
+        keys.jump = btnJump;
+        keys.action = btnJump;
       }
-      keys.jump = btnJump;
-      keys.action = btnJump;
     }
     gpPrevJump = btnJump;
   }
@@ -5635,6 +6830,11 @@ on</button>
 
   function syncAdminUI() {
     const on = isAdmin();
+    try {
+      const row = document.getElementById("start-admin-row");
+      if (row) row.classList.toggle("is-empty", !on);
+      document.documentElement.classList.toggle("is-admin", on);
+    } catch (_) {}
     if (el.btnAdmin) {
       el.btnAdmin.classList.toggle("hidden", on);
     }
@@ -5745,8 +6945,8 @@ on</button>
     const TAPE_MS = 1580; // VariFi / tape-stop plus long à la mort
 
     // HTMLAudio uniquement pour le kick unlock ; lecture musique = AudioBuffer (horloge unique)
-    const beat = new Audio("sounds/beat.mp3");
-    const acap = new Audio("sounds/acap.mp3");
+    const beat = new Audio("sounds/beat.m4a");
+    const acap = new Audio("sounds/acap.m4a");
     function prepHtmlAudio(a, vol) {
       a.preload = "auto";
       a.volume = vol;
@@ -6225,11 +7425,11 @@ on</button>
       const ctx = ensureCtx();
       if (!ctx) return Promise.reject(new Error("no AudioContext"));
       musicLoadPromise = Promise.all([
-        fetch("sounds/beat.mp3").then((r) => {
+        fetch("sounds/beat.m4a").then((r) => {
           if (!r.ok) throw new Error("beat fetch " + r.status);
           return r.arrayBuffer();
         }).then((ab) => ctx.decodeAudioData(ab.slice(0))),
-        fetch("sounds/acap.mp3").then((r) => {
+        fetch("sounds/acap.m4a").then((r) => {
           if (!r.ok) throw new Error("acap fetch " + r.status);
           return r.arrayBuffer();
         }).then((ab) => ctx.decodeAudioData(ab.slice(0))),
@@ -7028,9 +8228,9 @@ on</button>
      * 15 m → Yssound1 (×1.25) ; 5 m → Lsound1 puis Lsound2 (×1.38)
      */
     const COMP_VOICE_URLS = {
-      l1: "sounds/Lsound1.wav",
-      l2: "sounds/Lsound2.wav",
-      ys: "sounds/Yssound1.wav",
+      l1: "sounds/Lsound1.m4a",
+      l2: "sounds/Lsound2.m4a",
+      ys: "sounds/Yssound1.m4a",
     };
     const companionBufs = { l1: null, l2: null, ys: null };
     let companionVoiceLoad = null;
@@ -8712,7 +9912,20 @@ on</button>
       else localStorage.removeItem(PSEUDO_KEY);
     } catch (_) {}
     if (el.pseudoInput && el.pseudoInput.value !== n) el.pseudoInput.value = n;
+    syncPseudoUI();
     return n;
+  }
+
+  /** Accueil : pseudo déjà choisi → simple pastille ; le champ ne revient qu’au clic */
+  function syncPseudoUI(forceEdit) {
+    const box = document.getElementById("player-id");
+    if (!box) return;
+    const n = playerPseudo || "";
+    const chipName = document.getElementById("pseudo-chip-name");
+    if (chipName) chipName.textContent = n;
+    box.classList.toggle("has-pseudo", !!n);
+    if (forceEdit === true) box.classList.add("editing");
+    else if (forceEdit === false || !n) box.classList.remove("editing");
   }
 
   function boardRank(a, b) {
@@ -8748,19 +9961,17 @@ on</button>
     const name = String(e.name || "").trim().slice(0, 20).replace(/[<>&"']/g, "");
     if (!name) return null;
     if ((e.season | 0) !== BOARD_SEASON) return null;
-    const did = String(e.did || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
-    const roseAt = Math.max(0, e.roseAt | 0);
+    const roseAt = Math.max(0, Math.trunc(Number(e.roseAt) || 0));
     const out = {
-      id: String(e.id || name.toLowerCase() + "_" + (e.at | 0)).slice(0, 64),
+      id: String(e.id || name.toLowerCase() + "_" + Math.trunc(Number(e.at) || 0)).slice(0, 64),
       name,
       timeMs: Math.max(0, e.timeMs | 0),
       meters: Math.max(0, e.meters | 0),
       cams: Math.max(0, e.cams | 0),
       win: !!e.win,
-      at: Math.max(0, e.at | 0) || Date.now(),
+      at: Math.max(0, Math.trunc(Number(e.at) || 0)) || Date.now(),
       season: BOARD_SEASON,
     };
-    if (did.length >= 8) out.did = did;
     if (roseAt && Date.now() - roseAt < 90 * 1000) out.roseAt = roseAt;
     return out;
   }
@@ -8771,6 +9982,9 @@ on</button>
   let boardClimbFlash = new Set(); // noms à flasher une fois
   let boardPollTimer = 0;
   let boardPollBusy = false;
+  const BOARD_POLL_MS = 8000;
+  let boardPollDelay = BOARD_POLL_MS;
+  let boardOffline = false; // dernière requête classement en échec
 
   function pruneBoardRises() {
     const now = Date.now();
@@ -8805,10 +10019,10 @@ on</button>
     for (let i = 0; i < arr.length; i++) {
       const e = arr[i];
       if (!e || !e.roseAt) continue;
-      const age = now - (e.roseAt | 0);
+      const age = now - e.roseAt;
       if (age >= 0 && age < BOARD_RISE_MS) {
         const key = e.name.toLowerCase();
-        const until = (e.roseAt | 0) + BOARD_RISE_MS;
+        const until = e.roseAt + BOARD_RISE_MS;
         const cur = boardRiseUntil.get(key) || 0;
         if (until > cur) boardRiseUntil.set(key, until);
       }
@@ -8845,6 +10059,18 @@ on</button>
     return Array.from(byName.values()).sort(boardRank).slice(0, BOARD_MAX);
   }
 
+  /** Liste serveur = vérité. On n’y ajoute que l’entrée locale du joueur (pas encore synchronisée). */
+  function boardFromServer(scores) {
+    const key = (playerPseudo || loadPseudo() || "").toLowerCase();
+    const mine = key ? boardCache.filter((e) => e.name.toLowerCase() === key) : [];
+    return mergeBoardLists(mine, scores || []);
+  }
+
+  function myBoardEntries() {
+    const key = (playerPseudo || loadPseudo() || "").toLowerCase();
+    return key ? boardCache.filter((e) => e.name.toLowerCase() === key) : [];
+  }
+
   function loadBoardLocal() {
     try {
       const o = JSON.parse(localStorage.getItem(BOARD_KEY) || "[]");
@@ -8868,9 +10094,9 @@ on</button>
       for (let i = 0; i < boardCache.length; i++) {
         const e = boardCache[i];
         if (!e || !e.roseAt) continue;
-        const age = Date.now() - (e.roseAt | 0);
+        const age = Date.now() - e.roseAt;
         if (age >= 0 && age < BOARD_RISE_MS) {
-          boardRiseUntil.set(e.name.toLowerCase(), (e.roseAt | 0) + BOARD_RISE_MS);
+          boardRiseUntil.set(e.name.toLowerCase(), e.roseAt + BOARD_RISE_MS);
         }
       }
     } else {
@@ -8885,7 +10111,9 @@ on</button>
     const you = (highlightName || playerPseudo || "").toLowerCase();
     const list = boardCache.slice(0, 10);
     if (!list.length) {
-      node.innerHTML = "<li><span class=\"empty\">Aucun score pour l’instant</span></li>";
+      node.innerHTML = "<li><span class=\"empty\">" +
+        (boardOffline ? "Classement indisponible — réessaie plus tard" : "Aucun score pour l’instant") +
+        "</span></li>";
       return;
     }
     node.innerHTML = list.map((e, i) => {
@@ -8935,23 +10163,28 @@ on</button>
         BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
         { cache: "no-store" }
       );
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("board");
       const data = await res.json();
-      if (!data || !Array.isArray(data.scores)) return;
-      const before = boardCache.slice(0, 12).map((e) =>
+      if (!data || !Array.isArray(data.scores)) throw new Error("board");
+      const sig = () => boardCache.slice(0, 12).map((e) =>
         e.name + "|" + e.meters + "|" + e.timeMs + "|" + (e.win ? 1 : 0) + "|" + (e.roseAt || 0)
       ).join(";");
-      saveBoardLocal(mergeBoardLists(boardCache, data.scores));
-      const after = boardCache.slice(0, 12).map((e) =>
-        e.name + "|" + e.meters + "|" + e.timeMs + "|" + (e.win ? 1 : 0) + "|" + (e.roseAt || 0)
-      ).join(";");
-      if (before !== after || boardClimbFlash.size) refreshBoardUI();
-      else {
-        // Met à jour seulement les flèches ↑ si le temps a filé
-        pruneBoardRises();
+      const before = sig();
+      const wasOffline = boardOffline;
+      const hadRises = boardRiseUntil.size;
+      boardOffline = false;
+      boardPollDelay = BOARD_POLL_MS;
+      saveBoardLocal(boardFromServer(data.scores));
+      pruneBoardRises();
+      if (before !== sig() || boardClimbFlash.size || wasOffline || hadRises !== boardRiseUntil.size) {
         refreshBoardUI();
       }
     } catch (_) {
+      // API en panne : on espace les essais (jusqu’à 60 s)
+      const wasOffline = boardOffline;
+      boardOffline = true;
+      boardPollDelay = Math.min(60000, boardPollDelay * 2);
+      if (!wasOffline && !boardCache.length) refreshBoardUI();
     } finally {
       boardPollBusy = false;
     }
@@ -8959,14 +10192,17 @@ on</button>
 
   function startBoardLivePoll() {
     if (boardPollTimer) return;
-    boardPollTimer = setInterval(() => { pullBoardLive(); }, 2200);
+    const tick = () => {
+      boardPollTimer = setTimeout(tick, boardPollDelay);
+      pullBoardLive();
+    };
     // Premier tick rapide dès qu’un écran classement est ouvert
-    setTimeout(() => { pullBoardLive(); }, 400);
+    boardPollTimer = setTimeout(tick, 400);
   }
 
   function stopBoardLivePoll() {
     if (boardPollTimer) {
-      clearInterval(boardPollTimer);
+      clearTimeout(boardPollTimer);
       boardPollTimer = 0;
     }
   }
@@ -8979,7 +10215,7 @@ on</button>
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scores: boardCache,
+          scores: myBoardEntries(),
           name: name || undefined,
           deviceId,
         }),
@@ -8987,7 +10223,8 @@ on</button>
       if (!res.ok) throw new Error("board");
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
-        saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+        boardOffline = false;
+        saveBoardLocal(boardFromServer(data.scores));
       }
       applyBoardMe(data && data.me);
       const pseudoMsgEl = document.getElementById("pseudo-msg");
@@ -8997,6 +10234,7 @@ on</button>
           pseudoMsgEl.classList.add("show");
         }
         if (el.pseudoInput) el.pseudoInput.classList.add("pseudo-missing");
+        syncPseudoUI(true); // pseudo refusé : on rouvre le champ
       } else if (pseudoMsgEl) {
         pseudoMsgEl.classList.remove("show");
       }
@@ -9006,13 +10244,16 @@ on</button>
           BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
           { cache: "no-store" }
         );
-        if (!res.ok) return;
+        if (!res.ok) throw new Error("board");
         const data = await res.json();
         if (data && Array.isArray(data.scores)) {
-          saveBoardLocal(mergeBoardLists(boardCache, data.scores));
+          boardOffline = false;
+          saveBoardLocal(boardFromServer(data.scores));
         }
         applyBoardMe(data && data.me);
-      } catch (_) {}
+      } catch (_) {
+        boardOffline = true;
+      }
     }
     refreshBoardUI();
   }
@@ -9025,17 +10266,22 @@ on</button>
         BOARD_API + "?deviceId=" + encodeURIComponent(deviceId),
         { method: "GET", cache: "no-store" }
       );
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("board");
       const data = await res.json();
       if (data && Array.isArray(data.scores)) {
-        saveBoardLocal(mergeBoardLists(boardCache, data.scores), { trackRanks: false });
+        boardOffline = false;
+        saveBoardLocal(boardFromServer(data.scores), { trackRanks: false });
       }
       applyBoardMe(data && data.me);
       refreshBoardUI();
-    } catch (_) {}
+    } catch (_) {
+      boardOffline = true;
+      refreshBoardUI();
+    }
   }
 
   function submitRunScore(dist, win) {
+    if (runTainted || isAdmin()) return null; // run admin : jamais au classement
     const name = playerPseudo || loadPseudo();
     if (!name) return null;
     const key = name.toLowerCase();
@@ -9054,7 +10300,6 @@ on</button>
       win: !!win,
       at: Date.now(),
       season: BOARD_SEASON,
-      did: getDeviceId(),
     };
     if (improvedBoard && prevEntry) entry.roseAt = Date.now();
     saveBoardLocal(mergeBoardLists(boardCache, [entry]));
@@ -9226,6 +10471,7 @@ on</button>
   function commitPseudoFromUI() {
     const raw = el.pseudoInput ? el.pseudoInput.value : "";
     const n = savePseudo(raw);
+    if (n) syncPseudoUI(false);
     refreshBoardUI();
     flashPseudoSaved(!!n);
     if (!n && el.pseudoInput) {
@@ -9245,6 +10491,18 @@ on</button>
     if (el.pseudoInput) {
       el.pseudoInput.value = playerPseudo;
       el.pseudoInput.setAttribute("maxlength", "20");
+    }
+    syncPseudoUI();
+    const pseudoChip = document.getElementById("pseudo-chip");
+    if (pseudoChip) {
+      pseudoChip.addEventListener("click", (e) => {
+        e.preventDefault();
+        syncPseudoUI(true);
+        if (el.pseudoInput) {
+          el.pseudoInput.focus();
+          try { el.pseudoInput.select(); } catch (_) {}
+        }
+      });
     }
     loadBoardLocal();
     refreshBoardUI();
@@ -9346,19 +10604,19 @@ on</button>
   }
 
   const teeLogoImg = new Image();
-  teeLogoImg.src = "assets/CHDS.png?v=trim2";
+  teeLogoImg.src = "assets/chds.webp";
   const teeBackImg = new Image();
-  teeBackImg.src = "assets/skin1_back.png";
+  teeBackImg.src = "assets/skin1_back.webp";
   const camembertImg = new Image();
-  camembertImg.src = "assets/camembert.png?v=sprite2";
+  camembertImg.src = "assets/camembert.webp";
   const tableImg = new Image();
-  tableImg.src = "assets/table.png";
+  tableImg.src = "assets/table.webp";
   const flecheImg = new Image();
   flecheImg.src = "assets/flecheskin.png?v=2";
   const jetpackImg = new Image();
   jetpackImg.src = "assets/jetpack.png";
   const scooterImg = new Image();
-  scooterImg.src = "assets/scooter.png";
+  scooterImg.src = "assets/scooter.webp";
   /** Props décoratifs (ex. dos du t-shirt dans le niveau) */
   let levelProps = [];
   /** Métro aérien (800–900 m) */
@@ -9383,7 +10641,9 @@ on</button>
     ctx.imageSmoothingEnabled = false;
     if (teeLogoImg.complete && teeLogoImg.naturalWidth > 0) {
       // Crop plus large = logo moins « zoomé »
-      const sx0 = 200, sy0 = 180, sw0 = 1600, sh0 = 780;
+      // Coordonnées exprimées sur l’image d’origine (2031 px de large)
+      const k = teeLogoImg.naturalWidth / 2031;
+      const sx0 = 200 * k, sy0 = 180 * k, sw0 = 1600 * k, sh0 = 780 * k;
       ctx.drawImage(teeLogoImg, sx0, sy0, sw0, sh0, x, y, w, h);
     } else {
       ctx.fillStyle = "#f4f8fc";
@@ -9413,7 +10673,9 @@ on</button>
     ctx.clip();
     ctx.imageSmoothingEnabled = false;
     // Crop plus large = moins zoomé
-    const sx0 = 420, sy0 = 360, sw0 = 1160, sh0 = 960;
+    // Coordonnées exprimées sur l’image d’origine (2000 px de large)
+    const k = teeBackImg.naturalWidth / 2000;
+    const sx0 = 420 * k, sy0 = 360 * k, sw0 = 1160 * k, sh0 = 960 * k;
     ctx.drawImage(teeBackImg, sx0, sy0, sw0, sh0, x, y, w, h);
     ctx.restore();
     ctx.imageSmoothingEnabled = false;
@@ -9742,12 +11004,12 @@ on</button>
       }
     }
     const jetUsesEl = document.getElementById("shop-jet-uses");
-    if (jetUsesEl) jetUsesEl.textContent = "Charges : " + jetUsesLeft() + " / partie";
+    if (jetUsesEl) jetUsesEl.textContent = "Charges : " + jetUsesLeft();
     const shoeUsesEl = document.getElementById("shop-shoe-uses");
-    if (shoeUsesEl) shoeUsesEl.textContent = "Charges : " + shoeUsesLeft() + " / partie";
-    document.querySelectorAll(".shop-item").forEach((row) => {
+    if (shoeUsesEl) shoeUsesEl.textContent = "Charges : " + shoeUsesLeft();
+    document.querySelectorAll(".s2-item").forEach((row) => {
       const id = row.getAttribute("data-item");
-      const btn = row.querySelector(".shop-buy");
+      const btn = row.querySelector(".s2-buy");
       const owned = !!meta.owned[id];
       const def = SHOP[id];
       if (!btn || !def) return;
@@ -9772,26 +11034,27 @@ on</button>
       }
     });
     const skin = activeSkin();
-    document.querySelectorAll(".skin-card").forEach((card) => {
+    document.querySelectorAll(".s2-card").forEach((card) => {
       const id = normalizeSkin(card.getAttribute("data-skin") || "default");
       const owned = ownsSkin(id);
       const selected = skin === id;
       const def = SHOP[id];
       card.classList.toggle("selected", selected);
       card.classList.toggle("locked", !owned);
-      const status = card.querySelector(".skin-status");
+      card.classList.toggle("poor", !owned && !!def && meta.bank < def.price);
+      const status = card.querySelector(".s2-status");
       if (!status) return;
       if (id === "default") status.textContent = selected ? "Équipé" : "Sélectionner";
       else if (id === "teeFront") {
         const promoEl = document.getElementById("merch-promo");
-        if (promoEl) promoEl.style.display = owned ? "block" : "none";
+        if (promoEl) promoEl.style.display = owned ? "inline-block" : "none";
         if (!owned) {
-          status.textContent = def && meta.bank < def.price ? "Pas assez ●" : "Débloquer code promo";
+          status.textContent = def && meta.bank < def.price ? "Pas assez" : "Débloquer";
         } else {
           status.textContent = selected ? "Équipé" : "Sélectionner";
         }
       } else if (!owned) {
-        status.textContent = def && meta.bank < def.price ? "Pas assez ●" : "Acheter";
+        status.textContent = def && meta.bank < def.price ? "Pas assez" : "Acheter";
       } else {
         status.textContent = selected ? "Équipé" : "Sélectionner";
       }
@@ -9800,7 +11063,7 @@ on</button>
 
   function setShopTab(tab) {
     const items = tab !== "skins";
-    document.querySelectorAll(".shop-tab").forEach((btn) => {
+    document.querySelectorAll(".s2-tab").forEach((btn) => {
       const on = btn.getAttribute("data-tab") === (items ? "items" : "skins");
       btn.classList.toggle("active", on);
       btn.setAttribute("aria-selected", on ? "true" : "false");
@@ -11447,6 +12710,22 @@ on</button>
     best = loadBest();
     el.bestD.textContent = String(best.dist);
     el.bestC.textContent = String(best.cam);
+    // Accueil : record sur le trajet (0 → 920 m)
+    const hb = document.getElementById("home-best");
+    if (hb) {
+      const d = Math.max(0, Math.min(FINISH_METERS, best.dist | 0));
+      hb.classList.toggle("hidden", d <= 0);
+      const lab = document.getElementById("home-best-label");
+      const fill = document.getElementById("home-best-fill");
+      if (lab) {
+        lab.textContent = "";
+        lab.append(d >= FINISH_METERS ? "Arrivée " : "Record ");
+        const st = document.createElement("strong");
+        st.textContent = d >= FINISH_METERS ? "★" : d + " m";
+        lab.append(st);
+      }
+      if (fill) fill.style.width = (d / FINISH_METERS * 100).toFixed(1) + "%";
+    }
   }
 
   function updateJumpHud() {
@@ -12018,6 +13297,24 @@ on</button>
     }
   }
 
+  /**
+   * Physique à pas borné : la frame est découpée en sous-pas de 1/120 s max.
+   * Le saut et les collisions ne dépendent plus de la fréquence de l’écran
+   * (60 Hz, iPhone 120 Hz, PC 144 Hz, ou téléphone qui rame à 30 fps).
+   */
+  const PHYS_MAX_STEP = 1 / 120;
+  function stepPlayer(gdt) {
+    if (!(gdt > 0)) return;
+    const n = Math.max(1, Math.min(6, Math.ceil(gdt / PHYS_MAX_STEP - 1e-6)));
+    const h = gdt / n;
+    const st = state;
+    for (let i = 0; i < n; i++) {
+      updatePlayer(h);
+      // mort, victoire, cinématique ou hit-stop déclenché : on arrête la frame là
+      if (state !== st || hitStopTime > 0) break;
+    }
+  }
+
   function updatePlayer(dt) {
     updateMovingPlatforms(dt);
 
@@ -12197,7 +13494,7 @@ on</button>
       grav = GRAVITY * 0.06; // moins de gravité → monte plus fort
       player.vy -= JET_THRUST * dt;
       if (player.vy < JET_VY_CAP) player.vy = JET_VY_CAP;
-      if (Math.random() < 0.7) {
+      if (Math.random() < 0.7 * Math.min(1, dt * 60)) {
         burst(player.x + player.w / 2 - player.facing * 4, player.y + player.h - 2, {
           n: 3, speed: 55, up: 120, life: 0.24, gravity: 70,
           color: Math.random() < 0.5 ? "#ffb040" : "#ff6040", size: 2, glow: true,
@@ -12247,6 +13544,12 @@ on</button>
     if (player.x < 0) { player.x = 0; player.vx = 0; }
 
     resolvePlatforms();
+    // Ligne franchie = victoire, avant tout test de danger de cette frame
+    if (state === "play" && player.x + player.w >= finishX) {
+      maxReachX = Math.max(maxReachX, finishX);
+      die("win");
+      return;
+    }
     updateTrapDoor();
     // Re-résoudre si la trappe vient de s’ouvrir sous les pieds
     if (player.chemsFall && trapDoor && trapDoor.open && player.y + player.h <= GROUND_Y + 2) {
@@ -13530,14 +14833,41 @@ on</button>
     const timeStr = formatRunTime(runTimeMs);
     const prevBestDist = celebrate && celebrate.prevBest ? (celebrate.prevBest.dist | 0) : 0;
     const isNewRecord = !!(celebrate && celebrate.isNewRecord);
-    el.endStats.innerHTML =
-      "Temps : <strong>" + timeStr + "</strong><br />" +
-      "Distance : <strong>" + dist + "</strong> m" +
-      (isNewRecord && prevBestDist > 0
-        ? (" <span style=\"color:#ffe566\">(+" + (dist - prevBestDist) + " m)</span>")
-        : "") + "<br />" +
-      "Camemberts : <strong>" + camCount + "</strong> · Banque : <strong>" + meta.bank + "</strong><br />" +
-      "Record : <strong>" + saved.dist + "</strong> m · ● <strong>" + saved.cam + "</strong>";
+    {
+      const setT = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
+      // Chiffre héros : la distance (ou le temps si victoire)
+      setT("end-hero-val", win ? timeStr : String(dist));
+      setT("end-hero-unit", win ? "" : "m");
+      setT("end-time", timeStr);
+      setT("end-cams", "+" + camCount);
+      const delta = document.getElementById("end-delta");
+      if (delta) {
+        delta.textContent = "";
+        const strong = document.createElement("strong");
+        if (win) {
+          delta.append("920 m bouclés");
+        } else if (isNewRecord && prevBestDist > 0) {
+          strong.textContent = "+" + (dist - prevBestDist) + " m";
+          delta.append(strong, " sur ton record");
+        } else if ((saved.dist | 0) > dist) {
+          strong.textContent = saved.dist + " m";
+          delta.append("Ton record : ", strong);
+        }
+        delta.classList.toggle("hidden", !delta.textContent);
+      }
+      const fill = document.getElementById("end-track-fill");
+      const bestMark = document.getElementById("end-track-best");
+      const pct = (m) => (Math.max(0, Math.min(FINISH_METERS, m | 0)) / FINISH_METERS * 100).toFixed(1) + "%";
+      if (fill) {
+        fill.style.width = "0%";
+        requestAnimationFrame(() => { fill.style.width = pct(dist); });
+      }
+      if (bestMark) {
+        const showBest = !win && (saved.dist | 0) > dist;
+        bestMark.style.display = showBest ? "block" : "none";
+        bestMark.style.left = pct(saved.dist);
+      }
+    }
     refreshBoardUI();
 
     playEndCelebrate({
@@ -13593,12 +14923,12 @@ on</button>
 
     if (el.btnEndBuyJet) {
       el.btnEndBuyJet.classList.toggle("hidden", !needJet);
-      el.btnEndBuyJet.textContent = "Racheter Jetpack ●" + jetDef.price + " (×" + jetDef.uses + ")";
+      el.btnEndBuyJet.textContent = "Jetpack ×" + jetDef.uses + " · " + jetDef.price + " ●";
       el.btnEndBuyJet.disabled = !needJet;
     }
     if (el.btnEndBuyShoes) {
       el.btnEndBuyShoes.classList.toggle("hidden", !needShoes);
-      el.btnEndBuyShoes.textContent = "Racheter Air Max ●" + shoeDef.price + " (×" + shoeDef.uses + ")";
+      el.btnEndBuyShoes.textContent = "Air Max ×" + shoeDef.uses + " · " + shoeDef.price + " ●";
       el.btnEndBuyShoes.disabled = !needShoes;
     }
 
@@ -13636,7 +14966,10 @@ on</button>
     }
   }
 
+  let endInputLockUntil = 0; // pas de relance clavier juste après la fin
+  let endOverlayTimer = 0;
   function showEndOverlay(withFade) {
+    if (state !== "dead" && state !== "win") return; // une nouvelle course a déjà démarré
     el.touch.classList.remove("visible");
     hideTouchGuide(true);
     stickTouchId = null;
@@ -13676,7 +15009,7 @@ on</button>
     if (main) main.classList.add("hidden");
     if (confirm) confirm.classList.remove("hidden");
     if (sub) sub.textContent = "Abandonner la course ?";
-    if (hint) hint.textContent = "Confirme avec Oui";
+    if (hint) hint.textContent = "";
   }
 
   function setPaused(on) {
@@ -13718,6 +15051,7 @@ on</button>
     AudioFX.stopAllFlicVoices();
     rockets = [];
     fallingSpikes = [];
+    try { consumeJetRun(); consumeShoeRun(); } catch (_) {}
     runJetActive = false;
     runShoeActive = false;
     runJetHadUse = false;
@@ -13797,6 +15131,7 @@ on</button>
     fallingSpikes = [];
     const win = reason === "win";
     state = win ? "win" : "dead";
+    endInputLockUntil = performance.now() + 700;
     syncPhoneLayoutClass();
     // 1 partie avec jetpack / Air Max = 1 charge consommée
     runJetHadUse = !!runJetActive;
@@ -13860,7 +15195,8 @@ on</button>
     hideTouchGuide(true);
     const tapePromise = AudioFX.tapeStopGameOver();
     // Début du fondu à mi-parcours (~0.35 s) pour coller au VariFi
-    setTimeout(() => showEndOverlay(true), 350);
+    clearTimeout(endOverlayTimer);
+    endOverlayTimer = setTimeout(() => showEndOverlay(true), 350);
     tapePromise.catch(() => {});
   }
 
@@ -14106,6 +15442,8 @@ on</button>
     ctx.fillRect(0, y0, W, Math.max(1, y1 - y0));
   }
 
+  let FAR_SIL = null;
+  let FAR_TOWERS = null;
   function drawParallaxFar() {
     const blend = winterBlend();
     const seine = seineBlend();
@@ -14117,13 +15455,13 @@ on</button>
     // Plan 0 — silhouettes lointaines (ombres derrière)
     for (let i = -1; i < 3; i++) {
       const ox = i * 880 - (far % 880);
-      const sil = [
+      const sil = FAR_SIL || (FAR_SIL = [
         [8, 90, 22], [36, 140, 18], [62, 110, 28], [98, 168, 20],
         [128, 95, 34], [170, 155, 24], [205, 120, 30], [245, 175, 26],
         [285, 100, 40], [335, 148, 22], [370, 130, 32], [415, 185, 28],
         [460, 115, 36], [510, 160, 24], [550, 105, 42], [605, 145, 30],
         [650, 125, 26], [690, 170, 34], [740, 98, 28], [780, 150, 22],
-      ];
+      ]);
       for (let k = 0; k < sil.length; k++) {
         const [tx, th, tw] = sil[k];
         const x = (ox + tx) | 0;
@@ -14161,12 +15499,12 @@ on</button>
     const pal1 = cityPal(1);
     for (let i = -1; i < 3; i++) {
       const ox = i * 760 - (far2 % 760);
-      const towers = [
+      const towers = FAR_TOWERS || (FAR_TOWERS = [
         [10, 150, 30, 0], [48, 198, 24, 1], [82, 128, 36, 2], [128, 220, 28, 3],
         [170, 160, 40, 4], [224, 190, 26, 0], [262, 140, 44, 1], [320, 210, 30, 2],
         [368, 170, 34, 3], [420, 230, 38, 4], [475, 155, 32, 0], [525, 200, 28, 1],
         [570, 135, 42, 2], [630, 185, 30, 3], [680, 165, 36, 4],
-      ];
+      ]);
       for (const [tx, th, tw, kind] of towers) {
         drawFarTower((ox + tx) | 0, th, tw, kind, pal1);
       }
@@ -14823,21 +16161,22 @@ on</button>
         ctx.drawImage(camembertImg, x, y, size, size);
       } else {
         // Remplissage → rose, même détourage que les autres (pas de halo / voile)
+        // Sprite rose calculé une seule fois (plus de recomposition à chaque frame)
         if (!camPinkCanvas || camPinkCanvas.width !== size) {
           camPinkCanvas = document.createElement("canvas");
           camPinkCanvas.width = size;
           camPinkCanvas.height = size;
+          const t = camPinkCanvas.getContext("2d");
+          t.imageSmoothingEnabled = true;
+          if ("imageSmoothingQuality" in t) t.imageSmoothingQuality = "high";
+          t.drawImage(camembertImg, 0, 0, size, size);
+          t.globalCompositeOperation = "color";
+          t.fillStyle = "#e878a8";
+          t.fillRect(0, 0, size, size);
+          t.globalCompositeOperation = "destination-in";
+          t.drawImage(camembertImg, 0, 0, size, size);
+          t.globalCompositeOperation = "source-over";
         }
-        const t = camPinkCanvas.getContext("2d");
-        t.clearRect(0, 0, size, size);
-        t.imageSmoothingEnabled = true;
-        t.drawImage(camembertImg, 0, 0, size, size);
-        t.globalCompositeOperation = "color";
-        t.fillStyle = "#e878a8";
-        t.fillRect(0, 0, size, size);
-        t.globalCompositeOperation = "destination-in";
-        t.drawImage(camembertImg, 0, 0, size, size);
-        t.globalCompositeOperation = "source-over";
         ctx.drawImage(camPinkCanvas, x, y);
       }
       ctx.restore();
@@ -16372,6 +17711,7 @@ on</button>
   }
 
   function frame(ts) {
+    requestAnimationFrame(frame); // en premier : une exception ne fige pas le jeu
     pollGamepad();
     if (!lastTs) lastTs = ts;
     let dt = (ts - lastTs) / 1000;
@@ -16395,7 +17735,7 @@ on</button>
     tickRunTimer(realDt);
 
     if (state === "intro_cinematic" && !paused) {
-      if (!hitStopFreeze) updatePlayer(gdt);
+      if (!hitStopFreeze) stepPlayer(gdt);
       if (state === "intro_cinematic") {
         updateIntroCinematic(gdt);
         updateHud();
@@ -16414,7 +17754,7 @@ on</button>
         updateCopsAnim(gdt);
       }
     } else if (state === "play" && !paused) {
-      if (!hitStopFreeze) updatePlayer(gdt);
+      if (!hitStopFreeze) stepPlayer(gdt);
       // Mort / win dans updatePlayer : skip sync / gate (évite relance musique)
       if (state === "play") {
         // Caméra Look-Ahead lissée (évite les à-coups quand vx change)
@@ -16422,7 +17762,8 @@ on</button>
         const speedRatio = Math.max(-1.25, Math.min(1.25, player.vx / maxSpd));
         const lookMul = 0.14 + stompBoostAmt() * 0.1;
         camLookAhead += (speedRatio * lookMul - camLookAhead) * (1 - Math.exp(-7 * gdt));
-        const dynamicFocusX = CAM_FOCUS_X + camLookAhead;
+        // Plafond : le perso ne dépasse jamais 40 % de l’écran → toujours ≥ 60 % de vue devant
+        const dynamicFocusX = Math.min(0.4, CAM_FOCUS_X + camLookAhead);
         const targetX = Math.max(0, player.x - W * dynamicFocusX);
         camX += (targetX - camX) * (1 - Math.exp(-CAM_LERP * gdt));
         if (camX < 0) camX = 0;
@@ -16477,7 +17818,6 @@ on</button>
     render();
     // Portrait mobile : suit le perso si le cadre est plus large que l’écran
     try { syncPortraitCrop(); } catch (_) {}
-    requestAnimationFrame(frame);
   }
 
   /* ============================================================
@@ -16798,6 +18138,9 @@ on</button>
   }
 
   function enterPlayState() {
+    clearTimeout(endOverlayTimer);
+    endCelebrateGen++; // coupe les animations de rang de la course précédente
+    runTainted = isAdmin();
     resetLevel();
     resetRunTimer();
     AudioFX.stopAllFlicVoices();
@@ -17037,9 +18380,210 @@ on</button>
     closeBoardModal();
     startGame();
   });
+  /** Carte de score à partager (1080×1350, format portrait réseaux) */
+  async function buildShareCard({ dist, isWin, pseudo, timeStr }) {
+    const CW = 1080, CH = 1350;
+    const c = document.createElement("canvas");
+    c.width = CW;
+    c.height = CH;
+    const g = c.getContext("2d");
+    // Les polices du jeu doivent être prêtes avant de dessiner
+    try {
+      await Promise.all([
+        document.fonts.load("400 100px 'Bebas Neue'"),
+        document.fonts.load("800 30px Orbitron"),
+        document.fonts.load("700 30px Sora"),
+      ]);
+    } catch (_) {}
+    const F_DISPLAY = "'Bebas Neue', Impact, sans-serif";
+    const F_ARCADE = "Orbitron, Sora, sans-serif";
+    const F_UI = "Sora, sans-serif";
+    const YELLOW = "#ffe566", BLUE = "#3dc4ff", WHITE = "#f0f4fa", GREY = "#a8b2c0";
+    const cx = CW / 2;
+    const spaced = (txt, px) => { try { g.letterSpacing = px + "px"; } catch (_) {} return txt; };
+    const rr = (x, y, w, h, r) => {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    };
+
+    // Fond
+    const bg = g.createLinearGradient(0, 0, 0, CH);
+    bg.addColorStop(0, "#071226");
+    bg.addColorStop(0.55, "#050b16");
+    bg.addColorStop(1, "#04070d");
+    g.fillStyle = bg;
+    g.fillRect(0, 0, CW, CH);
+    const glowTop = g.createRadialGradient(cx, 0, 40, cx, 0, 760);
+    glowTop.addColorStop(0, "rgba(61,196,255,0.30)");
+    glowTop.addColorStop(1, "rgba(61,196,255,0)");
+    g.fillStyle = glowTop;
+    g.fillRect(0, 0, CW, 800);
+    const glowMid = g.createRadialGradient(cx, 640, 40, cx, 640, 520);
+    glowMid.addColorStop(0, isWin ? "rgba(255,229,102,0.22)" : "rgba(255,229,102,0.12)");
+    glowMid.addColorStop(1, "rgba(255,229,102,0)");
+    g.fillStyle = glowMid;
+    g.fillRect(0, 200, CW, 900);
+    // Grille discrète
+    g.strokeStyle = "rgba(140,210,255,0.05)";
+    g.lineWidth = 2;
+    for (let x = 60; x < CW; x += 96) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, CH); g.stroke(); }
+    for (let y = 54; y < CH; y += 96) { g.beginPath(); g.moveTo(0, y); g.lineTo(CW, y); g.stroke(); }
+    // Cadre
+    g.strokeStyle = "rgba(140,210,255,0.28)";
+    g.lineWidth = 3;
+    rr(30, 30, CW - 60, CH - 60, 44);
+    g.stroke();
+
+    g.textAlign = "center";
+    g.textBaseline = "alphabetic";
+
+    // Marque
+    let y = 80;
+    if (teeLogoImg.complete && teeLogoImg.naturalWidth > 0) {
+      const lw = 360, lh = lw * teeLogoImg.naturalHeight / teeLogoImg.naturalWidth;
+      g.drawImage(teeLogoImg, cx - lw / 2, y, lw, lh);
+      y += lh + 6;
+    } else {
+      y += 120;
+    }
+    g.font = "400 130px " + F_DISPLAY;
+    spaced("", 6);
+    const t92 = "92 ", tRush = "RUSH";
+    const w92 = g.measureText(t92).width, wRush = g.measureText(tRush).width;
+    g.textAlign = "left";
+    g.fillStyle = YELLOW;
+    g.fillText(t92, cx - (w92 + wRush) / 2, y + 108);
+    g.fillStyle = WHITE;
+    g.fillText(tRush, cx - (w92 + wRush) / 2 + w92, y + 108);
+    g.textAlign = "center";
+    y += 130;
+
+    // Étiquette résultat
+    g.font = "800 26px " + F_ARCADE;
+    spaced("", 7);
+    const tag = isWin ? "ARRIVÉE FRANCHIE" : "DISTANCE PARCOURUE";
+    const tw = g.measureText(tag).width + 64;
+    rr(cx - tw / 2, y + 22, tw, 56, 28);
+    g.fillStyle = isWin ? YELLOW : "rgba(61,196,255,0.14)";
+    g.fill();
+    if (!isWin) { g.strokeStyle = "rgba(61,196,255,0.6)"; g.lineWidth = 2; g.stroke(); }
+    g.fillStyle = isWin ? "#0a0f18" : BLUE;
+    g.fillText(tag, cx + 3, y + 60);
+    y += 96;
+
+    // Chiffre héros
+    spaced("", 4);
+    const hero = isWin ? timeStr : String(dist);
+    const unit = isWin ? "" : " M";
+    g.font = "400 300px " + F_DISPLAY;
+    const hw = g.measureText(hero).width;
+    g.font = "400 120px " + F_DISPLAY;
+    const uw = unit ? g.measureText(unit).width : 0;
+    const hx = cx - (hw + uw) / 2;
+    g.textAlign = "left";
+    g.font = "400 300px " + F_DISPLAY;
+    g.shadowColor = isWin ? "rgba(255,229,102,0.55)" : "rgba(61,196,255,0.45)";
+    g.shadowBlur = 60;
+    g.fillStyle = isWin ? YELLOW : WHITE;
+    g.fillText(hero, hx, y + 256);
+    g.shadowBlur = 0;
+    if (unit) {
+      g.font = "400 120px " + F_DISPLAY;
+      g.fillStyle = BLUE;
+      g.fillText(unit, hx + hw, y + 256);
+    }
+    g.textAlign = "center";
+    y += 290;
+
+    // Trajet La Défense → Berges de Seine
+    const bx = 120, bw = CW - 240, by = y + 30, bh = 18;
+    rr(bx, by, bw, bh, 9);
+    g.fillStyle = "rgba(140,210,255,0.16)";
+    g.fill();
+    const ratio = isWin ? 1 : Math.max(0.02, Math.min(1, dist / FINISH_METERS));
+    const pg = g.createLinearGradient(bx, 0, bx + bw, 0);
+    pg.addColorStop(0, BLUE);
+    pg.addColorStop(1, YELLOW);
+    rr(bx, by, bw * ratio, bh, 9);
+    g.fillStyle = pg;
+    g.fill();
+    g.beginPath();
+    g.arc(bx + bw * ratio, by + bh / 2, 17, 0, Math.PI * 2);
+    g.fillStyle = WHITE;
+    g.fill();
+    g.font = "700 22px " + F_ARCADE;
+    spaced("", 3);
+    g.fillStyle = GREY;
+    g.textAlign = "left";
+    g.fillText("LA DÉFENSE", bx, by + 66);
+    g.textAlign = "right";
+    g.fillText("BERGES DE SEINE · 920 M", bx + bw, by + 66);
+    g.textAlign = "center";
+    y = by + 110;
+
+    // Tuiles de stats
+    const nameKey = String(pseudo || "").toLowerCase();
+    const rankIdx = boardCache.findIndex((e) => e.name.toLowerCase() === nameKey);
+    const tiles = [
+      [isWin ? "DISTANCE" : "TEMPS", isWin ? "920 m" : timeStr],
+      ["CAMEMBERTS", String(camCount)],
+    ];
+    if (rankIdx >= 0) tiles.push(["RANG", "#" + (rankIdx + 1)]);
+    const gap = 24, tW = (bw - gap * (tiles.length - 1)) / tiles.length, tH = 130;
+    tiles.forEach(([k, v], i) => {
+      const tx = bx + i * (tW + gap);
+      rr(tx, y, tW, tH, 26);
+      g.fillStyle = "rgba(10,20,34,0.85)";
+      g.fill();
+      g.strokeStyle = "rgba(140,210,255,0.26)";
+      g.lineWidth = 2;
+      g.stroke();
+      g.font = "700 20px " + F_ARCADE;
+      spaced("", 4);
+      g.fillStyle = "#7aafd0";
+      g.fillText(k, tx + tW / 2 + 2, y + 44);
+      g.font = "700 54px " + F_UI;
+      spaced("", 0);
+      g.fillStyle = k === "RANG" ? YELLOW : WHITE;
+      g.fillText(v, tx + tW / 2, y + 102);
+    });
+    y += tH + 58;
+
+    // Joueur + défi
+    spaced("", 0);
+    g.font = "700 46px " + F_UI;
+    g.fillStyle = WHITE;
+    g.fillText(String(pseudo), cx, y);
+    g.font = "500 32px " + F_UI;
+    g.fillStyle = GREY;
+    g.fillText("Tu fais mieux ?", cx, y + 52);
+
+    // Lien
+    g.font = "800 30px " + F_ARCADE;
+    spaced("", 4);
+    const url = "92RUSH.VERCEL.APP";
+    const uw2 = g.measureText(url).width + 88;
+    rr(cx - uw2 / 2, CH - 150, uw2, 76, 38);
+    g.fillStyle = YELLOW;
+    g.fill();
+    g.fillStyle = "#0a0f18";
+    g.fillText(url, cx + 2, CH - 100);
+    spaced("", 0);
+    return c;
+  }
+  // Aperçu en dev uniquement (http://localhost) : window.__shareCard({dist, isWin, pseudo, timeStr})
+  try {
+    if (location.hostname === "localhost") window.__shareCard = buildShareCard;
+  } catch (_) {}
+
   async function shareRunScore() {
-    const dist = Math.min(FINISH_METERS, Math.round(maxReachX / PX_PER_METER));
-    const isWin = state === "win" || dist >= FINISH_METERS;
+    const dist = meters(); // même arrondi que l’écran de fin (pas de « 920 m » à 919,5)
+    const isWin = state === "win";
     const pseudo = playerPseudo || loadPseudo() || "Runner 92";
     const timeStr = formatRunTime(runTimeMs);
     const shareUrl = "https://92rush.vercel.app";
@@ -17049,33 +18593,7 @@ on</button>
 
     let file = null;
     try {
-      const c = document.createElement("canvas");
-      c.width = 600;
-      c.height = 315;
-      const g = c.getContext("2d");
-      const cx = 300;
-      const grad = g.createLinearGradient(0, 0, 600, 315);
-      grad.addColorStop(0, "#060b14");
-      grad.addColorStop(1, "#12243a");
-      g.fillStyle = grad;
-      g.fillRect(0, 0, 600, 315);
-      g.strokeStyle = "#3dc4ff";
-      g.lineWidth = 4;
-      g.strokeRect(12, 12, 576, 291);
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.fillStyle = "#3dc4ff";
-      g.font = "700 14px Orbitron, sans-serif";
-      g.fillText("CERTIFIÉ HAUTS-DE-SEINE · 92 RUSH", cx, 58);
-      g.fillStyle = "#ffe566";
-      g.font = "800 48px Bebas Neue, Impact, sans-serif";
-      g.fillText(isWin ? `ARRIVÉE 920 M — ${timeStr}` : `DISTANCE : ${dist} M`, cx, 145);
-      g.fillStyle = "#f0f4fa";
-      g.font = "600 20px Sora, sans-serif";
-      g.fillText(`Joueur : ${pseudo}   ·   Camemberts : ${camCount} ●`, cx, 210);
-      g.fillStyle = "#7aafd0";
-      g.font = "600 16px Orbitron, sans-serif";
-      g.fillText("92rush.vercel.app", cx, 268);
+      const c = await buildShareCard({ dist, isWin, pseudo, timeStr });
       const blob = await new Promise((res) => c.toBlob(res, "image/png"));
       if (blob) file = new File([blob], "92-rush-score.png", { type: "image/png" });
     } catch (_) {}
@@ -17088,11 +18606,13 @@ on</button>
         }
         await navigator.share(payload);
         return;
-      } catch (_) {}
+      } catch (err) {
+        if (err && err.name === "AbortError") return; // partage annulé : pas de « Copié ! »
+      }
     }
     try {
       await navigator.clipboard.writeText(`${text} ${shareUrl}`);
-      const btn = document.getElementById("btn-share-score");
+      const btn = document.querySelector("#btn-share-score span") || document.getElementById("btn-share-score");
       if (btn) {
         const prev = btn.textContent;
         btn.textContent = "✓ Copié !";
@@ -17308,7 +18828,7 @@ on</button>
   if (el.btnShopEnd) el.btnShopEnd.addEventListener("click", openShop);
   const btnShopClose = document.getElementById("btn-shop-close");
   if (btnShopClose) btnShopClose.addEventListener("click", closeShop);
-  document.querySelectorAll(".shop-buy").forEach((btn) => {
+  document.querySelectorAll(".s2-buy").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-buy");
       if (id) tryBuy(id);
@@ -17326,12 +18846,12 @@ on</button>
       if (tryBuy("shoes")) refreshEndOffers();
     });
   }
-  document.querySelectorAll(".shop-tab").forEach((btn) => {
+  document.querySelectorAll(".s2-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       setShopTab(btn.getAttribute("data-tab") || "items");
     });
   });
-  document.querySelectorAll(".skin-card").forEach((card) => {
+  document.querySelectorAll(".s2-card").forEach((card) => {
     card.addEventListener("click", () => {
       onSkinCardClick(card.getAttribute("data-skin") || "default");
     });
@@ -17354,7 +18874,7 @@ on</button>
   /* ============================================================
      UI JUICE — ripples, sons de menu, particules ambiantes
      ============================================================ */
-  const UI_BTN_SEL = ".btn, .btn-end-buy, .shop-tab, .shop-buy, .skin-card, .btn-mute, .btn-pause";
+  const UI_BTN_SEL = ".btn, .u2-cta, .u2-tile, .u2-btn, .u2-back, .home-play, .home-nav__btn, .s2-tab, .s2-buy, .s2-card, .btn-mute, .btn-pause";
 
   function spawnRipple(btn, clientX, clientY) {
     if (REDUCED_MOTION) return;
@@ -17430,7 +18950,12 @@ on</button>
       return;
     }
     if ((e.key === " " || e.key === "Enter") && (state === "menu" || state === "dead" || state === "win")) {
+      // Un bouton / lien a le focus : on le laisse s’activer normalement
+      const ae = document.activeElement;
+      if (ae && ae !== document.body && ae.closest && ae.closest("button, a, [role=tab], select")) return;
       e.preventDefault();
+      // Touche maintenue (jetpack) ou appui juste après la mort : on ne relance pas
+      if (e.repeat || performance.now() < endInputLockUntil) return;
       startGame();
     }
   });
@@ -17442,6 +18967,13 @@ on</button>
     if (t && t.closest && t.closest("button, a, input, #shop, #pause, #admin-pin")) return;
     finishIntroCinematic();
   }, { passive: true });
+
+  // Appel, notification, retour à l’accueil : la course se met en pause toute seule
+  const autoPause = () => {
+    try { if (state === "play" && !paused) setPaused(true); } catch (_) {}
+  };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) autoPause(); });
+  window.addEventListener("pagehide", autoPause);
 
   updateHudBest();
   refreshShopButtons();
@@ -17455,8 +18987,31 @@ on</button>
   // PWA — installable iOS (Partager → Sur l’écran d’accueil) + Android
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
+      // Une page déjà contrôlée qui reçoit un nouveau SW = nouvelle version du jeu
+      const hadController = !!navigator.serviceWorker.controller;
+      let swReloaded = false;
+      const reloadIfIdle = () => {
+        if (swReloaded || !swUpdateReady) return;
+        if (state !== "menu" || document.hidden) return; // jamais en pleine course
+        swReloaded = true;
+        location.reload();
+      };
+      let swUpdateReady = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController) return; // 1ʳᵉ installation : rien à recharger
+        swUpdateReady = true;
+        reloadIfIdle();
+      });
       navigator.serviceWorker.register("./sw.js")
-        .then((reg) => { try { reg.update(); } catch (_) {} })
+        .then((reg) => {
+          try { reg.update(); } catch (_) {}
+          // PWA iOS restaurée depuis le multitâche : on revérifie la version
+          document.addEventListener("visibilitychange", () => {
+            if (document.hidden) return;
+            try { reg.update(); } catch (_) {}
+            reloadIfIdle();
+          });
+        })
         .catch(() => {});
       try { syncSafeAreaVars(); } catch (_) {}
       syncTips();

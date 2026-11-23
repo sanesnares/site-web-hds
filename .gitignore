@@ -13,3 +13,8 @@ node_modules/
 *.swp
 *~
 !.env.example
+
+# Archives de passation (jamais dans le dépôt)
+POUR_GEMINI/
+POUR_GEMINI.zip
+A_ENVOYER_A_GEMINI/

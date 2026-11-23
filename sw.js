@@ -1,11 +1,9 @@
 /* 92 Rush — service worker PWA */
-const CACHE = "hds-rush-92-v23";
+const CACHE = "hds-rush-92-v24";
+const SHELL = "./"; // la page du jeu (cleanUrls : /index.html redirige vers /)
 const PRECACHE = [
-  "./",
-  "./index.html",
+  SHELL,
   "./manifest.json",
-  "./manifest.webmanifest",
-  "./assets/minia.png",
   "./assets/apple-touch-icon.png",
   "./assets/icon-192.png",
   "./assets/icon-512.png"
@@ -13,7 +11,10 @@ const PRECACHE = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      // cache: "reload" → on ne précache jamais une vieille copie du cache HTTP
+      .then((cache) => cache.addAll(PRECACHE.map((u) => new Request(u, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -24,6 +25,16 @@ self.addEventListener("activate", (event) => {
     ).then(() => self.clients.claim())
   );
 });
+
+function isHtml(res) {
+  return /text\/html/i.test(res.headers.get("content-type") || "");
+}
+
+function putInCache(req, res) {
+  if (!res || !res.ok || res.status !== 200 || res.redirected) return;
+  const copy = res.clone();
+  caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+}
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
@@ -36,35 +47,34 @@ self.addEventListener("fetch", (event) => {
   // Safari iOS utilise des requêtes Range (206 Partial Content) pour les sons
   if (req.headers.has("range")) {
     event.respondWith(
-      fetch(req).catch(() => caches.match(req))
+      fetch(req).catch(() => caches.match(req, { ignoreSearch: false }))
     );
     return;
   }
 
+  // Page du jeu : réseau d’abord, copie hors ligne en secours
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req, { cache: "no-cache" })
         .then((res) => {
-          if (res.ok && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          // Seule la vraie page d’accueil devient la copie hors ligne
+          if ((url.pathname === "/" || url.pathname === "/index.html") && isHtml(res)) {
+            putInCache(SHELL, res);
           }
           return res;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(SHELL))
     );
     return;
   }
 
+  // Images / sons : cache d’abord (les fichiers changent de nom quand ils changent)
   if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/sounds/")) {
     event.respondWith(
       caches.match(req).then((hit) => {
         if (hit) return hit;
         return fetch(req).then((res) => {
-          if (res.ok && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
+          putInCache(req, res);
           return res;
         });
       })
@@ -72,14 +82,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Le reste (manifest…) : cache puis mise à jour en arrière-plan
   event.respondWith(
     caches.match(req).then((hit) => {
       const fetched = fetch(req)
         .then((res) => {
-          if (res.ok && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
+          putInCache(req, res);
           return res;
         })
         .catch(() => hit);

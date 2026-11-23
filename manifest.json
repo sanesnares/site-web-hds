@@ -6,13 +6,15 @@
   "scope": "./",
   "id": "./",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
   "orientation": "any",
   "background_color": "#060b14",
   "theme_color": "#060b14",
   "lang": "fr",
   "dir": "ltr",
-  "categories": ["games", "entertainment"],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "assets/icon-192.png",
@@ -35,12 +37,6 @@
     {
       "src": "assets/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/minia.png",
-      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
     }

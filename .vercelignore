@@ -1,0 +1,19 @@
+# Rien de tout ça ne doit être servi au public
+POUR_GEMINI
+POUR_GEMINI.zip
+A_ENVOYER_A_GEMINI
+supabase
+scripts
+*.zip
+*.md
+.DS_Store
+**/.DS_Store
+.env*
+assets/*-source.*
+# Images non utilisées par le jeu
+assets/CHDS_full.png
+assets/metro-aerien.*
+assets/scooter.jpg
+assets/table.jpg
+assets/skin_winter.png
+assets/icon-180.png
