@@ -13987,6 +13987,27 @@ on</button>
       if (!metro.active || sx(metro.x + metro.w) < -40 || sx(metro.x) > W + 40) return;
     }
 
+    if (cityBgReady()) {
+      if (!(metro.active || (!metro.done && metro.armed))) return;
+      // Tablier du viaduc illustré (bande de fond) : y = 280 px sur l’image source
+      const z = renderZoom;
+      const off = cityBgOffset();
+      const k = CITY_BG.w / 1440;
+      const deck = sy(GROUND_Y + 6 - CITY_BG.baseFromTop) + 281 * k * z;
+      const vx0 = (5 * CITY_BG.step + 1262 * k - off) * z;
+      const vx1 = (7 * CITY_BG.step + 300 * k - off) * z;
+      const ts = 0.66 * z;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(vx0, 0, vx1 - vx0, H);
+      ctx.clip();
+      ctx.translate(Math.round(sx(metro.x)), Math.round(deck));
+      ctx.scale(ts, ts);
+      drawRerA(0, -metro.h, metro.w, metro.h, true);
+      ctx.restore();
+      return;
+    }
+
     const railY = sy(deckY);
     const x0 = sx(z0);
     const x1 = sx(z1);
@@ -15494,9 +15515,7 @@ on</button>
     // Immeubles lointains — s’effacent vers les quais
     ctx.save();
     // Avec la bande illustrée : les silhouettes sombres ne restent que derrière la ville de nuit
-    const nightOnly = cityBgReady()
-      ? Math.max(0, Math.min(1, (620 * PX_PER_METER - camX) / (70 * PX_PER_METER)))
-      : 1;
+    const nightOnly = cityBgReady() ? 0 : 1;
     ctx.globalAlpha = Math.max(0, 1 - seine * 0.95) * nightOnly;
     // Plan 0 — silhouettes lointaines (ombres derrière)
     if (nightOnly > 0.02) for (let i = -1; i < 3; i++) {
@@ -16801,192 +16820,369 @@ on</button>
     }
   }
 
+  /**
+   * Policier / CRS dessiné en vectoriel (contour sombre, ombrage, membres articulés)
+   * pour coller aux sprites des persos. Repère : 60 × 100, pieds en (30, 100), regard à gauche.
+   */
   function drawCop(screenX, screenY, o) {
     const kind = o.kind;
     const angry = kind === "angry" || kind === "boss";
+    const helm = kind !== "cop";
+    const hasShield = kind === "riot" || kind === "boss";
     const a = o._downed ? 0 : (angry ? Math.max(0.85, copAlertAmt(o._alertT || 0)) : copAlertAmt(o._alertT || 0));
     // -1 = regarde à gauche (approche), +1 = à droite (après dépassement)
     const face = o._faceDir == null ? -1 : o._faceDir;
-    const artW = 26 * CHAR_PX;
-    const artH = 42 * CHAR_PX;
-    artScale = CHAR_PX;
-    const coat = angry ? "#2a1018" : C.cop;
-    const coatL = angry ? "#4a1828" : C.copL;
-    const coatD = angry ? "#14080c" : C.copD;
-    ctx.save();
-    // Corps entier tourné vers le joueur (art de base face à gauche)
-    if (o._downed) {
-      // Allongé sur la ligne de sol (pas enterré dans les pierres)
-      const kdir = o._knockDir != null ? o._knockDir : (face < 0 ? -1 : 1);
-      const groundSy = sy(GROUND_Y);
-      ctx.translate(screenX + o.w * 0.5, groundSy - 3);
-      // Ombre sous le corps pour le détacher du sol
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillRect(-Math.round(o.h * 0.42), -3, Math.round(o.h * 0.84), 5);
-      ctx.rotate(kdir * Math.PI * 0.5);
-      const ds = 1.08; // un peu plus grand = plus lisible
-      ctx.scale((face < 0 ? 1 : -1) * (o.w / artW) * ds, (o.h / artH) * ds);
-      ctx.translate(-artW / 2, -artH * 0.42);
-    } else {
-      ctx.translate(screenX + o.w / 2, screenY + o.h);
-      ctx.scale((face < 0 ? 1 : -1) * (o.w / artW), o.h / artH);
-      ctx.translate(-artW / 2, -artH);
-    }
-    // Idle + course fluide (time) — doudoune hiver + matraque ; alerte = bras
-    const idle = Math.sin(time * (angry ? 4.2 : 2.1) + screenX * 0.05) * (angry ? 1.1 : 0.6) * (1 - a * 0.7);
-    const batonSwing = Math.sin(time * (angry ? 3.2 : 1.4) + screenX * 0.08) * (angry ? 2.4 : 1.2);
-    const armUp = a * (angry ? 9 : 7);
-    const copPhase = time * 10 + (o.x * 0.05);
-    const speedMult = angry ? 1.5 : 1;
-    const runAnim = !o._downed;
-    const copBounce = runAnim ? Math.abs(Math.sin(copPhase * speedMult)) : 0;
-    const copOffsetY = Math.round(copBounce * 2);
-    const copLegSwing = runAnim ? Math.sin(copPhase * speedMult) : 0;
-    const by = idle + copOffsetY;
-    const sx = 0;
+    // Visuel plus grand que la hitbox (comme le héros) : la collision ne change pas
+    const s = kind === "boss"
+      ? Math.min(o.w * 1.35 / 60, o.h * 1.12 / 100)
+      : Math.min(o.w * 1.7 / 60, o.h * 1.36 / 100);
+    let mirrored = false;
 
-    const helm = kind === "crs" || kind === "riot" || kind === "angry" || kind === "boss";
-    // Uniforme bleu marine ; version rouge sombre pour le condé énervé
-    const uni = angry ? "#3a1420" : "#18264a";
-    const uniL = angry ? "#5c2030" : "#2b3e70";
-    const uniD = angry ? "#1c0a10" : "#0c1428";
-    const ARM = "#0a0d13", ARML = "#262d3a";
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    if (o._downed) {
+      // Allongé sur la ligne de sol
+      const kdir = o._knockDir != null ? o._knockDir : (face < 0 ? -1 : 1);
+      ctx.translate(screenX + o.w * 0.5, sy(GROUND_Y) - 2);
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(-Math.round(o.h * 0.5), -3, Math.round(o.h), 5);
+      ctx.rotate(kdir * Math.PI * 0.5);
+      ctx.scale(s, s);
+      ctx.translate(kdir > 0 ? -43 : -17, -52);
+    } else {
+      mirrored = face >= 0;
+      ctx.translate(screenX + o.w / 2, screenY + o.h + 2);
+      ctx.scale((mirrored ? -1 : 1) * s, s);
+      ctx.translate(-30, -100);
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(30, 99.4, 15, 2.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // —— Palette
+    const OUT = "#070b16";
+    const uni = angry ? "#4a1622" : "#1c2d5a";
+    const uniL = angry ? "#7a2434" : "#33498c";
+    const uniD = angry ? "#260a11" : "#0f1934";
+    const pants = angry ? "#2c0d15" : "#141f42";
+    const pantsD = angry ? "#1c080d" : "#0c142c";
+    const ARM = "#0b0f18", ARML = "#2a3242", ARMH = "#4d586c";
     const WHITE = "#f2f5f8", YEL = "#ffd21e";
-    // Bandeau « POLICE » (jamais en miroir, quel que soit le sens du perso)
-    const policeBand = (x, y, w, h) => {
-      fr(x, y, w, h, WHITE);
+    const skin = C.copSkin, skinD = C.copSkinD;
+    const glove = helm ? "#10141d" : skin;
+
+    // —— Animation
+    const tOff = screenX * 0.05;
+    const speedMult = angry ? 1.5 : 1;
+    const phase = (time * 10 + o.x * 0.05) * speedMult;
+    const run = !o._downed;
+    // Jambes : vraie foulée seulement quand le flic se déplace (sinon simple piétinement)
+    const ccx = o.x + o.w * 0.5;
+    const stepping = o._drawCx != null && Math.abs(ccx - o._drawCx) > 0.15;
+    o._drawCx = ccx;
+    o._gait = (o._gait || 0) + ((stepping ? 1 : 0.14) - (o._gait || 0)) * 0.2;
+    const gait = run ? o._gait : 0;
+    const swing = run ? Math.sin(phase) * gait : 0.35;
+    const bounce = run ? Math.abs(Math.sin(phase)) * gait : 0;
+    const idle = Math.sin(time * (angry ? 4.2 : 2.1) + tOff) * (angry ? 0.9 : 0.5) * (1 - a * 0.7);
+    const batonSwing = Math.sin(time * (angry ? 3.2 : 1.4) + screenX * 0.08);
+    const hipY = 60 - bounce * 1.6 + idle;
+    const lean = -(0.04 + a * 0.07 + (angry ? 0.1 : 0));
+
+    // —— Outils de dessin
+    const seg = (pts, w, col) => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0], pts[1]);
+      for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+      ctx.lineWidth = w + 2.8;
+      ctx.strokeStyle = OUT;
+      ctx.stroke();
+      ctx.lineWidth = w;
+      ctx.strokeStyle = col;
+      ctx.stroke();
+    };
+    const line = (x1, y1, x2, y2, w, col) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = col;
+      ctx.stroke();
+    };
+    const shape = (pathFn, fill, lw) => {
+      ctx.beginPath();
+      pathFn();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.lineWidth = lw || 1.4;
+      ctx.strokeStyle = OUT;
+      ctx.stroke();
+    };
+    const dot = (x, y, r, fill, outlined) => {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      if (outlined) { ctx.lineWidth = 1.3; ctx.strokeStyle = OUT; ctx.stroke(); }
+    };
+    const rr = (x, y, w, h, r) => {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    };
+    const box = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+
+    // —— Jambes (2 segments, genou qui plie à l’arrière) + rangers
+    const leg = (hx, sw, col) => {
+      const a1 = sw * 0.5;
+      const a2 = a1 - (0.12 + Math.max(0, -sw) * 0.8);
+      const kx = hx - Math.sin(a1) * 19, ky = hipY + Math.cos(a1) * 19;
+      const fx = kx - Math.sin(a2) * 17;
+      const fy = Math.min(96, ky + Math.cos(a2) * 17);
+      seg([hx, hipY, kx, ky, fx, fy], 8, col);
+      if (helm) {
+        // Protège-tibia + genouillère (maintien de l’ordre)
+        line(kx + (fx - kx) * 0.3, ky + (fy - ky) * 0.3, kx + (fx - kx) * 0.82, ky + (fy - ky) * 0.82, 6, ARML);
+        line(kx + (fx - kx) * 0.32 - 1.6, ky + (fy - ky) * 0.32, kx + (fx - kx) * 0.8 - 1.6, ky + (fy - ky) * 0.8, 1.1, ARMH);
+        dot(kx - 0.6, ky, 3.9, ARML, true);
+        dot(kx - 1.6, ky - 1, 1.2, ARMH);
+      }
       ctx.save();
-      const k = artScale;
-      ctx.translate((x + w / 2) * k, (y + h / 2) * k);
-      if (face >= 0) ctx.scale(-1, 1);
-      ctx.fillStyle = "#0c1428";
-      ctx.font = "900 " + (h * k * 0.9).toFixed(1) + "px Sora, Arial, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("POLICE", 0, k * 0.4, w * k - 2);
+      ctx.translate(fx, fy);
+      ctx.rotate(-a2 * 0.55);
+      shape(() => {
+        ctx.moveTo(4, -3.4);
+        ctx.lineTo(4, 3.6);
+        ctx.lineTo(-7.2, 3.6);
+        ctx.quadraticCurveTo(-9.2, 0.6, -4.4, -0.8);
+        ctx.lineTo(-3, -3.4);
+        ctx.closePath();
+      }, "#0d1018");
+      line(-6.4, 3, 3.2, 3, 0.9, "#3a4250");
+      line(-4.6, 0.2, -6.6, 1.6, 0.9, "#3a4250");
       ctx.restore();
     };
+    leg(27.5, -swing, pantsD);
+    leg(32, swing, pants);
 
-    // Jambes (oscillation fluide) : pantalon marine, rangers noires
-    const leg1X = sx + 5 + Math.round(copLegSwing * 3);
-    const leg1Y = by + 28 - Math.round(Math.max(0, copLegSwing * 3));
-    const leg2X = sx + 15 - Math.round(copLegSwing * 3);
-    const leg2Y = by + 28 - Math.round(Math.max(0, -copLegSwing * 3));
-    fr(leg1X, leg1Y, 6, 12, uniD);
-    fr(leg2X, leg2Y, 6, 12, uniD);
-    fr(leg1X - 1, leg1Y + 8, 8, 6, ARM);
-    fr(leg2X - 1, leg2Y + 8, 8, 6, ARM);
-    fr(leg1X - 1, leg1Y + 13, 8, 1, "#3a4250");
-    fr(leg2X - 1, leg2Y + 13, 8, 1, "#3a4250");
-    if (helm) {
-      // Protège-tibias + genouillères (tenue maintien de l’ordre)
-      fr(leg1X, leg1Y + 3, 6, 5, ARML);
-      fr(leg2X, leg2Y + 3, 6, 5, ARML);
-      fr(leg1X, leg1Y + 2, 6, 1, "#4a5364");
-      fr(leg2X, leg2Y + 2, 6, 1, "#4a5364");
+    // —— Haut du corps (penché vers l’avant, pivot aux hanches)
+    ctx.save();
+    ctx.translate(30, hipY);
+    ctx.rotate(lean);
+    ctx.translate(-30, -60);
+
+    // Bras arrière : porte le bouclier, sinon balance à contre-temps
+    {
+      const shx = 24, shy = 37.5;
+      let ex, ey, hx2, hy2;
+      if (hasShield) {
+        ex = 19.5; ey = 47.5; hx2 = 13; hy2 = 46.5;
+      } else {
+        const b1 = -swing * 0.45 + a * 0.5;
+        const b2 = b1 + 0.55 + a * 0.6;
+        ex = shx - Math.sin(b1) * 12; ey = shy + Math.cos(b1) * 12;
+        hx2 = ex - Math.sin(b2) * 11; hy2 = ey + Math.cos(b2) * 11;
+      }
+      seg([shx, shy, ex, ey, hx2, hy2], 6.6, uniD);
+      dot(hx2, hy2, 3, glove, true);
     }
 
     // Buste
-    fr(sx + 3, by + 12, 20, 18, uni);
-    fr(sx + 4, by + 13, 18, 2, uniL);
+    const torso = () => {
+      ctx.moveTo(19, 38);
+      ctx.quadraticCurveTo(19, 32, 25, 32);
+      ctx.lineTo(35, 32);
+      ctx.quadraticCurveTo(42, 32, 42, 38.5);
+      ctx.lineTo(41, 50);
+      ctx.lineTo(39.6, 61.5);
+      ctx.lineTo(21.4, 61.5);
+      ctx.lineTo(20, 50);
+      ctx.closePath();
+    };
+    const tg = ctx.createLinearGradient(19, 0, 42, 0);
+    tg.addColorStop(0, uniL);
+    tg.addColorStop(0.42, uni);
+    tg.addColorStop(1, uniD);
+    shape(torso, tg);
     if (helm) {
-      // Gilet tactique + épaulières
-      fr(sx + 4, by + 14, 18, 14, ARM);
-      fr(sx + 5, by + 14, 16, 1, ARML);
-      fr(sx + 5, by + 24, 4, 3, ARML);
-      fr(sx + 11, by + 24, 4, 3, ARML);
-      fr(sx + 17, by + 24, 4, 3, ARML);
-      fr(sx + 1, by + 11, 7, 4, ARML);
-      fr(sx + 18, by + 11, 7, 4, ARML);
-      fr(sx + 1, by + 11, 7, 1, "#4a5364");
-      fr(sx + 18, by + 11, 7, 1, "#4a5364");
+      // Gilet tactique, pochettes, épaulière arrière
+      shape(() => {
+        ctx.moveTo(21.2, 36);
+        ctx.lineTo(40.4, 36);
+        ctx.lineTo(39.6, 56.4);
+        ctx.lineTo(21.8, 56.4);
+        ctx.closePath();
+      }, ARM, 1.1);
+      line(22.4, 37.2, 39.2, 37.2, 0.9, ARML);
+      for (let i = 0; i < 3; i++) {
+        box(23 + i * 5.6, 49.4, 4.4, 5.6, ARML);
+        box(23 + i * 5.6, 49.4, 4.4, 1, ARMH);
+      }
+      shape(() => ctx.ellipse(22, 35.2, 5, 3.6, -0.2, 0, Math.PI * 2), ARML, 1.2);
     } else {
-      // Polo police nationale : col + liseré
-      fr(sx + 9, by + 11, 8, 2, uniD);
-      fr(sx + 3, by + 22, 20, 1, uniL);
+      // Polo police nationale : col, liseré, radio d’épaule
+      line(27, 32.6, 30, 36.4, 1.1, uniD);
+      line(33, 32.6, 30, 36.4, 1.1, uniD);
+      line(20.6, 48.6, 40.8, 48.6, 0.9, uniL);
+      box(36.2, 34.4, 3, 4.6, ARM);
+      box(36.8, 35, 1.8, 1, "#6bd6ff");
     }
-    policeBand(sx + 4, by + 17, 18, 5);
-    // Ceinturon
-    fr(sx + 3, by + 28, 20, 2, ARM);
-    fr(sx + 12, by + 28, 3, 2, "#aab2be");
-    glowRect(sx + 19, by + 15, 2, 2, angry ? "#ff4050" : C.badge, angry ? 1 : 0.85);
-
-    // Bras (levés à l’alerte) + écusson tricolore à l’épaule
-    fr(sx + 0 - a, by + 14 - armUp, 5, 10 + a, uni);
-    fr(sx + 19 + a, by + 14 + batonSwing * 0.3 - armUp * 0.9, 5, 10 + a, uni);
-    fr(sx + 20 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#2f6fe0");
-    fr(sx + 21 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#ffffff");
-    fr(sx + 22 + a, by + 16 + batonSwing * 0.3 - armUp * 0.9, 1, 2, "#e03a3a");
-    const hand = helm ? ARM : C.copSkin; // CRS : gants
-    fr(sx + 0 - a, by + 22 - armUp, 4, 3, hand);
-    fr(sx + 20 + a, by + 22 + batonSwing * 0.3 - armUp * 0.9, 4, 3, hand);
-
-    // Matraque (remontée un peu à l’alerte)
-    const bx = sx - 3 - a * 2;
-    const byB = by + 10 + batonSwing - armUp * 0.85;
-    fr(bx, byB, 3, 16, angry ? "#1a0808" : "#0c0e12");
-    fr(bx - 1, byB - 2, 5, 3, angry ? "#ff3040" : "#3a4250");
-    fr(bx + 1, byB + 14, 1, 2, C.white);
-
-    // Tête (regard vers le joueur via flip du corps)
-    const hx = sx;
-    if (helm) {
-      // Casque CRS : coque marine, deux bandes jaunes, visière relevable, bavolet
-      const shell = angry ? "#2a0c14" : "#101a36";
-      fr(hx + 8, by + 6, 11, 7, C.copSkin);
-      fr(hx + 9, by + 8, 2, 2, "#0c0e12");
-      fr(hx + 14, by + 8, 2, 2, "#0c0e12");
-      fr(hx + 6, by + 0, 14, 7, shell);
-      fr(hx + 5, by + 2, 16, 5, shell);
-      fr(hx + 7, by + 0, 12, 1, angry ? "#4a1828" : "#22346a");
-      fr(hx + 5, by + 2, 16, 1, YEL);
-      fr(hx + 5, by + 4, 16, 1, YEL);
-      fr(hx + 18, by + 6, 3, 8, shell);       // bavolet (nuque)
-      fr(hx + 5, by + 12, 13, 2, shell);      // mentonnière
-      ctx.globalAlpha = 0.5;                  // visière transparente
-      fr(hx + 5, by + 6, 13, 6, angry ? "#ff8a96" : "#a8dcf4");
-      ctx.globalAlpha = 0.85;
-      fr(hx + 6, by + 7, 5, 1, "#ffffff");
-      ctx.globalAlpha = 1;
-    } else {
-      // Policier national : casquette à bandeau blanc + écusson
-      fr(hx + 6, by + 5, 14, 8, C.copSkin);
-      fr(hx + 10, by + 7, 3, 3, C.eyeW);
-      fr(hx + 16, by + 7, 3, 3, C.eyeW);
-      fr(hx + 11, by + 8, 2, 2, C.eye);
-      fr(hx + 17, by + 8, 2, 2, C.eye);
-      fr(hx + 6, by + 0, 14, 4, uniD);
-      fr(hx + 7, by - 1, 12, 2, uni);
-      fr(hx + 6, by + 3, 14, 1, WHITE);
-      fr(hx + 3, by + 4, 10, 2, ARM);         // visière de casquette
-      fr(hx + 11, by + 0, 3, 2, C.badge);
-    }
-
-    if (kind === "riot" || kind === "boss") {
-      // Bouclier anti-émeute transparent, bandeau POLICE
-      const shx = sx - 10 - a * 2, shy = by + 7 - armUp * 0.2;
-      ctx.globalAlpha = 0.34;
-      fr(shx, shy, 10, 28, "#a8dcf4");
-      ctx.globalAlpha = 0.7;
-      fr(shx, shy, 10, 1, "#e6f6ff");
-      fr(shx, shy, 1, 28, "#e6f6ff");
-      fr(shx + 9, shy, 1, 28, "#6f9cb8");
-      fr(shx, shy + 27, 10, 1, "#6f9cb8");
-      ctx.globalAlpha = 0.9;
-      fr(shx + 1, shy + 9, 8, 4, WHITE);
-      fr(shx + 2, shy + 10, 1, 2, "#0c1428");
-      fr(shx + 4, shy + 10, 1, 2, "#0c1428");
-      fr(shx + 6, shy + 10, 1, 2, "#0c1428");
-      ctx.globalAlpha = 1;
-      glowRect(shx + 1, shy + 2, 8, 1, angry ? "#ff4050" : C.blue, 0.4);
-    }
-    if (kind === "boss") {
-      // Bandes / présence massive
-      fr(sx + 4, by + 23, 18, 1, YEL);
-      fr(sx + 5, by + 26, 16, 1, "#ff4050");
-    }
-    artScale = 1;
+    // Bandeau POLICE (jamais en miroir, quel que soit le sens du perso)
+    ctx.beginPath();
+    rr(21.8, 40, 17.6, 6.4, 1.2);
+    ctx.fillStyle = WHITE;
+    ctx.fill();
+    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = OUT;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(30.6, 43.5);
+    if (mirrored) ctx.scale(-1, 1);
+    ctx.fillStyle = "#0c1428";
+    ctx.font = "900 5.2px Sora, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("POLICE", 0, 0.2, 16);
     ctx.restore();
+    // Ceinturon + étui
+    shape(() => rr(21, 57.4, 19, 4, 1), "#0d1018", 1);
+    box(28.6, 58.2, 3.2, 2.4, "#aab2be");
+    shape(() => rr(35.6, 58.6, 4.6, 7.4, 1.2), "#0d1018", 1);
+    if (kind === "boss") {
+      box(22.6, 46.8, 16, 1, YEL);
+      box(22.6, 48.2, 16, 0.8, "#ff4050");
+    }
+
+    // Cou + tête
+    seg([30, 33, 29.4, 28], 4.6, skinD);
+    if (helm) {
+      const shell = angry ? "#3a0f1a" : "#14204a";
+      const shellL = angry ? "#6a2030" : "#2f4690";
+      dot(28.6, 22.2, 7.6, skin, true);
+      dot(23.6, 21.6, 1.15, angry ? "#ff5060" : "#0c0e12");
+      line(21.6, 19.2, 26, 20, 1, "#2a1c14");
+      const shellPath = () => {
+        ctx.moveTo(18.4, 18.6);
+        ctx.bezierCurveTo(16.8, 6.4, 41, 5.6, 41, 20);
+        ctx.lineTo(41.4, 29.6);
+        ctx.quadraticCurveTo(37.6, 31.6, 34.6, 30);
+        ctx.lineTo(33.6, 23);
+        ctx.quadraticCurveTo(26, 17.4, 18.4, 18.6);
+        ctx.closePath();
+      };
+      shape(shellPath, shell);
+      ctx.save();
+      ctx.beginPath();
+      shellPath();
+      ctx.clip();
+      box(15, 11.2, 30, 1.6, YEL);   // deux bandes jaunes CRS
+      box(15, 14.2, 30, 1.6, YEL);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(29, 19.4, 9, Math.PI * 1.12, Math.PI * 1.5);
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = shellL;
+      ctx.stroke();
+      // Visière baissée (transparente)
+      ctx.beginPath();
+      ctx.moveTo(17.6, 18.4);
+      ctx.quadraticCurveTo(15.4, 25, 19.6, 30.6);
+      ctx.lineTo(30, 30);
+      ctx.lineTo(32.6, 21.4);
+      ctx.quadraticCurveTo(25, 17.6, 17.6, 18.4);
+      ctx.closePath();
+      ctx.fillStyle = angry ? "rgba(255,120,135,0.42)" : "rgba(168,220,244,0.4)";
+      ctx.fill();
+      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = angry ? "rgba(255,200,205,0.85)" : "rgba(230,246,255,0.85)";
+      ctx.stroke();
+      line(19, 21, 18.8, 26.4, 1.1, "rgba(255,255,255,0.8)");
+    } else {
+      // Policier national : casquette à bandeau blanc
+      shape(() => {
+        ctx.moveTo(33, 19);
+        ctx.quadraticCurveTo(38.4, 21, 36.4, 28);
+        ctx.lineTo(32, 27);
+        ctx.closePath();
+      }, "#2a1c14", 1);
+      dot(29, 21.6, 8.2, skin, true);
+      dot(33.4, 22.6, 1.9, skinD);
+      ctx.beginPath();
+      ctx.ellipse(24.2, 20.8, 2, 1.7, 0, 0, Math.PI * 2);
+      ctx.fillStyle = C.eyeW;
+      ctx.fill();
+      dot(23.5, 20.9, 1.05, C.eye);
+      line(21.8, 18.2 + a * 0.8, 26.6, 18.8 - a * 0.6, 1.1, "#2a1c14");
+      line(22.4, 26.2, 25.8, 26 - a * 0.5, 0.9, "#5a3a2c");
+      dot(20.8, 23.2, 1.2, skinD);
+      shape(() => {
+        ctx.moveTo(20, 16.4);
+        ctx.bezierCurveTo(19.4, 6.4, 39.6, 5.6, 39.8, 15);
+        ctx.lineTo(39.8, 17.6);
+        ctx.lineTo(20, 17.6);
+        ctx.closePath();
+      }, uni);
+      box(20.7, 14.8, 18.4, 2.2, WHITE);
+      line(22, 10.4, 27, 8.4, 1, uniL);
+      shape(() => {
+        ctx.moveTo(21, 17.4);
+        ctx.lineTo(12.4, 19.2);
+        ctx.quadraticCurveTo(13, 20.8, 16.2, 20.5);
+        ctx.lineTo(21, 19.6);
+        ctx.closePath();
+      }, "#0d1018", 1.1);
+      dot(25, 11.8, 1.6, C.badge);
+    }
+
+    // Bras avant + matraque (levée à l’alerte)
+    {
+      const shx = 33.4, shy = 37.5;
+      const c1 = (0.15 + swing * 0.35) * (1 - a) + 2.25 * a + batonSwing * 0.04;
+      const c2 = (c1 + 0.9) * (1 - a) + 2.85 * a + batonSwing * 0.05;
+      const ex = shx - Math.sin(c1) * 12, ey = shy + Math.cos(c1) * 12;
+      const hx2 = ex - Math.sin(c2) * 11, hy2 = ey + Math.cos(c2) * 11;
+      const d = 2.3 * (1 - a) + 3.2 * a + batonSwing * (angry ? 0.16 : 0.08);
+      const dx = -Math.sin(d), dy = Math.cos(d);
+      seg([hx2 - dx * 3.4, hy2 - dy * 3.4, hx2 + dx * 21, hy2 + dy * 21], 2.6, "#11141b");
+      line(hx2 + dx * 16.5, hy2 + dy * 16.5, hx2 + dx * 21, hy2 + dy * 21, 2.6, angry ? "#ff3040" : "#4a5364");
+      seg([shx, shy, ex, ey, hx2, hy2], 7, uni);
+      line(shx - 1.4, shy + 0.6, ex - 1.4, ey - 0.6, 1.2, uniL);
+      // Écusson tricolore
+      const px2 = shx + (ex - shx) * 0.45, py2 = shy + (ey - shy) * 0.45;
+      box(px2 - 2, py2 - 1.3, 1.3, 2.6, "#2f6fe0");
+      box(px2 - 0.7, py2 - 1.3, 1.3, 2.6, "#ffffff");
+      box(px2 + 0.6, py2 - 1.3, 1.3, 2.6, "#e03a3a");
+      dot(hx2, hy2, 3.2, glove, true);
+      if (helm) {
+        shape(() => ctx.ellipse(33.6, 35.4, 5.4, 3.9, 0.15, 0, Math.PI * 2), ARML, 1.2);
+        line(30.4, 34, 35.4, 33.2, 1, ARMH);
+      }
+    }
+
+    if (hasShield) {
+      // Bouclier anti-émeute transparent
+      ctx.beginPath();
+      rr(5, 28, 12.6, 57, 3);
+      ctx.fillStyle = "rgba(168,220,244,0.26)";
+      ctx.fill();
+      ctx.lineWidth = 1.3;
+      ctx.strokeStyle = angry ? "rgba(255,170,180,0.9)" : "rgba(230,246,255,0.9)";
+      ctx.stroke();
+      line(8, 32, 8, 80, 1.1, "rgba(255,255,255,0.55)");
+      box(6.6, 47, 9.4, 5.4, "rgba(242,245,248,0.92)");
+      box(8, 48.6, 6.6, 2.2, "#0c1428");
+    }
+    ctx.restore(); // haut du corps
+    ctx.restore();
+    ctx.imageSmoothingEnabled = false;
+    ctx.lineCap = "butt";
+    ctx.lineJoin = "miter";
   }
 
   function drawObstacles() {
@@ -18176,7 +18372,7 @@ on</button>
   }
 
   function frame(ts) {
-    requestAnimationFrame(frame); // en premier : une exception ne fige pas le jeu
+    if (!frame._manual) requestAnimationFrame(frame); // en premier : une exception ne fige pas le jeu
     pollGamepad();
     if (!lastTs) lastTs = ts;
     let dt = (ts - lastTs) / 1000;
@@ -19043,7 +19239,24 @@ on</button>
   }
   // Aperçu en dev uniquement (http://localhost) : window.__shareCard({dist, isWin, pseudo, timeStr})
   try {
-    if (location.hostname === "localhost") window.__shareCard = buildShareCard;
+    if (location.hostname === "localhost") {
+      window.__shareCard = buildShareCard;
+      // Téléport de test (dev local uniquement)
+      window.__tp = (m) => {
+        player.x = m * PX_PER_METER;
+        player.y = GROUND_Y - player.h - 60;
+        player.vy = 0;
+        runTainted = true;
+        return Math.round(meters());
+      };
+      window.__step = (n) => {
+        let t = lastTs || performance.now();
+        frame._manual = true;
+        try { for (let i = 0; i < n; i++) frame(t += 1000 / 60); } finally { frame._manual = false; }
+        return [state, Math.round(meters())];
+      };
+      window.__cops = () => obstacles.map((o) => [Math.round(o.x / PX_PER_METER), o.kind]);
+    }
   } catch (_) {}
 
   async function shareRunScore() {

@@ -1,5 +1,5 @@
 /* 92 Rush — service worker PWA */
-const CACHE = "hds-rush-92-v25";
+const CACHE = "hds-rush-92-v26";
 const SHELL = "./"; // la page du jeu (cleanUrls : /index.html redirige vers /)
 const PRECACHE = [
   SHELL,
