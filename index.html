@@ -6679,6 +6679,21 @@ on</button>
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d", { alpha: false });
   ctx.imageSmoothingEnabled = false;
+  // Résolution interne : ×2 quand le jeu est affiché en grand (persos et décors nets).
+  // Retombe à ×1 si l’appareil ne tient pas la cadence.
+  let RS = 1, rsCap = 2, rsCssH = H, rsSlow = 0;
+  function syncRenderScale() {
+    const want = (window.devicePixelRatio || 1) * rsCssH / H;
+    const rs = rsCap > 1 && want >= 1.35 ? 2 : 1;
+    if (rs !== RS || canvas.width !== W * rs || canvas.height !== H * rs) {
+      RS = rs;
+      canvas.width = W * RS;
+      canvas.height = H * RS;
+      canvas.style.imageRendering = RS > 1 ? "auto" : "";
+    }
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+  }
 
   const el = {
     dist: document.getElementById("hud-dist"),
@@ -10613,13 +10628,13 @@ on</button>
   tableImg.src = "assets/table.webp";
   const flecheImg = new Image();
   flecheImg.src = "assets/fleche2.webp";
-  // Planches de sprites fournies (8 cases de 168 px, pieds en bas au centre)
+  // Planches de sprites fournies (8 cases de 336 px, pieds en bas au centre)
   const heroSprImg = new Image();
-  heroSprImg.src = "assets/hero-sprites.webp?v=2";
+  heroSprImg.src = "assets/hero-sprites.webp?v=4";
   const lSprImg = new Image();
-  lSprImg.src = "assets/l-sprites.webp?v=2";
-  const SPR_CELL = 168;
-  const SPR_SCALE = 100 / 148; // perso debout (148 px sur la planche) = 100 px en jeu
+  lSprImg.src = "assets/l-sprites.webp?v=4";
+  const SPR_CELL = 336;
+  const SPR_SCALE = 100 / 296; // perso debout (296 px sur la planche) = 100 px en jeu
   /** Dessine une case de planche : pieds posés en (cx, feetY), miroir si facing < 0 */
   function drawSpriteCell(img, idx, cx, feetY, facing, scale) {
     const d = SPR_CELL * (scale || SPR_SCALE);
@@ -14741,6 +14756,8 @@ on</button>
       if (player.x + player.w >= companion.x - 8) {
         companion.active = true;
         companion.activeAge = 0;
+        companion.hist = [];
+        companion.air = false;
         companion.featPhase = "announce";
         companion.featT = 0;
         companion.featText = "NOUVEAU FEAT DÉBLOQUÉ";
@@ -14761,18 +14778,24 @@ on</button>
 
     // Suit le joueur (légèrement derrière)
     companion.activeAge += dt;
+    const hist = companion.hist || (companion.hist = []);
+    hist.push(companion.activeAge, player.y + player.h, player.onGround ? 1 : 0);
+    const tPast = companion.activeAge - 0.13;
+    while (hist.length > 3 && hist[3] <= tPast) hist.splice(0, 3);
     const lag = 42;
     const targetX = player.x - player.facing * lag;
     const prevX = companion.x;
     companion.x += (targetX - companion.x) * Math.min(1, 7.5 * dt);
-    companion.y += (player.y - companion.y) * Math.min(1, 9 * dt);
+    // Pieds sur la trajectoire du héros (et non tête contre tête : le L est plus petit)
+    companion.y = hist[1] - companion.h;
+    companion.air = !hist[2];
     companion.facing = player.facing;
     companion.moving = Math.abs(companion.x - targetX) > 3 || Math.abs(player.vx) > 18;
 
     companion.dreadLift += ((player.dreadLift * 0.85) - companion.dreadLift) * Math.min(1, 10 * dt);
     companion.dreadSwing += ((player.dreadSwing * 0.9) - companion.dreadSwing) * Math.min(1, 12 * dt);
 
-    if (companion.moving && companion.y >= GROUND_Y - companion.h - 2) {
+    if (companion.moving && !companion.air) {
       advanceRunPhase(
         companion,
         (Math.abs(player.vx) / Math.max(1, maxRunSpeed())) * dt * 14
@@ -17496,7 +17519,7 @@ on</button>
       } else {
         lift2 = Math.round(breath * 0.5);
       }
-      drawSpriteCell(heroSprImg, cell, px + player.w * 0.5, py + player.h + 3 - lift2, f);
+      drawSpriteCell(heroSprImg, cell, px + player.w * 0.5, py + player.h + 1 - lift2, f);
     } else {
     beginCharDraw(px, py, f, player.w, player.h);
 
@@ -17682,7 +17705,9 @@ on</button>
     if (px < -60 || px > W + 60) return;
 
     const f = companion.facing;
-    const inAir = companion.y < GROUND_Y - companion.h - 2;
+    const inAir = companion.active && !companion.cineAttack && !isCinematic()
+      ? !!companion.air
+      : companion.y < GROUND_Y - companion.h - 2;
     const moving = companion.moving && !inAir;
     const breath = (!moving) ? Math.sin(companion.breath * 2.5) * 1.2 : 0;
 
@@ -17699,7 +17724,7 @@ on</button>
         cell = 1 + Math.floor(ph * 4);
       }
       const lift2 = moving || inAir ? 0 : Math.round(breath * 0.5);
-      drawSpriteCell(lSprImg, cell, px + companion.w * 0.5, py + companion.h + 3 - lift2, f, 100 / 147);
+      drawSpriteCell(lSprImg, cell, px + companion.w * 0.5, py + companion.h + 1 - lift2, f, 100 / 294);
       if (!companion.active) {
         ctx.globalAlpha = 0.2 + Math.sin(time * 3) * 0.08;
         ctx.fillStyle = C.accent;
@@ -18278,6 +18303,7 @@ on</button>
   }
 
   function render() {
+    syncRenderScale();
     ctx.save();
     if (trauma > 0.002) {
       // Shake cohérent (sin) — moins de « frises » qu’un Math.random() / frame
@@ -18377,6 +18403,10 @@ on</button>
     if (!lastTs) lastTs = ts;
     let dt = (ts - lastTs) / 1000;
     lastTs = ts;
+    if (RS > 1 && !frame._manual && dt < 0.1) {
+      rsSlow = dt > 0.024 ? rsSlow + 1 : Math.max(0, rsSlow - 0.25);
+      if (rsSlow > 45) rsCap = 1;
+    }
     if (dt > 0.05) dt = 0.05;
     if (dt < 0) dt = 0;
     // Audio / sync restent en temps réel ; physique & anim = × GAME_SPEED
@@ -18567,8 +18597,6 @@ on</button>
     try { syncPhoneLayoutClass(); } catch (_) {}
 
     // Buffer interne fixe → entités toujours à la même taille relative
-    if (canvas.width !== W) canvas.width = W;
-    if (canvas.height !== H) canvas.height = H;
     ctx.imageSmoothingEnabled = false;
 
     const root = document.documentElement;
@@ -18635,6 +18663,7 @@ on</button>
     viewScale = scale;
     viewCssW = cssW;
     viewCssH = cssH;
+    rsCssH = cssH;
     // Snap crop seulement si la taille canvas change (sinon → saut d’image)
     if (sizeChanged) {
       portraitCropT = null;
@@ -19256,6 +19285,12 @@ on</button>
         return [state, Math.round(meters())];
       };
       window.__cops = () => obstacles.map((o) => [Math.round(o.x / PX_PER_METER), o.kind]);
+      window.__dbg = () => ({
+        rs: RS, cw: canvas.width,
+        pFeet: Math.round(player.y + player.h), pGround: player.onGround,
+        cFeet: Math.round(companion.y + companion.h), cAir: !!companion.air,
+        cActive: companion.active, dx: Math.round(player.x - companion.x),
+      });
     }
   } catch (_) {}
 
